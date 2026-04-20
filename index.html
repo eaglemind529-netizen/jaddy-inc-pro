@@ -1,1 +1,66 @@
+<!DOCTYPE html>
+<html lang="es" class="notranslate" translate="no">
+<head>
+    <meta charset="UTF-8">
+    <meta name="google" content="notranslate">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Jaddy Inc Pro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background-color: #000000; color: #ffffff; margin: 0; font-family: sans-serif; height: 100vh; overflow: hidden; }
+        .oro-texto { background: linear-gradient(to bottom, #D4AF37, #F1D37E, #AA8419); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 900; }
+        .tarjeta { background: #0a0a0a; border: 1px solid #1f1f1f; padding: 20px; border-radius: 15px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+    </style>
+</head>
+<body class="notranslate">
+    <div id="app" class="flex flex-col h-screen">
+        <header class="h-16 border-b border-zinc-900 bg-black flex items-center justify-between px-6">
+            <h1 class="oro-texto uppercase tracking-widest text-sm">Jaddy Inc. Pro</h1>
+            <div id="dot" class="w-2 h-2 bg-red-500 rounded-full"></div>
+        </header>
 
+        <main id="main-content" class="flex-1 overflow-y-auto p-5 pb-24">
+            <div id="pantalla-inicio" class="h-full flex flex-col items-center justify-center text-center">
+                <div class="text-6xl mb-4">👑</div>
+                <h2 class="text-xl font-light tracking-[0.3em] uppercase">Panel de Élite</h2>
+                <button onclick="verStock()" class="mt-8 border border-[#D4AF37] text-[#D4AF37] px-6 py-2 rounded-full text-xs uppercase font-bold">Ver Inventario</button>
+            </div>
+            <div id="pantalla-stock" class="hidden">
+                <h2 class="text-[#D4AF37] text-2xl font-black uppercase mb-6">Inventario</h2>
+                <div id="lista-productos"></div>
+            </div>
+        </main>
+
+        <nav class="fixed bottom-0 left-0 right-0 h-20 bg-black border-t border-zinc-900 flex items-center justify-around">
+            <button onclick="verInicio()" class="text-[#D4AF37] text-[10px] font-bold uppercase">Inicio</button>
+            <button onclick="verStock()" class="text-zinc-500 text-[10px] font-bold uppercase">Stock</button>
+        </nav>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        const conf = {
+            apiKey: "AIzaSyCrjjeOoXPOtJDXDfrHLOA4Ny0QW2zfVWk",
+            authDomain: "apps-d45d6.firebaseapp.com",
+            projectId: "apps-d45d6",
+            storageBucket: "apps-d45d6.firebasestorage.app",
+            messagingSenderId: "502648373937",
+            appId: "1:502648373937:web:8c3beaa2a6c9289a4d9890"
+        };
+
+        const app = initializeApp(conf);
+        const db = getFirestore(app);
+        let prods = [];
+
+        window.verInicio = () => {
+            document.getElementById('pantalla-inicio').classList.remove('hidden');
+            document.getElementById('pantalla-stock').classList.add('hidden');
+        };
+
+        window.verStock = () => {
+            document.getElementById('pantalla-inicio').classList.add('hidden');
+            document.getElementById('pantalla-stock').classList.remove('hidden');
+            render();
+      
