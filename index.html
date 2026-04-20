@@ -1,18 +1,136 @@
+```html
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Jaddy Inc. Co.</title>
-</head>
-<body style="background-color: #111; color: white; display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100vh; margin: 0; font-family: sans-serif;">
+    <title>Premium Gold System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Paleta de colores Premium */
+        :root {
+            --gold-primary: #D4AF37;
+            --gold-dark: #AA8419;
+            --black-deep: #0A0A0A;
+            --black-soft: #1A1A1A;
+        }
 
-    <h1 style="color: #00ccff; font-size: 3rem; margin-bottom: 10px;">Jaddy Inc. Co.</h1>
-    <p style="color: #888; font-size: 1.2rem;">Sistema en Línea - Verificación Exitosa</p>
-    
-    <div style="margin-top: 20px; padding: 15px; border: 1px solid #333; border-radius: 10px; background-color: #1a1a1a;">
-        <span style="color: #00ff00;">●</span> Conectado al Servidor
+        body {
+            background-color: var(--black-deep);
+            color: #E5E5E5;
+        }
+
+        .gold-gradient {
+            background: linear-gradient(135deg, #D4AF37 0%, #F1D37E 50%, #AA8419 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .gold-border {
+            border-color: var(--gold-primary);
+        }
+
+        .active-tab {
+            color: var(--gold-primary);
+            border-top: 2px solid var(--gold-primary);
+        }
+
+        /* Estilo para los botones del menú */
+        .nav-btn {
+            @apply flex flex-col items-center justify-center transition-all duration-300 text-gray-500;
+        }
+
+        /* Ajuste para que el área de contenido no sea tapada por el menú móvil */
+        .content-area {
+            padding-bottom: 80px;
+        }
+
+        @media (min-width: 768px) {
+            .content-area {
+                padding-bottom: 0;
+            }
+        }
+    </style>
+</head>
+<body class="font-sans antialiased">
+
+    <!-- CONTENEDOR PADRE -->
+    <div class="flex flex-col h-screen overflow-hidden">
+        
+        <!-- HEADER (Superior) -->
+        <header class="h-16 border-b border-gray-800 bg-[#0F0F0F] flex items-center justify-between px-6 z-20">
+            <h1 class="text-xl font-bold gold-gradient uppercase tracking-widest">Luxury App</h1>
+            <div id="status-indicator" class="flex items-center gap-2 text-[10px] text-gray-500">
+                <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                SISTEMA ACTIVO
+            </div>
+        </header>
+
+        <!-- ÁREA DE CONTENIDO (PANTALLA EN BLANCO) -->
+        <main id="pantalla-principal" class="flex-1 overflow-y-auto content-area p-4 md:p-8">
+            <!-- Vista inicial -->
+            <div id="vista-vacia" class="flex flex-col items-center justify-center h-full text-center">
+                <div class="p-8 rounded-3xl border border-gray-800 bg-[#151515] shadow-2xl">
+                    <div class="text-6xl mb-4">✨</div>
+                    <h2 class="text-2xl font-semibold text-white">Bienvenido</h2>
+                    <p class="text-gray-400 mt-2 max-w-xs">Seleccione una opción en el menú inferior para comenzar.</p>
+                </div>
+            </div>
+        </main>
+
+        <!-- MENÚ INFERIOR (RESPONSIVO Y CÓMODO) -->
+        <nav class="fixed bottom-0 left-0 right-0 h-20 bg-[#0F0F0F] border-t border-gray-800 px-4 flex items-center justify-around z-30 md:relative md:border-t-0 md:border-l md:h-auto md:w-20 md:flex-col md:justify-start md:pt-10 md:gap-8" id="menu-lateral">
+            <!-- Los botones se inyectarán aquí automáticamente -->
+        </nav>
+
     </div>
+
+    <!-- CEREBRO DE LA APP -->
+    <script>
+        const App = {
+            modulos: {},
+
+            registrar: function(config) {
+                this.modulos[config.id] = config;
+                
+                const menu = document.getElementById('menu-lateral');
+                
+                // Creamos el botón con estilo de "App Móvil"
+                const boton = document.createElement('button');
+                boton.id = `btn-${config.id}`;
+                boton.className = "nav-btn group";
+                
+                boton.innerHTML = `
+                    <span class="text-2xl mb-1 group-hover:scale-110 transition-transform">${config.icono}</span>
+                    <span class="text-[10px] font-bold uppercase tracking-tighter">${config.nombre}</span>
+                `;
+                
+                boton.onclick = () => this.cargarModulo(config.id);
+                menu.appendChild(boton);
+            },
+
+            cargarModulo: function(id) {
+                const modulo = this.modulos[id];
+
+                // Manejo visual de botones (quitar activo de otros, poner al nuevo)
+                document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active-tab'));
+                document.getElementById(`btn-${id}`).classList.add('active-tab');
+
+                // Inyectar el contenido
+                const pantalla = document.getElementById('pantalla-principal');
+                pantalla.innerHTML = `<div id="canvas-${id}" class="animate-in fade-in slide-in-from-bottom-4 duration-500"></div>`;
+                
+                // Llamar a la función de dibujo del archivo externo
+                modulo.dibujar(`canvas-${id}`);
+            }
+        };
+    </script>
+
+    <!-- ARCHIVOS DE DATOS Y MÓDULOS -->
+    <script src="database.js"></script>
+    <!-- <script src="inventario.js"></script> -->
 
 </body>
 </html>
+
+```
