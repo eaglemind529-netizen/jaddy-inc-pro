@@ -4,183 +4,114 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Luxury System Gold Edition</title>
-    <!-- Tailwind CSS para el diseño -->
+    <title>Luxury System - Gold Edition</title>
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;700;900&display=swap" rel="stylesheet">
     <style>
         :root {
-            --gold: #D4AF37;
-            --gold-light: #F1D37E;
-            --gold-dark: #AA8419;
-            --black-pure: #050505;
-            --black-card: #0F0F0F;
+            --oro: #D4AF37;
+            --negro-puro: #050505;
+            --tarjeta: #0F0F0F;
         }
 
         body {
-            background-color: var(--black-pure);
+            background-color: var(--negro-puro);
             color: #E0E0E0;
             font-family: 'Inter', sans-serif;
             margin: 0;
-            padding: 0;
-            height: 100vh;
             overflow: hidden;
+            height: 100vh;
         }
 
-        /* Texto Dorado Metalizado */
-        .gold-text {
-            background: linear-gradient(to bottom, #CF9E1D 22%, #F1D37E 45%, #CF9E1D 50%, #CF9E1D 52%, #F1D37E 82%, #CF9E1D 100%);
+        .texto-dorado {
+            background: linear-gradient(to bottom, #CF9E1D 22%, #F1D37E 45%, #CF9E1D 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            font-weight: 900;
         }
 
-        /* Animación de entrada */
-        .fade-in {
-            animation: fadeIn 0.6s cubic-bezier(0.39, 0.575, 0.565, 1) both;
-        }
-        @keyframes fadeIn {
-            0% { opacity: 0; transform: translateY(10px); }
-            100% { opacity: 1; transform: translateY(0); }
-        }
-
-        /* Estilo de los botones del menú inferior */
         .nav-item {
-            @apply flex flex-col items-center justify-center flex-1 h-full transition-all duration-300 relative;
+            @apply flex flex-col items-center justify-center flex-1 transition-all duration-300;
             color: #444;
         }
 
         .nav-item.active {
-            color: var(--gold);
+            color: var(--oro);
         }
 
-        .nav-item.active::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            width: 30%;
-            height: 2px;
-            background: var(--gold);
-            box-shadow: 0 0 10px var(--gold);
+        /* Animación */
+        .fade-in {
+            animation: fadeIn 0.6s ease-out;
         }
-
-        /* Scrollbar elegante */
-        ::-webkit-scrollbar { width: 4px; }
-        ::-webkit-scrollbar-track { background: #050505; }
-        ::-webkit-scrollbar-thumb { background: #1A1A1A; border-radius: 10px; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
     </style>
 </head>
 <body class="flex flex-col">
 
-    <!-- CABECERA (HEADER) -->
+    <!-- Encabezado -->
     <header class="h-16 border-b border-gray-900 bg-black flex items-center justify-between px-6 z-50">
         <div class="flex items-center gap-3">
-            <div class="w-7 h-7 bg-gradient-to-b from-[#D4AF37] to-[#AA8419] rounded shadow-[0_0_15px_rgba(212,175,55,0.3)] flex items-center justify-center text-black text-[10px] font-bold">
-                LX
-            </div>
-            <h1 class="gold-text uppercase tracking-[0.2em] text-sm">Luxury System</h1>
+            <div class="w-7 h-7 bg-gradient-to-b from-[#D4AF37] to-[#AA8419] rounded flex items-center justify-center text-black text-[10px] font-bold">LX</div>
+            <h1 class="texto-dorado uppercase tracking-widest text-sm font-black">Luxury System</h1>
         </div>
-        <div class="flex items-center gap-2">
-            <div class="w-2 h-2 bg-[#D4AF37] rounded-full animate-pulse shadow-[0_0_8px_#D4AF37]"></div>
-            <span class="text-[9px] text-gray-500 font-bold tracking-widest">FIREBASE CONNECTED</span>
-        </div>
+        <span class="text-[9px] text-gray-600 font-bold tracking-tighter">SISTEMA ACTIVO</span>
     </header>
 
-    <!-- ÁREA DE VISUALIZACIÓN (CONTENIDO CENTRAL) -->
-    <main id="main-content" class="flex-1 overflow-y-auto px-4 py-6 pb-28 md:px-12">
-        <!-- Pantalla de Inicio por defecto -->
+    <!-- Contenido -->
+    <main id="main-content" class="flex-1 overflow-y-auto px-4 py-6 pb-28">
         <div id="default-view" class="h-full flex flex-col items-center justify-center text-center fade-in">
-            <div class="mb-6 p-6 rounded-full border border-gray-900 bg-[#080808] shadow-inner">
-                <span class="text-5xl opacity-80">👑</span>
-            </div>
-            <h2 class="text-xl font-light tracking-widest text-white uppercase mb-2">Bienvenido</h2>
-            <p class="text-gray-600 text-xs max-w-[250px] leading-relaxed">
-                Su sistema de gestión premium está listo. Seleccione un módulo en la parte inferior.
-            </p>
+            <span class="text-5xl mb-4">👑</span>
+            <h2 class="text-xl font-light tracking-widest text-white uppercase">Bienvenido</h2>
+            <p class="text-gray-600 text-xs mt-2">Seleccione un módulo en el menú inferior.</p>
         </div>
     </main>
 
-    <!-- BARRA DE NAVEGACIÓN INFERIOR (CÓMODA PARA CELULAR) -->
-    <nav id="bottom-bar" class="fixed bottom-0 left-0 right-0 h-20 bg-black border-t border-gray-900 flex items-center justify-around z-50 px-2 shadow-[0_-10px_30px_rgba(0,0,0,0.5)]">
-        <!-- Los botones aparecerán aquí dinámicamente -->
-        <div id="loading-msg" class="text-[9px] text-gray-700 tracking-[0.3em] uppercase animate-pulse">
-            Cargando módulos...
-        </div>
+    <!-- Menú Inferior -->
+    <nav id="bottom-bar" class="fixed bottom-0 left-0 right-0 h-20 bg-black border-t border-gray-900 flex items-center justify-around z-50 shadow-2xl">
+        <div id="loading-msg" class="text-[9px] text-gray-700 tracking-widest uppercase animate-pulse">Cargando...</div>
     </nav>
 
-    <!-- LÓGICA PRINCIPAL (CEREBRO) -->
+    <!-- Lógica del Cerebro -->
     <script>
-        /**
-         * App: El objeto maestro que coordina todo el sistema.
-         */
         window.App = {
             modulos: {},
-
-            /**
-             * registrar(): Esta función la llaman los otros archivos (como inventario.js)
-             */
             registrar: function(config) {
-                // Quitar el mensaje de carga si es el primer módulo
                 const loadingMsg = document.getElementById('loading-msg');
                 if (loadingMsg) loadingMsg.remove();
 
-                // Guardar la configuración
                 this.modulos[config.id] = config;
 
-                // Crear el botón de navegación
                 const navBar = document.getElementById('bottom-bar');
                 const btn = document.createElement('button');
                 btn.id = `nav-${config.id}`;
                 btn.className = "nav-item";
-                btn.innerHTML = `
-                    <span class="text-2xl mb-1">${config.icono}</span>
-                    <span class="text-[9px] font-bold uppercase tracking-widest">${config.nombre}</span>
-                `;
+                btn.innerHTML = `<span class="text-2xl">${config.icono}</span><span class="text-[9px] font-bold uppercase mt-1">${config.nombre}</span>`;
 
                 btn.onclick = () => this.abrir(config.id);
                 navBar.appendChild(btn);
-
-                console.log(`Módulo [${config.nombre}] registrado con éxito.`);
             },
-
-            /**
-             * abrir(): Cambia la vista actual por la del módulo seleccionado
-             */
             abrir: function(id) {
-                // Manejo de estados activos en los botones
                 document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
                 document.getElementById(`nav-${id}`).classList.add('active');
 
-                // Preparar el área de contenido
                 const main = document.getElementById('main-content');
                 const modulo = this.modulos[id];
 
                 main.innerHTML = `
                     <div class="fade-in">
-                        <header class="mb-6">
-                            <h3 class="text-[10px] font-bold text-gray-500 tracking-[0.4em] uppercase mb-1">Sección</h3>
-                            <h2 class="text-[#D4AF37] text-2xl font-bold uppercase tracking-tight">${modulo.nombre}</h2>
-                        </header>
-                        <div id="render-target-${id}"></div>
+                        <h2 class="text-[#D4AF37] text-2xl font-bold uppercase mb-4">${modulo.nombre}</h2>
+                        <div id="render-${id}"></div>
                     </div>
                 `;
-
-                // Ejecutar la función de dibujo del módulo
-                try {
-                    modulo.dibujar(`render-target-${id}`);
-                } catch (error) {
-                    console.error("Error al renderizar módulo:", error);
-                    main.innerHTML = `<p class="p-8 text-red-800 text-xs">Error: No se pudo cargar el módulo ${id}.</p>`;
-                }
+                modulo.dibujar(`render-${id}`);
             }
         };
     </script>
 
-    <!-- 
-        IMPORTANTE: 
-        1. 'database.js' debe ser tipo "module" porque usa Firebase (imports).
-        2. 'inventario.js' es un script normal que usa el objeto App.
-    -->
+    <!-- Scripts externos -->
     <script type="module" src="database.js"></script>
     <script src="inventario.js"></script>
 
