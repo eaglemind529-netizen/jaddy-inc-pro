@@ -4,131 +4,185 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Premium Gold System</title>
+    <title>Luxury System Gold Edition</title>
+    <!-- Tailwind CSS para el diseño -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;700;900&display=swap" rel="stylesheet">
     <style>
-        /* Paleta de colores Premium */
         :root {
-            --gold-primary: #D4AF37;
+            --gold: #D4AF37;
+            --gold-light: #F1D37E;
             --gold-dark: #AA8419;
-            --black-deep: #0A0A0A;
-            --black-soft: #1A1A1A;
+            --black-pure: #050505;
+            --black-card: #0F0F0F;
         }
 
         body {
-            background-color: var(--black-deep);
-            color: #E5E5E5;
+            background-color: var(--black-pure);
+            color: #E0E0E0;
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            overflow: hidden;
         }
 
-        .gold-gradient {
-            background: linear-gradient(135deg, #D4AF37 0%, #F1D37E 50%, #AA8419 100%);
+        /* Texto Dorado Metalizado */
+        .gold-text {
+            background: linear-gradient(to bottom, #CF9E1D 22%, #F1D37E 45%, #CF9E1D 50%, #CF9E1D 52%, #F1D37E 82%, #CF9E1D 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
+            font-weight: 900;
         }
 
-        .gold-border {
-            border-color: var(--gold-primary);
+        /* Animación de entrada */
+        .fade-in {
+            animation: fadeIn 0.6s cubic-bezier(0.39, 0.575, 0.565, 1) both;
+        }
+        @keyframes fadeIn {
+            0% { opacity: 0; transform: translateY(10px); }
+            100% { opacity: 1; transform: translateY(0); }
         }
 
-        .active-tab {
-            color: var(--gold-primary);
-            border-top: 2px solid var(--gold-primary);
+        /* Estilo de los botones del menú inferior */
+        .nav-item {
+            @apply flex flex-col items-center justify-center flex-1 h-full transition-all duration-300 relative;
+            color: #444;
         }
 
-        /* Estilo para los botones del menú */
-        .nav-btn {
-            @apply flex flex-col items-center justify-center transition-all duration-300 text-gray-500;
+        .nav-item.active {
+            color: var(--gold);
         }
 
-        /* Ajuste para que el área de contenido no sea tapada por el menú móvil */
-        .content-area {
-            padding-bottom: 80px;
+        .nav-item.active::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            width: 30%;
+            height: 2px;
+            background: var(--gold);
+            box-shadow: 0 0 10px var(--gold);
         }
 
-        @media (min-width: 768px) {
-            .content-area {
-                padding-bottom: 0;
-            }
-        }
+        /* Scrollbar elegante */
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: #050505; }
+        ::-webkit-scrollbar-thumb { background: #1A1A1A; border-radius: 10px; }
     </style>
 </head>
-<body class="font-sans antialiased">
+<body class="flex flex-col">
 
-    <!-- CONTENEDOR PADRE -->
-    <div class="flex flex-col h-screen overflow-hidden">
-        
-        <!-- HEADER (Superior) -->
-        <header class="h-16 border-b border-gray-800 bg-[#0F0F0F] flex items-center justify-between px-6 z-20">
-            <h1 class="text-xl font-bold gold-gradient uppercase tracking-widest">Luxury App</h1>
-            <div id="status-indicator" class="flex items-center gap-2 text-[10px] text-gray-500">
-                <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                SISTEMA ACTIVO
+    <!-- CABECERA (HEADER) -->
+    <header class="h-16 border-b border-gray-900 bg-black flex items-center justify-between px-6 z-50">
+        <div class="flex items-center gap-3">
+            <div class="w-7 h-7 bg-gradient-to-b from-[#D4AF37] to-[#AA8419] rounded shadow-[0_0_15px_rgba(212,175,55,0.3)] flex items-center justify-center text-black text-[10px] font-bold">
+                LX
             </div>
-        </header>
+            <h1 class="gold-text uppercase tracking-[0.2em] text-sm">Luxury System</h1>
+        </div>
+        <div class="flex items-center gap-2">
+            <div class="w-2 h-2 bg-[#D4AF37] rounded-full animate-pulse shadow-[0_0_8px_#D4AF37]"></div>
+            <span class="text-[9px] text-gray-500 font-bold tracking-widest">FIREBASE CONNECTED</span>
+        </div>
+    </header>
 
-        <!-- ÁREA DE CONTENIDO (PANTALLA EN BLANCO) -->
-        <main id="pantalla-principal" class="flex-1 overflow-y-auto content-area p-4 md:p-8">
-            <!-- Vista inicial -->
-            <div id="vista-vacia" class="flex flex-col items-center justify-center h-full text-center">
-                <div class="p-8 rounded-3xl border border-gray-800 bg-[#151515] shadow-2xl">
-                    <div class="text-6xl mb-4">✨</div>
-                    <h2 class="text-2xl font-semibold text-white">Bienvenido</h2>
-                    <p class="text-gray-400 mt-2 max-w-xs">Seleccione una opción en el menú inferior para comenzar.</p>
-                </div>
+    <!-- ÁREA DE VISUALIZACIÓN (CONTENIDO CENTRAL) -->
+    <main id="main-content" class="flex-1 overflow-y-auto px-4 py-6 pb-28 md:px-12">
+        <!-- Pantalla de Inicio por defecto -->
+        <div id="default-view" class="h-full flex flex-col items-center justify-center text-center fade-in">
+            <div class="mb-6 p-6 rounded-full border border-gray-900 bg-[#080808] shadow-inner">
+                <span class="text-5xl opacity-80">👑</span>
             </div>
-        </main>
+            <h2 class="text-xl font-light tracking-widest text-white uppercase mb-2">Bienvenido</h2>
+            <p class="text-gray-600 text-xs max-w-[250px] leading-relaxed">
+                Su sistema de gestión premium está listo. Seleccione un módulo en la parte inferior.
+            </p>
+        </div>
+    </main>
 
-        <!-- MENÚ INFERIOR (RESPONSIVO Y CÓMODO) -->
-        <nav class="fixed bottom-0 left-0 right-0 h-20 bg-[#0F0F0F] border-t border-gray-800 px-4 flex items-center justify-around z-30 md:relative md:border-t-0 md:border-l md:h-auto md:w-20 md:flex-col md:justify-start md:pt-10 md:gap-8" id="menu-lateral">
-            <!-- Los botones se inyectarán aquí automáticamente -->
-        </nav>
+    <!-- BARRA DE NAVEGACIÓN INFERIOR (CÓMODA PARA CELULAR) -->
+    <nav id="bottom-bar" class="fixed bottom-0 left-0 right-0 h-20 bg-black border-t border-gray-900 flex items-center justify-around z-50 px-2 shadow-[0_-10px_30px_rgba(0,0,0,0.5)]">
+        <!-- Los botones aparecerán aquí dinámicamente -->
+        <div id="loading-msg" class="text-[9px] text-gray-700 tracking-[0.3em] uppercase animate-pulse">
+            Cargando módulos...
+        </div>
+    </nav>
 
-    </div>
-
-    <!-- CEREBRO DE LA APP -->
+    <!-- LÓGICA PRINCIPAL (CEREBRO) -->
     <script>
-        const App = {
+        /**
+         * App: El objeto maestro que coordina todo el sistema.
+         */
+        window.App = {
             modulos: {},
 
+            /**
+             * registrar(): Esta función la llaman los otros archivos (como inventario.js)
+             */
             registrar: function(config) {
+                // Quitar el mensaje de carga si es el primer módulo
+                const loadingMsg = document.getElementById('loading-msg');
+                if (loadingMsg) loadingMsg.remove();
+
+                // Guardar la configuración
                 this.modulos[config.id] = config;
-                
-                const menu = document.getElementById('menu-lateral');
-                
-                // Creamos el botón con estilo de "App Móvil"
-                const boton = document.createElement('button');
-                boton.id = `btn-${config.id}`;
-                boton.className = "nav-btn group";
-                
-                boton.innerHTML = `
-                    <span class="text-2xl mb-1 group-hover:scale-110 transition-transform">${config.icono}</span>
-                    <span class="text-[10px] font-bold uppercase tracking-tighter">${config.nombre}</span>
+
+                // Crear el botón de navegación
+                const navBar = document.getElementById('bottom-bar');
+                const btn = document.createElement('button');
+                btn.id = `nav-${config.id}`;
+                btn.className = "nav-item";
+                btn.innerHTML = `
+                    <span class="text-2xl mb-1">${config.icono}</span>
+                    <span class="text-[9px] font-bold uppercase tracking-widest">${config.nombre}</span>
                 `;
-                
-                boton.onclick = () => this.cargarModulo(config.id);
-                menu.appendChild(boton);
+
+                btn.onclick = () => this.abrir(config.id);
+                navBar.appendChild(btn);
+
+                console.log(`Módulo [${config.nombre}] registrado con éxito.`);
             },
 
-            cargarModulo: function(id) {
+            /**
+             * abrir(): Cambia la vista actual por la del módulo seleccionado
+             */
+            abrir: function(id) {
+                // Manejo de estados activos en los botones
+                document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+                document.getElementById(`nav-${id}`).classList.add('active');
+
+                // Preparar el área de contenido
+                const main = document.getElementById('main-content');
                 const modulo = this.modulos[id];
 
-                // Manejo visual de botones (quitar activo de otros, poner al nuevo)
-                document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active-tab'));
-                document.getElementById(`btn-${id}`).classList.add('active-tab');
+                main.innerHTML = `
+                    <div class="fade-in">
+                        <header class="mb-6">
+                            <h3 class="text-[10px] font-bold text-gray-500 tracking-[0.4em] uppercase mb-1">Sección</h3>
+                            <h2 class="text-[#D4AF37] text-2xl font-bold uppercase tracking-tight">${modulo.nombre}</h2>
+                        </header>
+                        <div id="render-target-${id}"></div>
+                    </div>
+                `;
 
-                // Inyectar el contenido
-                const pantalla = document.getElementById('pantalla-principal');
-                pantalla.innerHTML = `<div id="canvas-${id}" class="animate-in fade-in slide-in-from-bottom-4 duration-500"></div>`;
-                
-                // Llamar a la función de dibujo del archivo externo
-                modulo.dibujar(`canvas-${id}`);
+                // Ejecutar la función de dibujo del módulo
+                try {
+                    modulo.dibujar(`render-target-${id}`);
+                } catch (error) {
+                    console.error("Error al renderizar módulo:", error);
+                    main.innerHTML = `<p class="p-8 text-red-800 text-xs">Error: No se pudo cargar el módulo ${id}.</p>`;
+                }
             }
         };
     </script>
 
-    <!-- ARCHIVOS DE DATOS Y MÓDULOS -->
-    <script src="database.js"></script>
-    <!-- <script src="inventario.js"></script> -->
+    <!-- 
+        IMPORTANTE: 
+        1. 'database.js' debe ser tipo "module" porque usa Firebase (imports).
+        2. 'inventario.js' es un script normal que usa el objeto App.
+    -->
+    <script type="module" src="database.js"></script>
+    <script src="inventario.js"></script>
 
 </body>
 </html>
