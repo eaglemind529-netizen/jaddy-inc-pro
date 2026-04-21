@@ -1,3 +1,14 @@
+<script>
+  // Este código hace que cuando toques el botón dorado, te mande al inventario
+  document.addEventListener("DOMContentLoaded", function() {
+    const botones = document.getElementsByTagName("button");
+    for (let boton of botones) {
+      if (boton.innerText.includes("VER INVENTARIO")) {
+        boton.onclick = function() { window.location.href = "inventario.html"; };
+      }
+    }
+  });
+</script>
 <!DOCTYPE html>
 <html lang="es" class="notranslate" translate="no">
 <head>
