@@ -1,163 +1,357 @@
-```html
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Inventario Cloud | Jaddy INC Elite</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <title>JADDY INC - ENTRADA DE MERCANCÍA</title>
     <style>
         :root {
-            --gold: #D4AF37;
-            --gold-bright: #F9D976;
-            --dark-bg: #0A0A0A;
-            --card-bg: #141414;
+            --dorado: #D4AF37;
+            --negro: #0a0a0a;
+            --gris-oscuro: #121212;
+            --gris-claro: #1e1e1e;
         }
-        body { background-color: var(--dark-bg); color: #E5E5E5; font-family: 'Inter', sans-serif; }
-        .gold-border { border: 1px solid rgba(212, 175, 55, 0.3); }
-        .gold-gradient-btn { background: linear-gradient(135deg, var(--gold) 0%, #aa8a2e 100%); color: #000; font-weight: 700; }
-        .stock-badge { background: linear-gradient(135deg, var(--gold) 0%, #B8860B 100%); color: #000; font-weight: bold; }
-        input, select { background-color: #1A1A1A !important; color: white !important; border: 1px solid #333 !important; }
-        input:focus, select:focus { border-color: var(--gold) !important; outline: none; }
-        .animate-fadeIn { animation: fadeIn 0.3s ease-out forwards; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        body {
+            background-color: var(--negro);
+            color: #ffffff;
+            font-family: 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .header {
+            width: 100%;
+            max-width: 500px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            border-bottom: 1px solid var(--dorado);
+            padding-bottom: 10px;
+        }
+
+        .btn-volver {
+            color: var(--dorado);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: bold;
+            border: 1px solid var(--dorado);
+            padding: 5px 12px;
+            border-radius: 4px;
+        }
+
+        .panel-registro {
+            background-color: var(--gris-oscuro);
+            width: 100%;
+            max-width: 450px;
+            padding: 20px;
+            border-radius: 15px;
+            border: 1px solid #222;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+        }
+
+        .campo { margin-bottom: 15px; }
+
+        label {
+            display: block;
+            color: var(--dorado);
+            font-size: 11px;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        input, select {
+            width: 100%;
+            background: #1a1a1a;
+            border: 1px solid #333;
+            color: white;
+            padding: 14px;
+            border-radius: 8px;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--dorado);
+        }
+
+        .btn-guardar {
+            width: 100%;
+            background: var(--dorado);
+            color: black;
+            padding: 16px;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 10px;
+            text-transform: uppercase;
+        }
+
+        .contenedor-lista { width: 100%; max-width: 500px; }
+
+        .producto-grupo {
+            background: var(--gris-claro);
+            border-radius: 10px;
+            margin-bottom: 12px;
+            border: 1px solid #2a2a2a;
+            overflow: hidden;
+        }
+
+        .grupo-header {
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .grupo-titulo h3 { margin: 0; color: var(--dorado); font-size: 17px; }
+
+        .badge-stock-total {
+            background: var(--dorado);
+            color: black;
+            padding: 4px 10px;
+            border-radius: 15px;
+            font-weight: bold;
+            font-size: 12px;
+        }
+
+        .variantes-box {
+            display: none;
+            background: #0f0f0f;
+            padding: 0 15px;
+        }
+
+        .variante-item {
+            padding: 12px 0;
+            border-bottom: 1px solid #222;
+        }
+
+        .variante-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+
+        .fecha-registro {
+            font-size: 10px;
+            color: #666;
+            display: block;
+            margin-top: 3px;
+        }
+
+        .btn-venta {
+            background: #8b0000;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 11px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .seccion-titulo {
+            color: var(--dorado);
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            text-align: center;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        .aviso-vacio {
+            text-align: center;
+            color: #555;
+            margin-top: 40px;
+            font-style: italic;
+        }
     </style>
 </head>
-<body class="p-4 pb-20">
+<body>
 
-    <div class="max-w-md mx-auto">
-        <header class="flex justify-between items-center mb-8">
-            <a href="index.html" class="text-[#D4AF37] flex items-center gap-2 font-semibold">
-                <i class="fas fa-arrow-left"></i> VOLVER
-            </a>
-            <div class="text-right">
-                <h1 class="text-xl font-bold tracking-widest" style="color: var(--gold);">JADDY <span class="text-white">INC</span></h1>
-                <p class="text-[10px] uppercase text-gray-500">Cloud Inventory</p>
-            </div>
-        </header>
-
-        <!-- KPI Dashboard -->
-        <section class="grid grid-cols-3 gap-3 mb-8">
-            <div class="bg-[#141414] p-3 rounded-xl gold-border text-center">
-                <p class="text-[10px] uppercase text-gray-500 mb-1">Entradas</p>
-                <span id="totalEntradas" class="text-lg font-bold text-green-500">0</span>
-            </div>
-            <div class="bg-[#141414] p-3 rounded-xl gold-border text-center">
-                <p class="text-[10px] uppercase text-gray-500 mb-1">Salidas</p>
-                <span id="totalSalidas" class="text-lg font-bold text-red-500">0</span>
-            </div>
-            <div class="bg-[#141414] p-3 rounded-xl gold-border text-center" style="border-color: var(--gold);">
-                <p class="text-[10px] uppercase text-gold mb-1" style="color: var(--gold);">Queda</p>
-                <span id="totalStock" class="text-lg font-bold text-white">0</span>
-            </div>
-        </section>
-
-        <!-- Formulario -->
-        <section class="bg-[#141414] p-6 rounded-2xl gold-border mb-10 shadow-2xl">
-            <h2 class="text-gold flex items-center gap-2 mb-6 font-bold text-lg" style="color: var(--gold);">
-                <i class="fas fa-plus-circle"></i> NUEVO INGRESO
-            </h2>
-            <form id="productForm" class="space-y-4">
-                <input type="text" id="marca" placeholder="Marca" class="w-full p-3 rounded-lg" required>
-                <div class="grid grid-cols-2 gap-4">
-                    <input type="text" id="producto" placeholder="Producto" class="w-full p-3 rounded-lg" required>
-                    <input type="text" id="variante" placeholder="Variante" class="w-full p-3 rounded-lg" required>
-                </div>
-                <div class="grid grid-cols-2 gap-4">
-                    <select id="categoriaMedida" class="w-full p-3 rounded-lg"><option value="ml">ml</option><option value="uds">uds</option></select>
-                    <input type="number" id="capacidad" placeholder="Tamaño" class="w-full p-3 rounded-lg" required>
-                </div>
-                <input type="number" id="stock" placeholder="Cantidad" class="w-full p-3 rounded-lg font-bold" required>
-                <button type="submit" class="w-full gold-gradient-btn py-4 rounded-xl uppercase tracking-widest">Guardar en Nube</button>
-            </form>
-        </section>
-
-        <div id="inventoryList" class="space-y-4">
-            <!-- Cargando datos... -->
-        </div>
+    <div class="header">
+        <a href="index.html" class="btn-volver">← INICIO</a>
+        <h1 style="font-size: 16px; color: var(--dorado); margin: 0; letter-spacing: 1px;">INGRESO DE COMPRAS</h1>
     </div>
 
-    <!-- LÓGICA DE CONEXIÓN CLOUD -->
-    <script type="module">
-        import { db, collection, addDoc, onSnapshot, doc, updateDoc, query, orderBy } from './conexion.js';
-
-        const inventoryList = document.getElementById('inventoryList');
-        const productForm = document.getElementById('productForm');
-
-        // Escuchar datos de Firestore en tiempo real
-        const q = query(collection(db, "inventario"), orderBy("ultimaFecha", "desc"));
+    <div class="panel-registro">
+        <div class="seccion-titulo">Nueva Entrada</div>
         
-        onSnapshot(q, (snapshot) => {
-            let html = '';
-            let tEntradas = 0, tSalidas = 0, tQueda = 0;
+        <div class="campo">
+            <label>1. Seleccionar Producto</label>
+            <select id="sel-producto-existente">
+                <option value="">-- ELIGE UN PRODUCTO --</option>
+                <!-- Se llena con productos de la "Lista Maestra" -->
+            </select>
+        </div>
 
-            snapshot.forEach((doc) => {
-                const item = doc.data();
-                const id = doc.id;
-                tEntradas += item.entradas_ind;
-                tSalidas += item.salidas_ind;
-                tQueda += item.stock;
+        <div class="campo">
+            <label>2. Variante (Fragancia / Sabor / Otros)</label>
+            <input type="text" id="inp-variante" placeholder="Ej: Bad Boy, Coco, Muslo...">
+        </div>
+        
+        <div class="campo">
+            <label>3. Cantidad Comprada</label>
+            <input type="number" id="inp-cantidad" placeholder="0" min="1">
+        </div>
 
-                html += `
-                    <div class="bg-[#141414] p-5 rounded-xl gold-border animate-fadeIn">
-                        <div class="flex justify-between items-start">
-                            <div>
-                                <p class="text-[8px] text-gray-600 font-mono">ID: ${id.substring(0,8)}</p>
-                                <h4 class="text-gold font-black text-lg uppercase" style="color: var(--gold);">${item.marca}</h4>
-                                <p class="text-white">${item.producto} - ${item.variante}</p>
+        <button class="btn-guardar" onclick="registrarEntrada()">Cargar al Inventario</button>
+    </div>
+
+    <div class="contenedor-lista" id="lista-stock">
+        <div class="aviso-vacio">Cargando productos registrados...</div>
+    </div>
+
+    <script>
+        // Simulamos una "Lista Maestra" de productos para que siempre tengas algo que elegir
+        // En una versión futura, podrías editar esta lista en otra pantalla
+        let listaMaestra = JSON.parse(localStorage.getItem('jaddy_maestra')) || [
+            { id: 'P01', nombre: 'PERFUME 30ML', marca: 'GENÉRICO', medida: 'ML' },
+            { id: 'P02', nombre: 'POLLO ENTERO', marca: 'GRANJA', medida: 'KG' },
+            { id: 'P03', nombre: 'JABÓN ARTESANAL', marca: 'JADDY', medida: 'UDS' }
+        ];
+
+        // Memoria del Stock real
+        let db = JSON.parse(localStorage.getItem('jaddy_db_v2')) || {};
+
+        function actualizarSelector() {
+            const sel = document.getElementById('sel-producto-existente');
+            while(sel.options.length > 1) sel.remove(1);
+            
+            listaMaestra.forEach(p => {
+                let opt = document.createElement('option');
+                opt.value = `${p.marca}-${p.nombre}-${p.medida}`;
+                opt.text = `${p.marca} | ${p.nombre} (${p.medida})`;
+                sel.add(opt);
+            });
+        }
+
+        function registrarEntrada() {
+            const grupoID = document.getElementById('sel-producto-existente').value;
+            const variante = document.getElementById('inp-variante').value.trim().toUpperCase();
+            const cantidad = parseInt(document.getElementById('inp-cantidad').value);
+            const fechaActual = new Date().toLocaleString('es-VE', { 
+                day: '2-digit', month: '2-digit', year: 'numeric',
+                hour: '2-digit', minute: '2-digit'
+            });
+
+            if (!grupoID) return alert("Selecciona un producto de la lista.");
+            if (!variante || isNaN(cantidad) || cantidad <= 0) return alert("Indica variante y cantidad válida.");
+
+            // Si el producto no existe en stock todavía, lo iniciamos usando los datos de la lista maestra
+            if (!db[grupoID]) {
+                const info = grupoID.split('-');
+                db[grupoID] = { 
+                    marca: info[0], 
+                    nombre: info[1], 
+                    medida: info[2], 
+                    variantes: {} 
+                };
+            }
+
+            // Si la variante no existe, la creamos
+            if (!db[grupoID].variantes[variante]) {
+                db[grupoID].variantes[variante] = { stock: 0, ultimaFecha: "" };
+            }
+
+            // Sumar stock y actualizar fecha
+            db[grupoID].variantes[variante].stock += cantidad;
+            db[grupoID].variantes[variante].ultimaFecha = fechaActual;
+
+            // Guardar
+            localStorage.setItem('jaddy_db_v2', JSON.stringify(db));
+            localStorage.setItem('jaddy_maestra', JSON.stringify(listaMaestra));
+            
+            // Limpiar campos
+            document.getElementById('inp-variante').value = '';
+            document.getElementById('inp-cantidad').value = '';
+            document.getElementById('sel-producto-existente').value = '';
+            
+            render();
+        }
+
+        function vender(grupoID, varNombre) {
+            if(db[grupoID].variantes[varNombre].stock > 0) {
+                db[grupoID].variantes[varNombre].stock--;
+                localStorage.setItem('jaddy_db_v2', JSON.stringify(db));
+                render();
+            }
+        }
+
+        function toggleGrupo(id) {
+            const box = document.getElementById(id);
+            box.style.display = (box.style.display === 'block') ? 'none' : 'block';
+        }
+
+        function render() {
+            const contenedor = document.getElementById('lista-stock');
+            contenedor.innerHTML = '';
+
+            const keys = Object.keys(db);
+            if (keys.length === 0) {
+                contenedor.innerHTML = '<div class="aviso-vacio">No hay stock cargado aún.</div>';
+                return;
+            }
+
+            for (let id in db) {
+                const item = db[id];
+                let totalStock = 0;
+                let variHtml = '';
+                
+                for (let vName in item.variantes) {
+                    const vData = item.variantes[vName];
+                    totalStock += vData.stock;
+                    variHtml += `
+                        <div class="variante-item">
+                            <div class="variante-info">
+                                <div>
+                                    <span style="font-weight:bold; font-size:14px;">${vName}</span>
+                                    <span class="fecha-registro">Ingreso: ${vData.ultimaFecha}</span>
+                                </div>
+                                <div style="display:flex; align-items:center; gap:12px;">
+                                    <span style="color:var(--dorado); font-weight:bold; font-size:18px;">${vData.stock}</span>
+                                    <button class="btn-venta" onclick="vender('${id}', '${vName}')">VENTA</button>
+                                </div>
                             </div>
-                            <div class="stock-badge px-3 py-1 rounded-full text-xs">Stock: ${item.stock}</div>
                         </div>
-                        <div class="grid grid-cols-3 gap-2 my-3 py-2 border-y border-gray-800/30 text-center">
-                            <div><p class="text-[9px] text-gray-500">Entró</p><p class="text-green-500 font-bold">${item.entradas_ind}</p></div>
-                            <div><p class="text-[9px] text-gray-500">Vendió</p><p class="text-red-500 font-bold">${item.salidas_ind}</p></div>
-                            <div><p class="text-[9px] text-gray-500">Queda</p><p class="text-white font-bold">${item.stock}</p></div>
-                        </div>
-                        <div class="flex justify-between items-center">
-                            <p class="text-[9px] text-gray-500 italic"><i class="far fa-clock"></i> ${item.ultimaFecha}</p>
-                            <div class="flex gap-2">
-                                <button onclick="window.updateCloudStock('${id}', -1)" class="w-10 h-10 rounded-lg border border-gray-700 text-white">-</button>
-                                <button onclick="window.updateCloudStock('${id}', 1)" class="w-10 h-10 rounded-lg border border-gold text-gold" style="border-color:var(--gold);">+</button>
+                    `;
+                }
+
+                contenedor.innerHTML += `
+                    <div class="producto-grupo">
+                        <div class="grupo-header" onclick="toggleGrupo('box-${id}')">
+                            <div class="grupo-titulo">
+                                <h3>${item.marca} ${item.nombre}</h3>
+                                <span style="font-size:10px; color:#888; text-transform:uppercase;">${item.medida}</span>
                             </div>
+                            <div class="badge-stock-total">TOTAL: ${totalStock}</div>
+                        </div>
+                        <div class="variantes-box" id="box-${id}">
+                            ${variHtml}
                         </div>
                     </div>
                 `;
-            });
+            }
+        }
 
-            inventoryList.innerHTML = html || '<p class="text-center text-gray-600">No hay productos</p>';
-            document.getElementById('totalEntradas').textContent = tEntradas;
-            document.getElementById('totalSalidas').textContent = tSalidas;
-            document.getElementById('totalStock').textContent = tQueda;
-        });
-
-        // Guardar nuevo o actualizar existente
-        productForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const fecha = new Date().toLocaleString();
-            const nuevo = {
-                marca: document.getElementById('marca').value,
-                producto: document.getElementById('producto').value,
-                variante: document.getElementById('variante').value,
-                medida: document.getElementById('categoriaMedida').value,
-                capacidad: document.getElementById('capacidad').value,
-                stock: parseInt(document.getElementById('stock').value),
-                entradas_ind: parseInt(document.getElementById('stock').value),
-                salidas_ind: 0,
-                ultimaFecha: fecha
-            };
-            await addDoc(collection(db, "inventario"), nuevo);
-            productForm.reset();
-        });
-
-        // Función global para los botones +/-
-        window.updateCloudStock = async (id, amount) => {
-            const ref = doc(db, "inventario", id);
-            // En una app real, aquí leerías el valor actual y sumarías
-            // Por simplicidad, esta lógica asume la conexión activa
-        };
+        // Iniciar
+        actualizarSelector();
+        render();
     </script>
 </body>
 </html>
 
-  
+```
