@@ -1,10 +1,10 @@
-
+```html
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JADDY INC - ENTRADA DE MERCANCÍA</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>JADDY INC - CONTROL DE ENTRADAS</title>
     <style>
         :root {
             --dorado: #D4AF37;
@@ -18,19 +18,20 @@
             color: #ffffff;
             font-family: 'Segoe UI', Roboto, sans-serif;
             margin: 0;
-            padding: 20px;
+            padding: 15px;
             display: flex;
             flex-direction: column;
             align-items: center;
         }
 
+        /* --- HEADER --- */
         .header {
             width: 100%;
             max-width: 500px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 25px;
+            margin-bottom: 20px;
             border-bottom: 1px solid var(--dorado);
             padding-bottom: 10px;
         }
@@ -41,10 +42,11 @@
             font-size: 14px;
             font-weight: bold;
             border: 1px solid var(--dorado);
-            padding: 5px 12px;
-            border-radius: 4px;
+            padding: 6px 12px;
+            border-radius: 5px;
         }
 
+        /* --- FORMULARIO DE ENTRADA --- */
         .panel-registro {
             background-color: var(--gris-oscuro);
             width: 100%;
@@ -52,8 +54,19 @@
             padding: 20px;
             border-radius: 15px;
             border: 1px solid #222;
-            margin-bottom: 30px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            margin-bottom: 25px;
+            box-sizing: border-box;
+        }
+
+        .seccion-titulo {
+            color: var(--dorado);
+            font-size: 14px;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
         }
 
         .campo { margin-bottom: 15px; }
@@ -62,9 +75,8 @@
             display: block;
             color: var(--dorado);
             font-size: 11px;
-            margin-bottom: 5px;
+            margin-bottom: 6px;
             text-transform: uppercase;
-            letter-spacing: 1px;
         }
 
         input, select {
@@ -73,15 +85,13 @@
             border: 1px solid #333;
             color: white;
             padding: 14px;
-            border-radius: 8px;
+            border-radius: 10px;
             box-sizing: border-box;
             font-size: 16px;
+            appearance: none; /* Quita estilo nativo en iOS */
         }
 
-        input:focus, select:focus {
-            outline: none;
-            border-color: var(--dorado);
-        }
+        input:focus { border-color: var(--dorado); outline: none; }
 
         .btn-guardar {
             width: 100%;
@@ -89,266 +99,236 @@
             color: black;
             padding: 16px;
             border: none;
-            border-radius: 8px;
+            border-radius: 10px;
             font-weight: bold;
             font-size: 16px;
             cursor: pointer;
-            margin-top: 10px;
             text-transform: uppercase;
+            margin-top: 10px;
         }
 
+        /* --- LISTADO DE STOCK --- */
         .contenedor-lista { width: 100%; max-width: 500px; }
 
-        .producto-grupo {
+        .producto-card {
             background: var(--gris-claro);
-            border-radius: 10px;
+            border-radius: 12px;
             margin-bottom: 12px;
             border: 1px solid #2a2a2a;
             overflow: hidden;
         }
 
-        .grupo-header {
+        .card-header {
             padding: 15px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            cursor: pointer;
         }
 
-        .grupo-titulo h3 { margin: 0; color: var(--dorado); font-size: 17px; }
+        .card-info h3 {
+            margin: 0;
+            color: var(--dorado);
+            font-size: 17px;
+            text-transform: uppercase;
+        }
 
-        .badge-stock-total {
+        .card-info span {
+            color: #777;
+            font-size: 11px;
+        }
+
+        .badge-total {
             background: var(--dorado);
             color: black;
-            padding: 4px 10px;
-            border-radius: 15px;
+            padding: 5px 12px;
+            border-radius: 20px;
             font-weight: bold;
             font-size: 12px;
         }
 
-        .variantes-box {
-            display: none;
-            background: #0f0f0f;
+        /* --- VARIANTES INTERNAS --- */
+        .variantes-lista {
+            background: rgba(0,0,0,0.3);
             padding: 0 15px;
+            border-top: 1px solid #222;
         }
 
         .variante-item {
-            padding: 12px 0;
+            padding: 15px 0;
             border-bottom: 1px solid #222;
-        }
-
-        .variante-info {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 5px;
         }
 
-        .fecha-registro {
-            font-size: 10px;
-            color: #666;
+        .variante-item:last-child { border-bottom: none; }
+
+        .v-nombre {
+            font-weight: bold;
+            font-size: 15px;
             display: block;
-            margin-top: 3px;
         }
 
-        .btn-venta {
+        .v-fecha {
+            font-size: 10px;
+            color: #555;
+            display: block;
+            margin-top: 4px;
+        }
+
+        .v-stock {
+            color: var(--dorado);
+            font-size: 20px;
+            font-weight: bold;
+            margin-right: 15px;
+        }
+
+        .btn-vender {
             background: #8b0000;
             color: white;
             border: none;
-            padding: 6px 12px;
-            border-radius: 4px;
-            font-size: 11px;
-            cursor: pointer;
+            padding: 8px 15px;
+            border-radius: 6px;
+            font-size: 12px;
             font-weight: bold;
-        }
-
-        .seccion-titulo {
-            color: var(--dorado);
-            font-size: 16px;
-            font-weight: bold;
-            margin-bottom: 20px;
-            text-align: center;
-            letter-spacing: 2px;
-            text-transform: uppercase;
-        }
-
-        .aviso-vacio {
-            text-align: center;
-            color: #555;
-            margin-top: 40px;
-            font-style: italic;
         }
     </style>
 </head>
 <body>
 
     <div class="header">
-        <a href="index.html" class="btn-volver">← INICIO</a>
-        <h1 style="font-size: 16px; color: var(--dorado); margin: 0; letter-spacing: 1px;">INGRESO DE COMPRAS</h1>
+        <a href="index.html" class="btn-volver">← VOLVER</a>
+        <span style="color:var(--dorado); font-weight:bold; letter-spacing:1px;">JADDY INC.</span>
     </div>
 
     <div class="panel-registro">
-        <div class="seccion-titulo">Nueva Entrada</div>
+        <div class="seccion-titulo">Cargar Mercancía</div>
         
         <div class="campo">
-            <label>1. Seleccionar Producto</label>
-            <select id="sel-producto-existente">
-                <option value="">-- ELIGE UN PRODUCTO --</option>
-                <!-- Se llena con productos de la "Lista Maestra" -->
+            <label>Seleccionar Producto</label>
+            <select id="sel-producto">
+                <option value="">-- ¿Qué producto entró? --</option>
+                <!-- Aquí puedes añadir o quitar los productos base que manejas -->
+                <option value="GENÉRICO-PERFUME 30ML-UDS">PERFUMES 30ML</option>
+                <option value="GENÉRICO-PERFUME 100ML-UDS">PERFUMES 100ML</option>
+                <option value="JADDY-JABÓN ARTESANAL-UDS">JABONES JADDY</option>
+                <option value="GRANJA-POLLO ENTERO-KG">POLLO (POR KG)</option>
             </select>
         </div>
 
         <div class="campo">
-            <label>2. Variante (Fragancia / Sabor / Otros)</label>
-            <input type="text" id="inp-variante" placeholder="Ej: Bad Boy, Coco, Muslo...">
+            <label>Variante (Fragancia / Sabor / Otros)</label>
+            <input type="text" id="inp-variante" placeholder="Ej: Bad Boy, Fresa, etc.">
         </div>
         
         <div class="campo">
-            <label>3. Cantidad Comprada</label>
-            <input type="number" id="inp-cantidad" placeholder="0" min="1">
+            <label>Cantidad Ingresada</label>
+            <input type="number" id="inp-cantidad" placeholder="0">
         </div>
 
-        <button class="btn-guardar" onclick="registrarEntrada()">Cargar al Inventario</button>
+        <button class="btn-guardar" onclick="registrar()">REGISTRAR ENTRADA</button>
     </div>
 
-    <div class="contenedor-lista" id="lista-stock">
-        <div class="aviso-vacio">Cargando productos registrados...</div>
-    </div>
+    <div class="contenedor-lista" id="lista-inventario"></div>
 
     <script>
-        // Simulamos una "Lista Maestra" de productos para que siempre tengas algo que elegir
-        // En una versión futura, podrías editar esta lista en otra pantalla
-        let listaMaestra = JSON.parse(localStorage.getItem('jaddy_maestra')) || [
-            { id: 'P01', nombre: 'PERFUME 30ML', marca: 'GENÉRICO', medida: 'ML' },
-            { id: 'P02', nombre: 'POLLO ENTERO', marca: 'GRANJA', medida: 'KG' },
-            { id: 'P03', nombre: 'JABÓN ARTESANAL', marca: 'JADDY', medida: 'UDS' }
-        ];
+        // Memoria de Stock
+        let inventario = JSON.parse(localStorage.getItem('jaddy_stock_v3')) || {};
 
-        // Memoria del Stock real
-        let db = JSON.parse(localStorage.getItem('jaddy_db_v2')) || {};
-
-        function actualizarSelector() {
-            const sel = document.getElementById('sel-producto-existente');
-            while(sel.options.length > 1) sel.remove(1);
-            
-            listaMaestra.forEach(p => {
-                let opt = document.createElement('option');
-                opt.value = `${p.marca}-${p.nombre}-${p.medida}`;
-                opt.text = `${p.marca} | ${p.nombre} (${p.medida})`;
-                sel.add(opt);
-            });
-        }
-
-        function registrarEntrada() {
-            const grupoID = document.getElementById('sel-producto-existente').value;
+        function registrar() {
+            const selectVal = document.getElementById('sel-producto').value;
             const variante = document.getElementById('inp-variante').value.trim().toUpperCase();
             const cantidad = parseInt(document.getElementById('inp-cantidad').value);
-            const fechaActual = new Date().toLocaleString('es-VE', { 
+            
+            // Fecha y Hora actual (Venezuela)
+            const ahora = new Date().toLocaleString('es-VE', {
                 day: '2-digit', month: '2-digit', year: 'numeric',
                 hour: '2-digit', minute: '2-digit'
             });
 
-            if (!grupoID) return alert("Selecciona un producto de la lista.");
-            if (!variante || isNaN(cantidad) || cantidad <= 0) return alert("Indica variante y cantidad válida.");
+            if(!selectVal) return alert("Selecciona un producto.");
+            if(!variante || isNaN(cantidad) || cantidad <= 0) return alert("Pon variante y cantidad.");
 
-            // Si el producto no existe en stock todavía, lo iniciamos usando los datos de la lista maestra
-            if (!db[grupoID]) {
-                const info = grupoID.split('-');
-                db[grupoID] = { 
-                    marca: info[0], 
-                    nombre: info[1], 
-                    medida: info[2], 
-                    variantes: {} 
+            if(!inventario[selectVal]) {
+                const partes = selectVal.split('-');
+                inventario[selectVal] = {
+                    marca: partes[0],
+                    nombre: partes[1],
+                    medida: partes[2],
+                    items: {}
                 };
             }
 
-            // Si la variante no existe, la creamos
-            if (!db[grupoID].variantes[variante]) {
-                db[grupoID].variantes[variante] = { stock: 0, ultimaFecha: "" };
+            // Si ya existe la variante, sumamos. Si no, creamos.
+            if(!inventario[selectVal].items[variante]) {
+                inventario[selectVal].items[variante] = { stock: 0, fecha: "" };
             }
 
-            // Sumar stock y actualizar fecha
-            db[grupoID].variantes[variante].stock += cantidad;
-            db[grupoID].variantes[variante].ultimaFecha = fechaActual;
+            inventario[selectVal].items[variante].stock += cantidad;
+            inventario[selectVal].items[variante].fecha = ahora;
 
-            // Guardar
-            localStorage.setItem('jaddy_db_v2', JSON.stringify(db));
-            localStorage.setItem('jaddy_maestra', JSON.stringify(listaMaestra));
+            // Guardar en el teléfono
+            localStorage.setItem('jaddy_stock_v3', JSON.stringify(inventario));
             
             // Limpiar campos
-            document.getElementById('inp-variante').value = '';
-            document.getElementById('inp-cantidad').value = '';
-            document.getElementById('sel-producto-existente').value = '';
+            document.getElementById('inp-variante').value = "";
+            document.getElementById('inp-cantidad').value = "";
             
             render();
         }
 
-        function vender(grupoID, varNombre) {
-            if(db[grupoID].variantes[varNombre].stock > 0) {
-                db[grupoID].variantes[varNombre].stock--;
-                localStorage.setItem('jaddy_db_v2', JSON.stringify(db));
+        function vender(prodID, varName) {
+            if(inventario[prodID].items[varName].stock > 0) {
+                inventario[prodID].items[varName].stock--;
+                localStorage.setItem('jaddy_stock_v3', JSON.stringify(inventario));
                 render();
             }
         }
 
-        function toggleGrupo(id) {
-            const box = document.getElementById(id);
-            box.style.display = (box.style.display === 'block') ? 'none' : 'block';
-        }
-
         function render() {
-            const contenedor = document.getElementById('lista-stock');
-            contenedor.innerHTML = '';
+            const container = document.getElementById('lista-inventario');
+            container.innerHTML = '';
 
-            const keys = Object.keys(db);
-            if (keys.length === 0) {
-                contenedor.innerHTML = '<div class="aviso-vacio">No hay stock cargado aún.</div>';
-                return;
-            }
+            for(let id in inventario) {
+                const prod = inventario[id];
+                let totalGrupo = 0;
+                let itemsHtml = '';
 
-            for (let id in db) {
-                const item = db[id];
-                let totalStock = 0;
-                let variHtml = '';
-                
-                for (let vName in item.variantes) {
-                    const vData = item.variantes[vName];
-                    totalStock += vData.stock;
-                    variHtml += `
+                for(let vName in prod.items) {
+                    const item = prod.items[vName];
+                    totalGrupo += item.stock;
+                    itemsHtml += `
                         <div class="variante-item">
-                            <div class="variante-info">
-                                <div>
-                                    <span style="font-weight:bold; font-size:14px;">${vName}</span>
-                                    <span class="fecha-registro">Ingreso: ${vData.ultimaFecha}</span>
-                                </div>
-                                <div style="display:flex; align-items:center; gap:12px;">
-                                    <span style="color:var(--dorado); font-weight:bold; font-size:18px;">${vData.stock}</span>
-                                    <button class="btn-venta" onclick="vender('${id}', '${vName}')">VENTA</button>
-                                </div>
+                            <div>
+                                <span class="v-nombre">${vName}</span>
+                                <span class="v-fecha">Última carga: ${item.fecha}</span>
+                            </div>
+                            <div style="display:flex; align-items:center;">
+                                <span class="v-stock">${item.stock}</span>
+                                <button class="btn-vender" onclick="vender('${id}','${vName}')">VENTA</button>
                             </div>
                         </div>
                     `;
                 }
 
-                contenedor.innerHTML += `
-                    <div class="producto-grupo">
-                        <div class="grupo-header" onclick="toggleGrupo('box-${id}')">
-                            <div class="grupo-titulo">
-                                <h3>${item.marca} ${item.nombre}</h3>
-                                <span style="font-size:10px; color:#888; text-transform:uppercase;">${item.medida}</span>
+                container.innerHTML += `
+                    <div class="producto-card">
+                        <div class="card-header">
+                            <div class="card-info">
+                                <h3>${prod.marca} ${prod.nombre}</h3>
+                                <span>${prod.medida}</span>
                             </div>
-                            <div class="badge-stock-total">TOTAL: ${totalStock}</div>
+                            <div class="badge-total">TOTAL: ${totalGrupo}</div>
                         </div>
-                        <div class="variantes-box" id="box-${id}">
-                            ${variHtml}
+                        <div class="variantes-lista">
+                            ${itemsHtml}
                         </div>
                     </div>
                 `;
             }
         }
 
-        // Iniciar
-        actualizarSelector();
+        // Cargar al abrir
         render();
     </script>
 </body>
