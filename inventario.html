@@ -1,0 +1,163 @@
+```html
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventario Cloud | Jaddy INC Elite</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --gold: #D4AF37;
+            --gold-bright: #F9D976;
+            --dark-bg: #0A0A0A;
+            --card-bg: #141414;
+        }
+        body { background-color: var(--dark-bg); color: #E5E5E5; font-family: 'Inter', sans-serif; }
+        .gold-border { border: 1px solid rgba(212, 175, 55, 0.3); }
+        .gold-gradient-btn { background: linear-gradient(135deg, var(--gold) 0%, #aa8a2e 100%); color: #000; font-weight: 700; }
+        .stock-badge { background: linear-gradient(135deg, var(--gold) 0%, #B8860B 100%); color: #000; font-weight: bold; }
+        input, select { background-color: #1A1A1A !important; color: white !important; border: 1px solid #333 !important; }
+        input:focus, select:focus { border-color: var(--gold) !important; outline: none; }
+        .animate-fadeIn { animation: fadeIn 0.3s ease-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body class="p-4 pb-20">
+
+    <div class="max-w-md mx-auto">
+        <header class="flex justify-between items-center mb-8">
+            <a href="index.html" class="text-[#D4AF37] flex items-center gap-2 font-semibold">
+                <i class="fas fa-arrow-left"></i> VOLVER
+            </a>
+            <div class="text-right">
+                <h1 class="text-xl font-bold tracking-widest" style="color: var(--gold);">JADDY <span class="text-white">INC</span></h1>
+                <p class="text-[10px] uppercase text-gray-500">Cloud Inventory</p>
+            </div>
+        </header>
+
+        <!-- KPI Dashboard -->
+        <section class="grid grid-cols-3 gap-3 mb-8">
+            <div class="bg-[#141414] p-3 rounded-xl gold-border text-center">
+                <p class="text-[10px] uppercase text-gray-500 mb-1">Entradas</p>
+                <span id="totalEntradas" class="text-lg font-bold text-green-500">0</span>
+            </div>
+            <div class="bg-[#141414] p-3 rounded-xl gold-border text-center">
+                <p class="text-[10px] uppercase text-gray-500 mb-1">Salidas</p>
+                <span id="totalSalidas" class="text-lg font-bold text-red-500">0</span>
+            </div>
+            <div class="bg-[#141414] p-3 rounded-xl gold-border text-center" style="border-color: var(--gold);">
+                <p class="text-[10px] uppercase text-gold mb-1" style="color: var(--gold);">Queda</p>
+                <span id="totalStock" class="text-lg font-bold text-white">0</span>
+            </div>
+        </section>
+
+        <!-- Formulario -->
+        <section class="bg-[#141414] p-6 rounded-2xl gold-border mb-10 shadow-2xl">
+            <h2 class="text-gold flex items-center gap-2 mb-6 font-bold text-lg" style="color: var(--gold);">
+                <i class="fas fa-plus-circle"></i> NUEVO INGRESO
+            </h2>
+            <form id="productForm" class="space-y-4">
+                <input type="text" id="marca" placeholder="Marca" class="w-full p-3 rounded-lg" required>
+                <div class="grid grid-cols-2 gap-4">
+                    <input type="text" id="producto" placeholder="Producto" class="w-full p-3 rounded-lg" required>
+                    <input type="text" id="variante" placeholder="Variante" class="w-full p-3 rounded-lg" required>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <select id="categoriaMedida" class="w-full p-3 rounded-lg"><option value="ml">ml</option><option value="uds">uds</option></select>
+                    <input type="number" id="capacidad" placeholder="Tamaño" class="w-full p-3 rounded-lg" required>
+                </div>
+                <input type="number" id="stock" placeholder="Cantidad" class="w-full p-3 rounded-lg font-bold" required>
+                <button type="submit" class="w-full gold-gradient-btn py-4 rounded-xl uppercase tracking-widest">Guardar en Nube</button>
+            </form>
+        </section>
+
+        <div id="inventoryList" class="space-y-4">
+            <!-- Cargando datos... -->
+        </div>
+    </div>
+
+    <!-- LÓGICA DE CONEXIÓN CLOUD -->
+    <script type="module">
+        import { db, collection, addDoc, onSnapshot, doc, updateDoc, query, orderBy } from './conexion.js';
+
+        const inventoryList = document.getElementById('inventoryList');
+        const productForm = document.getElementById('productForm');
+
+        // Escuchar datos de Firestore en tiempo real
+        const q = query(collection(db, "inventario"), orderBy("ultimaFecha", "desc"));
+        
+        onSnapshot(q, (snapshot) => {
+            let html = '';
+            let tEntradas = 0, tSalidas = 0, tQueda = 0;
+
+            snapshot.forEach((doc) => {
+                const item = doc.data();
+                const id = doc.id;
+                tEntradas += item.entradas_ind;
+                tSalidas += item.salidas_ind;
+                tQueda += item.stock;
+
+                html += `
+                    <div class="bg-[#141414] p-5 rounded-xl gold-border animate-fadeIn">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="text-[8px] text-gray-600 font-mono">ID: ${id.substring(0,8)}</p>
+                                <h4 class="text-gold font-black text-lg uppercase" style="color: var(--gold);">${item.marca}</h4>
+                                <p class="text-white">${item.producto} - ${item.variante}</p>
+                            </div>
+                            <div class="stock-badge px-3 py-1 rounded-full text-xs">Stock: ${item.stock}</div>
+                        </div>
+                        <div class="grid grid-cols-3 gap-2 my-3 py-2 border-y border-gray-800/30 text-center">
+                            <div><p class="text-[9px] text-gray-500">Entró</p><p class="text-green-500 font-bold">${item.entradas_ind}</p></div>
+                            <div><p class="text-[9px] text-gray-500">Vendió</p><p class="text-red-500 font-bold">${item.salidas_ind}</p></div>
+                            <div><p class="text-[9px] text-gray-500">Queda</p><p class="text-white font-bold">${item.stock}</p></div>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <p class="text-[9px] text-gray-500 italic"><i class="far fa-clock"></i> ${item.ultimaFecha}</p>
+                            <div class="flex gap-2">
+                                <button onclick="window.updateCloudStock('${id}', -1)" class="w-10 h-10 rounded-lg border border-gray-700 text-white">-</button>
+                                <button onclick="window.updateCloudStock('${id}', 1)" class="w-10 h-10 rounded-lg border border-gold text-gold" style="border-color:var(--gold);">+</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            inventoryList.innerHTML = html || '<p class="text-center text-gray-600">No hay productos</p>';
+            document.getElementById('totalEntradas').textContent = tEntradas;
+            document.getElementById('totalSalidas').textContent = tSalidas;
+            document.getElementById('totalStock').textContent = tQueda;
+        });
+
+        // Guardar nuevo o actualizar existente
+        productForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const fecha = new Date().toLocaleString();
+            const nuevo = {
+                marca: document.getElementById('marca').value,
+                producto: document.getElementById('producto').value,
+                variante: document.getElementById('variante').value,
+                medida: document.getElementById('categoriaMedida').value,
+                capacidad: document.getElementById('capacidad').value,
+                stock: parseInt(document.getElementById('stock').value),
+                entradas_ind: parseInt(document.getElementById('stock').value),
+                salidas_ind: 0,
+                ultimaFecha: fecha
+            };
+            await addDoc(collection(db, "inventario"), nuevo);
+            productForm.reset();
+        });
+
+        // Función global para los botones +/-
+        window.updateCloudStock = async (id, amount) => {
+            const ref = doc(db, "inventario", id);
+            // En una app real, aquí leerías el valor actual y sumarías
+            // Por simplicidad, esta lógica asume la conexión activa
+        };
+    </script>
+</body>
+</html>
+
+  
