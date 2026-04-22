@@ -20,5 +20,17 @@ const db = getFirestore(app);
 const appId = "jaddy-inc-elite"; 
 
 export { auth, db, appId, collection, doc, setDoc, addDoc, getDoc, updateDoc, onSnapshot, query, signInAnonymously, onAuthStateChanged };
+// --- CONEXIÓN JADDY INC: PRODUCTOS ---
 
-```
+export function guardarProductoJaddy(datosProducto) {
+    let productosExistentes = JSON.parse(localStorage.getItem('jaddy_db_productos')) || [];
+    productosExistentes.unshift(datosProducto);
+    localStorage.setItem('jaddy_db_productos', JSON.stringify(productosExistentes));
+}
+
+export function obtenerCatalogoJaddy() {
+    return JSON.parse(localStorage.getItem('jaddy_db_productos')) || [];
+}
+
+
+
