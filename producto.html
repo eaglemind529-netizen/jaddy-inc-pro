@@ -3,7 +3,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Producto | Jaddy INC</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -12,13 +12,13 @@
         body { background-color: var(--dark-bg); color: #E5E5E5; font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
         .gold-border { border: 1px solid rgba(212, 175, 55, 0.3); }
         .input-dark { background: #141414 !important; border: 1px solid #333 !important; color: white !important; }
-        .input-dark:focus { border-color: var(--gold) !important; outline: none; }
-        .btn-gold { background: linear-gradient(135deg, var(--gold) 0%, #aa8a2e 100%); color: black; font-weight: bold; transition: 0.3s; }
+        .input-dark:focus { border-color: var(--gold) !important; outline: none; box-shadow: 0 0 10px rgba(212, 175, 55, 0.1); }
+        .btn-gold { background: linear-gradient(135deg, var(--gold) 0%, #aa8a2e 100%); color: black; font-weight: 900; transition: 0.3s; }
         .btn-gold:active { transform: scale(0.95); opacity: 0.8; }
-        .card-product { background: #111; border: 1px solid #222; border-radius: 24px; transition: 0.3s; margin-bottom: 1rem; }
+        .card-product { background: linear-gradient(145deg, #111 0%, #0a0a0a 100%); border: 1px solid #222; border-radius: 28px; transition: 0.3s; margin-bottom: 1.2rem; }
         .status-pill { padding: 4px 12px; border-radius: 20px; font-size: 9px; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; }
-        .bg-online { background: rgba(34, 197, 94, 0.2); color: #22c55e; border: 1px solid rgba(34, 197, 94, 0.4); }
-        .bg-offline { background: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.4); }
+        .bg-online { background: rgba(34, 197, 94, 0.1); color: #22c55e; border: 1px solid rgba(34, 197, 94, 0.3); }
+        .bg-offline { background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); }
     </style>
 </head>
 <body class="p-4 pb-28">
@@ -28,83 +28,91 @@
     <div class="max-w-md mx-auto">
         <header class="flex justify-between items-center mb-8 pt-2">
             <button onclick="window.history.back()" class="w-10 h-10 flex items-center justify-center rounded-full bg-[#111] gold-border text-gold">
-                <i class="fas fa-arrow-left"></i>
+                <i class="fas fa-chevron-left"></i>
             </button>
             <div class="text-right">
-                <h1 class="text-xl font-black text-white italic tracking-tighter">JADDY <span class="text-gold">INC</span></h1>
+                <h1 class="text-xl font-black text-white italic tracking-tighter uppercase">Jaddy <span class="text-gold">Inc</span></h1>
                 <span id="connStatus" class="status-pill bg-offline">Conectando...</span>
             </div>
         </header>
 
-        <!-- Formulario Maestro -->
-        <section class="bg-[#111] p-6 rounded-[2.5rem] gold-border mb-8 shadow-2xl relative overflow-hidden">
+        <!-- Formulario de Registro -->
+        <section class="bg-[#0f0f0f] p-6 rounded-[2.5rem] gold-border mb-10 shadow-2xl relative overflow-hidden">
             <form id="productForm" class="space-y-4">
                 <input type="hidden" id="editId">
+                
                 <div class="grid grid-cols-3 gap-3">
                     <div class="col-span-1">
-                        <label class="text-[10px] text-gray-500 mb-1 block uppercase font-bold">Código</label>
-                        <input type="text" id="codigo" placeholder="ID-01" class="input-dark w-full p-4 rounded-2xl text-xs font-bold uppercase" required>
+                        <label class="text-[9px] text-gray-500 mb-1 block uppercase font-black ml-1">Código</label>
+                        <input type="text" id="codigo" placeholder="ID-00" class="input-dark w-full p-4 rounded-2xl text-xs font-bold uppercase" required>
                     </div>
                     <div class="col-span-2">
-                        <label class="text-[10px] text-gray-500 mb-1 block uppercase font-bold">Producto</label>
-                        <input type="text" id="nombre" placeholder="NOMBRE DEL PERFUME" class="input-dark w-full p-4 rounded-2xl text-xs uppercase" required>
+                        <label class="text-[9px] text-gray-500 mb-1 block uppercase font-black ml-1">Producto</label>
+                        <input type="text" id="nombre" placeholder="Nombre del perfume" class="input-dark w-full p-4 rounded-2xl text-xs uppercase font-bold" required>
                     </div>
                 </div>
 
                 <div class="grid grid-cols-2 gap-3">
                     <div>
-                        <label class="text-[10px] text-gray-500 mb-1 block uppercase font-bold">Costo $</label>
-                        <input type="number" step="0.01" id="costo" placeholder="0.00" class="input-dark w-full p-4 rounded-2xl text-xs">
+                        <label class="text-[9px] text-gray-500 mb-1 block uppercase font-black ml-1">Costo $</label>
+                        <input type="number" step="0.01" id="costo" placeholder="0.00" class="input-dark w-full p-4 rounded-2xl text-xs font-bold">
                     </div>
                     <div>
-                        <label class="text-[10px] text-green-500 mb-1 block uppercase font-bold">Detal $</label>
-                        <input type="number" step="0.01" id="precio_detal" placeholder="0.00" class="input-dark w-full p-4 rounded-2xl text-xs font-bold text-green-400">
+                        <label class="text-[9px] text-green-500 mb-1 block uppercase font-black ml-1">Detal $</label>
+                        <input type="number" step="0.01" id="precio_detal" placeholder="0.00" class="input-dark w-full p-4 rounded-2xl text-xs font-black text-green-400">
                     </div>
                 </div>
 
                 <div class="grid grid-cols-2 gap-3">
                     <div>
-                        <label class="text-[10px] text-blue-400 mb-1 block uppercase font-bold">Crédito $</label>
-                        <input type="number" step="0.01" id="precio_credito" placeholder="0.00" class="input-dark w-full p-4 rounded-2xl text-xs text-blue-400">
+                        <label class="text-[9px] text-blue-400 mb-1 block uppercase font-black ml-1">Crédito $</label>
+                        <input type="number" step="0.01" id="precio_credito" placeholder="0.00" class="input-dark w-full p-4 rounded-2xl text-xs font-bold text-blue-400">
                     </div>
                     <div>
-                        <label class="text-[10px] text-gold mb-1 block uppercase font-bold">Mayor $</label>
-                        <input type="number" step="0.01" id="precio_mayor" placeholder="0.00" class="input-dark w-full p-4 rounded-2xl text-xs text-gold">
+                        <label class="text-[9px] text-gold mb-1 block uppercase font-black ml-1">Mayor $</label>
+                        <input type="number" step="0.01" id="precio_mayor" placeholder="0.00" class="input-dark w-full p-4 rounded-2xl text-xs font-bold text-gold">
                     </div>
                 </div>
 
-                <button type="submit" id="saveBtn" class="w-full btn-gold py-5 rounded-2xl uppercase text-xs tracking-widest mt-2 shadow-lg shadow-gold/20">
+                <button type="submit" id="saveBtn" class="w-full btn-gold py-5 rounded-2xl uppercase text-xs tracking-[0.2em] mt-2 shadow-xl shadow-gold/10">
                     Guardar en Sistema
                 </button>
-                <button type="button" id="cancelBtn" class="hidden w-full text-gray-500 py-2 text-[10px] uppercase font-bold tracking-widest">Cancelar Edición</button>
+                <button type="button" id="cancelBtn" class="hidden w-full text-gray-500 py-2 text-[9px] uppercase font-bold tracking-widest mt-2">Cancelar Edición</button>
             </form>
         </section>
 
         <!-- Lista de Productos -->
-        <div id="productList" class="pb-10">
-            <div id="loadingInfo" class="text-center py-10 opacity-30">
-                <i class="fas fa-circle-notch animate-spin text-xl mb-2"></i>
-                <p class="text-[10px] uppercase font-bold tracking-[0.2em]">Sincronizando Base de Datos...</p>
+        <div id="productList" class="space-y-4">
+            <div id="loader" class="text-center py-20 opacity-30">
+                <div class="w-8 h-8 border-2 border-gold/20 border-t-gold rounded-full animate-spin mx-auto mb-4"></div>
+                <p class="text-[9px] uppercase font-black tracking-widest text-gold">Cargando base de datos...</p>
             </div>
         </div>
     </div>
 
-    <!-- Scripts de Firebase -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, doc, addDoc, updateDoc, onSnapshot, query } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, doc, addDoc, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // CONFIGURACIÓN DE ENTORNO
-        const firebaseConfig = JSON.parse(__firebase_config);
+        // CONFIGURACIÓN DE FIREBASE (Directa para evitar 404)
+        const firebaseConfig = {
+          apiKey: "AIzaSyCrjjeOoXPOtJDXDfrHLOA4Ny0QW2zfVWk",
+          authDomain: "apps-d45d6.firebaseapp.com",
+          projectId: "apps-d45d6",
+          storageBucket: "apps-d45d6.firebasestorage.app",
+          messagingSenderId: "502648373937",
+          appId: "1:502648373937:web:8c3beaa2a6c9289a4d9890"
+        };
+
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'jaddy-inc-inventario';
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'jaddy-inc-elite';
 
-        const connStatus = document.getElementById('connStatus');
-        const productList = document.getElementById('productList');
         const productForm = document.getElementById('productForm');
+        const productList = document.getElementById('productList');
+        const connStatus = document.getElementById('connStatus');
         const saveBtn = document.getElementById('saveBtn');
         const cancelBtn = document.getElementById('cancelBtn');
 
@@ -116,75 +124,68 @@
             setTimeout(() => t.style.display = 'none', 2500);
         }
 
-        // AUTENTICACIÓN
-        const initAuth = async () => {
+        // Autenticación inicial
+        const init = async () => {
             try {
                 await signInAnonymously(auth);
-            } catch (err) {
-                console.error("Auth Error:", err);
-                connStatus.innerText = "Error Auth";
-            }
-        };
-        initAuth();
-
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
                 connStatus.innerText = "Online";
                 connStatus.className = "status-pill bg-online";
                 startListening();
-            } else {
-                connStatus.innerText = "Desconectado";
-                connStatus.className = "status-pill bg-offline";
+            } catch (err) {
+                connStatus.innerText = "Error Red";
+                console.error(err);
             }
-        });
+        };
+        init();
 
-        // ESCUCHA DE DATOS EN TIEMPO REAL
+        // Escucha en tiempo real (Ruta corregida)
         function startListening() {
-            const colRef = collection(db, 'artifacts', appId, 'public', 'data', 'productos_maestro');
+            const colRef = collection(db, 'artifacts', appId, 'public', 'data', 'productos_jaddy');
             
             onSnapshot(colRef, (snapshot) => {
                 let html = '';
                 if (snapshot.empty) {
-                    productList.innerHTML = '<div class="text-center py-20 opacity-20 uppercase text-[10px] tracking-widest">No hay registros</div>';
+                    productList.innerHTML = '<div class="text-center py-20 opacity-20 uppercase text-[9px] font-black tracking-[0.3em]">No hay productos registrados</div>';
                     return;
                 }
 
-                snapshot.forEach(snapDoc => {
-                    const p = snapDoc.data();
-                    const id = snapDoc.id;
+                const lista = [];
+                snapshot.forEach(d => lista.push({id: d.id, ...d.data()}));
+                lista.sort((a, b) => (a.nombre || "").localeCompare(b.nombre || ""));
+
+                lista.forEach(p => {
                     html += `
-                        <div class="card-product p-5 shadow-2xl" onclick="loadToEdit('${id}', ${JSON.stringify(p).replace(/"/g, '&quot;')})">
-                            <div class="flex justify-between items-start mb-4">
-                                <div class="flex items-center gap-3">
-                                    <div class="w-10 h-10 bg-black rounded-xl flex items-center justify-center border border-white/5 text-gold">
-                                        <i class="fas fa-barcode text-xs"></i>
+                        <div class="card-product p-6 shadow-2xl border border-white/5 active:scale-95 transition-transform" onclick="loadToEdit('${p.id}', ${JSON.stringify(p).replace(/"/g, '&quot;')})">
+                            <div class="flex justify-between items-start mb-5">
+                                <div class="flex items-center gap-4">
+                                    <div class="w-12 h-12 bg-black rounded-2xl flex items-center justify-center border border-white/5 text-gold">
+                                        <i class="fas fa-box-open text-sm"></i>
                                     </div>
                                     <div>
-                                        <p class="text-[8px] text-gold font-black tracking-widest uppercase">${p.codigo}</p>
-                                        <h3 class="text-sm font-black text-white uppercase leading-none">${p.nombre}</h3>
+                                        <p class="text-[8px] text-gold font-black tracking-[0.2em] uppercase mb-1">${p.codigo || 'S/N'}</p>
+                                        <h3 class="text-sm font-black text-white uppercase tracking-tight">${p.nombre}</h3>
                                     </div>
                                 </div>
                                 <div class="text-right">
-                                    <p class="text-xs font-black text-green-400">$${p.precio_detal || '0'}</p>
+                                    <p class="text-[14px] font-black text-green-400">$${p.precio_detal || '0'}</p>
                                     <p class="text-[7px] text-gray-500 uppercase font-black">Detal</p>
                                 </div>
                             </div>
                             
-                            <div class="grid grid-cols-3 gap-2 pt-3 border-t border-white/5">
+                            <div class="grid grid-cols-3 gap-3 pt-4 border-t border-white/5">
                                 <div class="text-center">
-                                    <p class="text-[7px] text-gray-500 uppercase font-bold">Costo</p>
-                                    <p class="text-[10px] text-white font-black">$${p.costo || '0'}</p>
+                                    <p class="text-[7px] text-gray-500 uppercase font-bold mb-1 tracking-widest">Costo</p>
+                                    <p class="text-[11px] text-white font-black">$${p.costo || '0'}</p>
                                 </div>
                                 <div class="text-center border-x border-white/5">
-                                    <p class="text-[7px] text-blue-400 uppercase font-bold tracking-tighter">Crédito</p>
-                                    <p class="text-[10px] text-blue-400 font-black">$${p.precio_credito || '0'}</p>
+                                    <p class="text-[7px] text-blue-400 uppercase font-bold mb-1 tracking-widest">Crédito</p>
+                                    <p class="text-[11px] text-blue-400 font-black">$${p.precio_credito || '0'}</p>
                                 </div>
                                 <div class="text-center">
-                                    <p class="text-[7px] text-gold uppercase font-bold tracking-tighter">Mayor</p>
-                                    <p class="text-[10px] text-gold font-black">$${p.precio_mayor || '0'}</p>
+                                    <p class="text-[7px] text-gold uppercase font-bold mb-1 tracking-widest">Mayor</p>
+                                    <p class="text-[11px] text-gold font-black">$${p.precio_mayor || '0'}</p>
                                 </div>
                             </div>
-                            <p class="text-[7px] text-center text-gray-600 mt-4 uppercase font-black tracking-[0.2em] italic">Toca para editar producto</p>
                         </div>
                     `;
                 });
@@ -192,13 +193,10 @@
             });
         }
 
-        // GUARDAR O ACTUALIZAR
         productForm.onsubmit = async (e) => {
             e.preventDefault();
-            if (!auth.currentUser) return showToast("Sin conexión", true);
-
             saveBtn.disabled = true;
-            saveBtn.innerText = "PROCESANDO...";
+            saveBtn.innerText = "SINCRONIZANDO...";
 
             const id = document.getElementById('editId').value;
             const data = {
@@ -208,22 +206,22 @@
                 precio_detal: parseFloat(document.getElementById('precio_detal').value) || 0,
                 precio_credito: parseFloat(document.getElementById('precio_credito').value) || 0,
                 precio_mayor: parseFloat(document.getElementById('precio_mayor').value) || 0,
-                updatedAt: new Date().getTime()
+                fechaUpdate: new Date().getTime()
             };
 
             try {
                 if (id) {
-                    const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'productos_maestro', id);
+                    const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'productos_jaddy', id);
                     await updateDoc(docRef, data);
-                    showToast("Actualizado correctamente");
+                    showToast("Actualizado");
                 } else {
-                    const colRef = collection(db, 'artifacts', appId, 'public', 'data', 'productos_maestro');
+                    const colRef = collection(db, 'artifacts', appId, 'public', 'data', 'productos_jaddy');
                     await addDoc(colRef, data);
-                    showToast("Producto guardado");
+                    showToast("Guardado");
                 }
                 resetForm();
             } catch (err) {
-                showToast("Error al guardar", true);
+                showToast("Error", true);
             } finally {
                 saveBtn.disabled = false;
             }
@@ -237,7 +235,7 @@
             document.getElementById('precio_detal').value = data.precio_detal;
             document.getElementById('precio_credito').value = data.precio_credito;
             document.getElementById('precio_mayor').value = data.precio_mayor;
-            saveBtn.innerText = "ACTUALIZAR PRODUCTO";
+            saveBtn.innerText = "ACTUALIZAR DATOS";
             cancelBtn.classList.remove('hidden');
             window.scrollTo({ top: 0, behavior: 'smooth' });
         };
