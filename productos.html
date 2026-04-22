@@ -44,7 +44,6 @@
             border-color: var(--gold);
         }
 
-        /* Estilo para los inputs en modo oscuro */
         input {
             background: #2a2a2a !important;
             color: white !important;
@@ -52,7 +51,19 @@
         }
         input:focus {
             border-color: var(--gold) !important;
-            ring: 1px solid var(--gold) !important;
+            outline: none !important;
+            border-width: 1px !important;
+        }
+        
+        /* Skeleton loading animation */
+        .skeleton {
+            background: linear-gradient(90deg, #1e1e1e 25%, #2a2a2a 50%, #1e1e1e 75%);
+            background-size: 200% 100%;
+            animation: loading 1.5s infinite;
+        }
+        @keyframes loading {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
         }
     </style>
 </head>
@@ -65,7 +76,7 @@
                 <h1 class="text-2xl font-black tracking-tighter">JADDY INC</h1>
                 <p class="text-[10px] uppercase tracking-widest font-bold opacity-80">Luxury Inventory</p>
             </div>
-            <button onclick="abrirModalProducto()" class="bg-black text-white px-5 py-2 rounded-full font-bold shadow-lg flex items-center gap-2 text-sm">
+            <button onclick="abrirModalProducto()" class="bg-black text-white px-5 py-2 rounded-full font-bold shadow-lg flex items-center gap-2 text-sm active:scale-90 transition-transform">
                 <i class="fas fa-plus-circle text-gold"></i> NUEVO
             </button>
         </div>
@@ -74,158 +85,80 @@
     <!-- Buscador Elegante -->
     <div class="p-6 max-w-4xl mx-auto">
         <div class="relative">
-            <input type="text" placeholder="Buscar fragancia o código..." class="w-full p-4 pl-12 rounded-2xl shadow-inner outline-none">
+            <input type="text" id="inputBusqueda" placeholder="Buscar fragancia o código..." class="w-full p-4 pl-12 rounded-2xl shadow-inner outline-none">
             <i class="fas fa-search absolute left-4 top-5 text-gold"></i>
         </div>
     </div>
 
-    <!-- Lista de Productos (Tarjetas Premium) -->
+    <!-- Lista de Productos -->
     <main id="listaProductos" class="p-4 grid grid-cols-1 sm:grid-cols-2 gap-5 max-w-4xl mx-auto">
-        <!-- Ejemplo de tarjeta de producto -->
-        <div class="product-card rounded-3xl overflow-hidden shadow-2xl" onclick="verDetallesProducto('P30-001')">
-            <div class="flex">
-                <div class="w-32 h-36 bg-black relative">
-                    <img src="https://via.placeholder.com/150/000000/D4AF37?text=Jaddy+INC" alt="Producto" class="w-full h-full object-cover opacity-80">
-                    <div class="absolute inset-0 bg-gradient-to-t from-black to-transparent"></div>
-                </div>
-                <div class="p-4 flex-1 flex flex-col justify-between">
-                    <div>
-                        <div class="flex justify-between items-start">
-                            <h3 class="font-bold text-white text-lg leading-tight">Perfume 30ml</h3>
-                            <span class="text-[10px] text-gold border border-gold px-2 py-0.5 rounded-md">P30-001</span>
-                        </div>
-                        <p class="text-xs text-gray-500 mt-1 uppercase tracking-widest">Base Preparada</p>
-                    </div>
-                    
-                    <div class="grid grid-cols-2 gap-2 mt-4">
-                        <div class="flex flex-col">
-                            <span class="text-[10px] text-gray-500">DETAL</span>
-                            <span class="text-gold font-black text-sm">10.00$</span>
-                        </div>
-                        <div class="flex flex-col">
-                            <span class="text-[10px] text-gray-500">CRÉDITO</span>
-                            <span class="text-white font-black text-sm">12.00$</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <!-- Los productos se cargarán dinámicamente aquí -->
+        <div class="skeleton h-36 rounded-3xl opacity-20"></div>
+        <div class="skeleton h-36 rounded-3xl opacity-20"></div>
     </main>
 
-    <!-- MODAL: REGISTRO DE PRODUCTO (NEGRO Y ORO) -->
+    <!-- MODAL: REGISTRO DE PRODUCTO -->
     <div id="modalProducto" class="modal fixed inset-0 bg-black bg-opacity-80 z-50 items-center justify-center p-4">
         <div class="bg-[#1a1a1a] border border-gold/30 w-full max-w-md rounded-[2.5rem] overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
             <div class="p-5 border-b border-white/10 bg-black/50 flex justify-between items-center">
-                <h2 class="font-bold text-gold tracking-wide">REGISTRAR PRODUCTO</h2>
-                <button onclick="cerrarModalProducto()" class="text-white bg-white/10 w-8 h-8 rounded-full flex items-center justify-center">&times;</button>
+                <h2 class="font-bold text-gold tracking-wide uppercase text-sm">Registrar Producto</h2>
+                <button onclick="cerrarModalProducto()" class="text-white bg-white/10 w-8 h-8 rounded-full flex items-center justify-center hover:bg-white/20">&times;</button>
             </div>
             
             <form id="formProducto" class="p-6 overflow-y-auto space-y-6">
-                <!-- Foto de Producto -->
+                <!-- Foto Placeholder -->
                 <div class="text-center">
                     <div class="w-28 h-28 bg-black rounded-3xl mx-auto border-2 border-dashed border-gold/50 flex items-center justify-center relative overflow-hidden">
                         <i class="fas fa-camera text-gold/50 text-2xl"></i>
-                        <input type="file" class="absolute inset-0 opacity-0 cursor-pointer" accept="image/*">
                     </div>
-                    <p class="text-[10px] text-gold mt-2 font-bold uppercase tracking-widest">Cargar Imagen</p>
+                    <p class="text-[10px] text-gold mt-2 font-bold uppercase tracking-widest">Imagen Estándar Jaddy</p>
                 </div>
 
                 <div class="space-y-4">
                     <div class="group">
-                        <label class="block text-[10px] font-bold text-gold uppercase mb-1 ml-1">Nombre</label>
-                        <input type="text" placeholder="Nombre del producto" class="w-full p-3 rounded-xl outline-none transition-all">
+                        <label class="block text-[10px] font-bold text-gold uppercase mb-1 ml-1">Nombre de Fragancia</label>
+                        <input type="text" id="prodNombre" placeholder="Ej: Invictus - P.R." class="w-full p-3 rounded-xl outline-none" required>
                     </div>
                     <div class="group">
-                        <label class="block text-[10px] font-bold text-gold uppercase mb-1 ml-1">Código Identificador</label>
-                        <input type="text" placeholder="Código interno" class="w-full p-3 rounded-xl outline-none transition-all">
+                        <label class="block text-[10px] font-bold text-gold uppercase mb-1 ml-1">Código / SKU</label>
+                        <input type="text" id="prodCodigo" placeholder="Ej: P30-001" class="w-full p-3 rounded-xl outline-none">
                     </div>
 
-                    <!-- Panel de Precios Premium -->
+                    <!-- Panel de Precios -->
                     <div class="bg-black p-5 rounded-3xl border border-gold/20 space-y-4">
-                        <h4 class="text-gold text-xs font-black italic tracking-widest flex items-center gap-2">
-                            <i class="fas fa-coins text-[10px]"></i> LISTA DE PRECIOS
+                        <h4 class="text-gold text-xs font-black italic tracking-widest flex items-center gap-2 uppercase">
+                            <i class="fas fa-coins text-[10px]"></i> Lista de Precios ($)
                         </h4>
                         
                         <div class="grid grid-cols-2 gap-4">
                             <div>
-                                <label class="text-[9px] text-gray-500 uppercase font-bold">Costo Unitario</label>
-                                <input type="number" step="0.01" class="w-full p-3 rounded-xl text-center" placeholder="0.00">
+                                <label class="text-[9px] text-gray-500 uppercase font-bold">Costo</label>
+                                <input type="number" id="prodCosto" step="0.01" class="w-full p-3 rounded-xl text-center" placeholder="0.00">
                             </div>
                             <div>
-                                <label class="text-[9px] text-gray-500 uppercase font-bold">Precio Detal</label>
-                                <input type="number" step="0.01" class="w-full p-3 rounded-xl text-center" placeholder="0.00">
+                                <label class="text-[9px] text-gray-500 uppercase font-bold">Detal</label>
+                                <input type="number" id="prodDetal" step="0.01" class="w-full p-3 rounded-xl text-center border-gold/30" placeholder="0.00">
                             </div>
                             <div>
-                                <label class="text-[9px] text-gray-500 uppercase font-bold">Precio Mayor</label>
-                                <input type="number" step="0.01" class="w-full p-3 rounded-xl text-center" placeholder="0.00">
+                                <label class="text-[9px] text-gray-500 uppercase font-bold">Mayor</label>
+                                <input type="number" id="prodMayor" step="0.01" class="w-full p-3 rounded-xl text-center" placeholder="0.00">
                             </div>
                             <div>
-                                <label class="text-[9px] text-gray-500 uppercase font-bold">Precio Crédito</label>
-                                <input type="number" step="0.01" class="w-full p-3 rounded-xl text-center" placeholder="0.00">
-                            </div>
-                            <div class="col-span-2">
-                                <label class="text-[9px] text-gray-500 uppercase font-bold">Crédito al Mayor</label>
-                                <input type="number" step="0.01" class="w-full p-3 rounded-xl text-center border-gold/50" placeholder="0.00">
+                                <label class="text-[9px] text-gray-500 uppercase font-bold">Crédito</label>
+                                <input type="number" id="prodCredito" step="0.01" class="w-full p-3 rounded-xl text-center" placeholder="0.00">
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <button type="button" class="w-full gold-gradient text-black font-black py-4 rounded-2xl shadow-xl active:scale-95 transition-transform">
-                    GUARDAR EN INVENTARIO
+                <button type="submit" id="btnGuardar" class="w-full gold-gradient text-black font-black py-4 rounded-2xl shadow-xl active:scale-95 transition-transform uppercase tracking-tighter">
+                    Guardar Producto
                 </button>
             </form>
         </div>
     </div>
 
-    <!-- MODAL: VARIANTES (FRAGANCIAS/MARCAS) -->
-    <div id="modalVariantes" class="modal fixed inset-0 bg-black bg-opacity-90 z-50 items-end justify-center">
-        <div class="bg-[#111] w-full max-w-md rounded-t-[3rem] border-t border-gold/40 shadow-2xl flex flex-col max-h-[85vh]">
-            <div class="p-6 border-b border-white/5 flex justify-between items-center">
-                <div>
-                    <h2 id="varNombreProducto" class="font-black text-white text-xl">Perfume 30ml</h2>
-                    <p class="text-[10px] text-gold uppercase tracking-widest font-bold">Fragancias & Marcas Disponibles</p>
-                </div>
-                <button onclick="cerrarModalVariantes()" class="text-white bg-white/10 w-10 h-10 rounded-full flex items-center justify-center font-bold">&times;</button>
-            </div>
-
-            <div class="p-6 bg-black/40">
-                <div class="flex gap-2">
-                    <input id="nuevaVariante" type="text" placeholder="Fragancia (ej: Invictus)" class="flex-1 p-4 rounded-2xl outline-none">
-                    <input id="stockVariante" type="number" placeholder="Stock" class="w-24 p-4 rounded-2xl text-center outline-none">
-                    <button onclick="agregarVariante()" class="gold-gradient text-black w-14 h-14 rounded-2xl shadow-lg flex items-center justify-center">
-                        <i class="fas fa-check font-bold"></i>
-                    </button>
-                </div>
-            </div>
-
-            <div class="overflow-y-auto p-6 flex-1">
-                <table class="w-full text-left">
-                    <thead>
-                        <tr class="text-[10px] text-gray-500 uppercase tracking-widest">
-                            <th class="pb-4">Descripción</th>
-                            <th class="pb-4 text-center">Existencia</th>
-                            <th class="pb-4 text-right"></th>
-                        </tr>
-                    </thead>
-                    <tbody id="listaVariantes" class="divide-y divide-white/5 text-sm">
-                        <!-- Ejemplo de variante -->
-                        <tr>
-                            <td class="py-4 font-bold text-white">Bad Boy - Carolina Herrera</td>
-                            <td class="py-4 text-center">
-                                <span class="bg-gold/10 text-gold border border-gold/30 px-3 py-1 rounded-full text-[10px] font-bold">15 PIEZAS</span>
-                            </td>
-                            <td class="py-4 text-right">
-                                <button class="text-red-500/50 hover:text-red-500 transition-colors p-2"><i class="fas fa-trash-alt"></i></button>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
-    <!-- Navegación Inferior Jaddy INC -->
+    <!-- Navegación Inferior -->
     <nav class="fixed bottom-0 left-0 right-0 bg-[#0a0a0a]/90 backdrop-blur-md border-t border-white/5 flex justify-around p-4 text-gray-500 max-w-4xl mx-auto z-40 rounded-t-3xl">
         <a href="index.html" class="flex flex-col items-center">
             <i class="fas fa-th-large text-lg"></i>
@@ -243,48 +176,113 @@
         </a>
     </nav>
 
+    <script type="module">
+        import { guardarProductoJaddy, obtenerCatalogoJaddy } from './conexion.js';
+
+        let todosLosProductos = [];
+
+        // 1. CARGA INICIAL Y ESCUCHA DE CAMBIOS
+        obtenerCatalogoJaddy((productos) => {
+            todosLosProductos = productos;
+            renderizarLista(productos);
+        });
+
+        function renderizarLista(lista) {
+            const contenedor = document.getElementById('listaProductos');
+            contenedor.innerHTML = '';
+
+            if (lista.length === 0) {
+                contenedor.innerHTML = `<div class="col-span-full text-center py-20 text-gray-600 uppercase text-xs font-bold tracking-widest">No hay productos registrados</div>`;
+                return;
+            }
+
+            lista.forEach(p => {
+                contenedor.innerHTML += `
+                    <div class="product-card rounded-3xl overflow-hidden shadow-2xl">
+                        <div class="flex">
+                            <div class="w-28 h-32 bg-black relative">
+                                <img src="https://via.placeholder.com/150/000000/D4AF37?text=Jaddy" class="w-full h-full object-cover opacity-60">
+                                <div class="absolute inset-0 bg-gradient-to-t from-black to-transparent"></div>
+                            </div>
+                            <div class="p-4 flex-1 flex flex-col justify-between">
+                                <div>
+                                    <div class="flex justify-between items-start">
+                                        <h3 class="font-bold text-white text-sm leading-tight uppercase">${p.nombre}</h3>
+                                        <span class="text-[8px] text-gold border border-gold/50 px-1.5 rounded">${p.codigo || 'S/C'}</span>
+                                    </div>
+                                    <div class="flex items-center gap-2 mt-1">
+                                        <div class="w-1.5 h-1.5 rounded-full ${p.stock > 0 ? 'bg-green-500' : 'bg-red-500'}"></div>
+                                        <span class="text-[10px] text-gray-500 font-bold uppercase">${p.stock || 0} DISPONIBLES</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="flex justify-between items-end mt-2">
+                                    <div class="flex flex-col">
+                                        <span class="text-[8px] text-gray-500 uppercase font-bold">Precio Detal</span>
+                                        <span class="text-gold font-black text-md">${p.precioDetal || '0.00'}$</span>
+                                    </div>
+                                    <div class="flex flex-col items-end">
+                                        <span class="text-[8px] text-gray-500 uppercase font-bold">Crédito</span>
+                                        <span class="text-white font-bold text-xs">${p.precioCredito || '0.00'}$</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        // 2. BUSCADOR
+        document.getElementById('inputBusqueda').addEventListener('input', (e) => {
+            const term = e.target.value.toLowerCase();
+            const filtrados = todosLosProductos.filter(p => 
+                p.nombre.toLowerCase().includes(term) || 
+                (p.codigo && p.codigo.toLowerCase().includes(term))
+            );
+            renderizarLista(filtrados);
+        });
+
+        // 3. GUARDAR PRODUCTO
+        document.getElementById('formProducto').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('btnGuardar');
+            
+            const datos = {
+                nombre: document.getElementById('prodNombre').value,
+                codigo: document.getElementById('prodCodigo').value,
+                costo: document.getElementById('prodCosto').value,
+                precioDetal: document.getElementById('prodDetal').value,
+                precioMayor: document.getElementById('prodMayor').value,
+                precioCredito: document.getElementById('prodCredito').value,
+                stock: 0 // Inicia en 0 hasta la primera compra en inventario
+            };
+
+            try {
+                btn.disabled = true;
+                btn.innerText = "SINCRONIZANDO...";
+                
+                await guardarProductoJaddy(datos);
+                
+                // Limpieza
+                document.getElementById('formProducto').reset();
+                cerrarModalProducto();
+                
+            } catch (error) {
+                console.error(error);
+                alert("Error al conectar con Jaddy INC Cloud");
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "GUARDAR PRODUCTO";
+            }
+        });
+    </script>
+
     <script>
-        function abrirModalProducto() {
-            document.getElementById('modalProducto').classList.add('active');
-        }
-
-        function cerrarModalProducto() {
-            document.getElementById('modalProducto').classList.remove('active');
-        }
-
-        function verDetallesProducto(sku) {
-            document.getElementById('modalVariantes').classList.add('active');
-        }
-
-        function cerrarModalVariantes() {
-            document.getElementById('modalVariantes').classList.remove('active');
-        }
-
-        function agregarVariante() {
-            const nombre = document.getElementById('nuevaVariante').value;
-            const stock = document.getElementById('stockVariante').value;
-            
-            if(!nombre || !stock) return;
-
-            const fila = `
-                <tr class="animate-pulse">
-                    <td class="py-4 font-bold text-white uppercase text-xs">${nombre}</td>
-                    <td class="py-4 text-center">
-                        <span class="bg-gold/10 text-gold border border-gold/30 px-3 py-1 rounded-full text-[10px] font-bold">${stock} PIEZAS</span>
-                    </td>
-                    <td class="py-4 text-right">
-                        <button class="text-red-500/50 p-2"><i class="fas fa-trash-alt"></i></button>
-                    </td>
-                </tr>
-            `;
-            document.getElementById('listaVariantes').innerHTML += fila;
-            
-            document.getElementById('nuevaVariante').value = '';
-            document.getElementById('stockVariante').value = '';
-        }
+        function abrirModalProducto() { document.getElementById('modalProducto').classList.add('active'); }
+        function cerrarModalProducto() { document.getElementById('modalProducto').classList.remove('active'); }
     </script>
 </body>
 </html>
 
 ```
-
