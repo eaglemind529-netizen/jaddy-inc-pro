@@ -9,20 +9,17 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root { --gold: #D4AF37; --bg: #050505; }
-        body { background: var(--bg); color: white; font-family: 'Inter', sans-serif; overflow-x: hidden; }
+        body { background: var(--bg); color: white; font-family: 'Inter', sans-serif; }
         .gold-border { border: 1px solid rgba(212, 175, 55, 0.2); }
         .input-field { background: #111; border: 1px solid #222; border-radius: 12px; padding: 14px; width: 100%; color: white; font-size: 14px; }
-        .input-field:focus { border-color: var(--gold); outline: none; }
         .btn-save { background: var(--gold); color: black; font-weight: 800; border-radius: 12px; width: 100%; padding: 16px; text-transform: uppercase; cursor: pointer; }
-        .product-card { background: #0F0F0F; border: 1px solid #1A1A1A; border-radius: 20px; padding: 16px; margin-bottom: 12px; position: relative; }
+        .product-card { background: #0F0F0F; border: 1px solid #1A1A1A; border-radius: 20px; padding: 16px; margin-bottom: 12px; }
         .modal-full { position: fixed; inset: 0; background: var(--bg); z-index: 100; display: none; flex-direction: column; }
-        .variant-tag { background: rgba(212, 175, 55, 0.1); color: var(--gold); border: 1px solid rgba(212, 175, 55, 0.3); padding: 4px 10px; border-radius: 8px; font-size: 10px; font-weight: bold; text-transform: uppercase; }
-        .action-btn { width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; border-radius: 10px; }
+        .variant-tag { background: rgba(212, 175, 55, 0.1); color: var(--gold); border: 1px solid rgba(212, 175, 55, 0.3); padding: 4px 10px; border-radius: 8px; font-size: 10px; font-weight: bold; }
     </style>
 </head>
 <body class="p-4 pb-24">
 
-    <!-- Modal de Variantes -->
     <div id="modalVariantes" class="modal-full p-6">
         <header class="flex justify-between items-center mb-8">
             <div>
@@ -35,21 +32,19 @@
         </header>
 
         <div class="flex-1 overflow-y-auto">
-            <label class="text-[10px] font-black text-gray-500 uppercase mb-4 block tracking-widest">Variantes Disponibles</label>
             <div class="flex gap-3 mb-8">
                 <input type="text" id="inputNuevaVar" placeholder="NUEVA VARIANTE..." class="input-field flex-1 font-bold uppercase">
                 <button id="btnSumarVar" class="bg-white text-black px-6 rounded-xl font-black"><i class="fas fa-plus"></i></button>
             </div>
             <div id="listaVariantesModal" class="grid grid-cols-2 gap-3"></div>
         </div>
-        <button id="btnSaveVariants" class="btn-save mt-6 shadow-xl shadow-gold/20">Guardar Cambios</button>
+        <button id="btnSaveVariants" class="btn-save mt-6">Confirmar Variantes</button>
     </div>
 
     <div class="max-w-md mx-auto">
         <header class="flex justify-between items-center py-4 mb-6">
-            <h1 class="text-xl font-black italic uppercase">PRODUCTOS <span class="text-[#D4AF37]">JADDY</span></h1>
-            <!-- El indicador de estado -->
-            <div id="statusDot" class="w-4 h-4 rounded-full bg-red-600 shadow-[0_0_10px_rgba(255,0,0,0.5)]"></div>
+            <h1 class="text-xl font-black italic uppercase italic">PRODUCTOS <span class="text-[#D4AF37]">JADDY</span></h1>
+            <div id="statusDot" class="w-3 h-3 rounded-full bg-red-600 shadow-[0_0_8px_red]"></div>
         </header>
 
         <section class="bg-[#0A0A0A] p-5 rounded-[24px] gold-border mb-8 shadow-2xl">
@@ -67,87 +62,83 @@
                     <input type="number" step="0.01" id="credito" placeholder="CRÉDITO $" class="input-field text-blue-400 font-bold">
                     <input type="number" step="0.01" id="mayor" placeholder="MAYOR $" class="input-field text-gold font-bold">
                 </div>
-                <button type="submit" id="btnEnvio" class="btn-save shadow-lg shadow-gold/10">Registrar Producto</button>
+                <button type="submit" id="btnEnvio" class="btn-save">Registrar Producto</button>
                 <button type="button" id="btnCancel" class="hidden w-full text-[10px] text-gray-500 font-bold uppercase mt-3">Cancelar Edición</button>
             </form>
         </section>
 
-        <h2 class="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-4 ml-2">Lista Maestra</h2>
-        <div id="displayLista" class="space-y-3">
-            <div class="text-center py-10 opacity-50 text-[10px] uppercase font-bold tracking-widest">Sincronizando con la nube...</div>
-        </div>
+        <h2 class="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-4 ml-2 italic">Inventario Activo</h2>
+        <div id="displayLista" class="space-y-3"></div>
     </div>
 
     <script type="module">
+        // Importamos Firebase para la acción directa de eliminar
         import { doc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-        // Importamos con tilde ya que el archivo en tu GitHub se llama 'conexión.js'
-        import { conectarCerebro, subirProducto, obtenerProductos, auth, db, onAuthStateChanged } from './conexión.js';
+        // Importamos tus funciones de conexión.js (con tilde)
+        import { conectarCerebro, subirProducto, obtenerProductos, auth, onAuthStateChanged, db } from './conexión.js';
 
         const form = document.getElementById('formProd');
         const listaDiv = document.getElementById('displayLista');
-        const modal = document.getElementById('modalVariantes');
         const statusDot = document.getElementById('statusDot');
         const btnEnvio = document.getElementById('btnEnvio');
         const btnCancel = document.getElementById('btnCancel');
         const editIdInput = document.getElementById('editId');
+        const modal = document.getElementById('modalVariantes');
 
         let localCache = [];
         let productoSeleccionado = null;
         let variantesTemporales = [];
 
+        // Iniciar conexión anónima de conexión.js
         conectarCerebro();
 
-        // Monitoreo de conexión real
         onAuthStateChanged(auth, (user) => {
             if (user) {
-                console.log("Conectado con éxito");
-                statusDot.style.background = "#22c55e";
-                statusDot.style.boxShadow = "0 0 15px #22c55e";
+                statusDot.classList.replace('bg-red-600', 'bg-green-500');
+                statusDot.style.boxShadow = "0 0 10px #22c55e";
+                // Escuchar productos en tiempo real
                 obtenerProductos(dibujar);
-            } else {
-                statusDot.style.background = "#dc2626";
-                statusDot.style.boxShadow = "0 0 15px #dc2626";
             }
         });
 
         function dibujar(productos) {
             localCache = productos;
             if (productos.length === 0) {
-                listaDiv.innerHTML = '<div class="text-center py-10 text-gray-600 text-[10px] font-bold uppercase">No hay perfumes registrados</div>';
+                listaDiv.innerHTML = '<p class="text-center py-10 text-[10px] uppercase opacity-40 font-bold">No hay productos registrados</p>';
                 return;
             }
 
             listaDiv.innerHTML = productos.map(p => `
                 <div class="product-card">
-                    <div class="flex justify-between items-start">
+                    <div class="flex justify-between items-start mb-2">
                         <div onclick="abrirVariantes('${p.id}')" class="flex-1 cursor-pointer">
                             <span class="text-[8px] font-black text-gold uppercase tracking-widest">${p.codigo || 'SIN COD'}</span>
                             <h3 class="text-sm font-black uppercase text-white">${p.nombre}</h3>
-                            <div class="flex gap-3 mt-1">
+                            <div class="flex gap-4 mt-1">
                                 <p class="text-xs font-black text-green-400">$${p.precio_detal || 0}</p>
-                                <p class="text-[9px] font-bold text-gray-500 uppercase tracking-tighter">Costo: $${p.costo || 0}</p>
+                                <p class="text-[10px] font-bold text-gray-500 uppercase tracking-tighter">Costo: $${p.costo || 0}</p>
                             </div>
                         </div>
                         <div class="flex gap-2">
-                            <button onclick="prepararEdicion('${p.id}')" class="action-btn bg-blue-500/10 text-blue-400 border border-blue-500/20">
-                                <i class="fas fa-edit"></i>
+                            <button onclick="prepararEdicion('${p.id}')" class="w-9 h-9 flex items-center justify-center bg-blue-500/10 text-blue-400 border border-blue-500/20 rounded-lg">
+                                <i class="fas fa-edit text-xs"></i>
                             </button>
-                            <button onclick="eliminarProducto('${p.id}')" class="action-btn bg-red-500/10 text-red-500 border border-red-500/20">
-                                <i class="fas fa-trash-alt"></i>
+                            <button onclick="eliminarProducto('${p.id}')" class="w-9 h-9 flex items-center justify-center bg-red-500/10 text-red-500 border border-red-500/20 rounded-lg">
+                                <i class="fas fa-trash-alt text-xs"></i>
                             </button>
                         </div>
                     </div>
-                    <div onclick="abrirVariantes('${p.id}')" class="flex flex-wrap gap-1 mt-3 cursor-pointer">
+                    <div onclick="abrirVariantes('${p.id}')" class="flex flex-wrap gap-1 mt-2 cursor-pointer">
                         ${(p.variantes || []).length > 0 
                             ? p.variantes.map(v => `<span class="variant-tag">${v}</span>`).join('')
-                            : '<span class="text-[8px] text-gray-600 font-bold uppercase italic">Tocar para añadir variantes</span>'
+                            : '<span class="text-[8px] text-gray-600 font-bold uppercase italic tracking-tighter">Gestionar Variantes</span>'
                         }
                     </div>
                 </div>
             `).join('');
         }
 
-        // --- FUNCIONES ACCESIBLES ---
+        // --- LÓGICA DE PRODUCTOS ---
         window.prepararEdicion = (id) => {
             const p = localCache.find(x => x.id === id);
             if(!p) return;
@@ -164,14 +155,39 @@
         };
 
         window.eliminarProducto = async (id) => {
-            if(confirm("¿Seguro que quieres borrar este perfume?")){
+            if(confirm("¿Seguro que quieres eliminar este producto?")){
                 try {
+                    // Ruta exacta según tu conexión.js: artifacts > jaddy-inc-inventario > public > data > productos_jaddy
                     const docRef = doc(db, 'artifacts', 'jaddy-inc-inventario', 'public', 'data', 'productos_jaddy', id);
                     await deleteDoc(docRef);
-                } catch (e) { alert("Error al borrar: " + e.message); }
+                } catch (e) { console.error("Error al borrar:", e); }
             }
         };
 
+        form.onsubmit = async (e) => {
+            e.preventDefault();
+            const id = editIdInput.value;
+            const datos = {
+                codigo: document.getElementById('codigo').value.toUpperCase().trim(),
+                nombre: document.getElementById('nombre').value.toUpperCase().trim(),
+                costo: parseFloat(document.getElementById('costo').value) || 0,
+                precio_detal: parseFloat(document.getElementById('detal').value) || 0,
+                precio_credito: parseFloat(document.getElementById('credito').value) || 0,
+                precio_mayor: parseFloat(document.getElementById('mayor').value) || 0,
+                variantes: id ? (localCache.find(x => x.id === id).variantes || []) : []
+            };
+            await subirProducto(datos, id || null);
+            btnCancel.click();
+        };
+
+        btnCancel.onclick = () => {
+            form.reset();
+            editIdInput.value = "";
+            btnEnvio.innerText = "Registrar Producto";
+            btnCancel.classList.add('hidden');
+        };
+
+        // --- LÓGICA DE VARIANTES ---
         window.abrirVariantes = (id) => {
             const p = localCache.find(x => x.id === id);
             if(!p) return;
@@ -181,7 +197,6 @@
             document.getElementById('modalNombre').innerText = p.nombre;
             renderVariantesModal();
             modal.style.display = 'flex';
-            document.body.style.overflow = 'hidden';
         };
 
         window.quitarVar = (i) => {
@@ -209,10 +224,7 @@
             }
         };
 
-        document.getElementById('btnCloseModal').onclick = () => {
-            modal.style.display = 'none';
-            document.body.style.overflow = 'auto';
-        };
+        document.getElementById('btnCloseModal').onclick = () => { modal.style.display = 'none'; };
 
         document.getElementById('btnSaveVariants').onclick = async () => {
             if(!productoSeleccionado) return;
@@ -221,35 +233,10 @@
             delete nuevosDatos.id;
             await subirProducto(nuevosDatos, id);
             modal.style.display = 'none';
-            document.body.style.overflow = 'auto';
-        };
-
-        btnCancel.onclick = () => {
-            form.reset();
-            editIdInput.value = "";
-            btnEnvio.innerText = "Registrar Producto";
-            btnCancel.classList.add('hidden');
-        };
-
-        form.onsubmit = async (e) => {
-            e.preventDefault();
-            const id = editIdInput.value;
-            const datos = {
-                codigo: document.getElementById('codigo').value.toUpperCase().trim(),
-                nombre: document.getElementById('nombre').value.toUpperCase().trim(),
-                costo: parseFloat(document.getElementById('costo').value) || 0,
-                precio_detal: parseFloat(document.getElementById('detal').value) || 0,
-                precio_credito: parseFloat(document.getElementById('credito').value) || 0,
-                precio_mayor: parseFloat(document.getElementById('mayor').value) || 0,
-                variantes: id ? (localCache.find(x => x.id === id).variantes || []) : []
-            };
-            try {
-                await subirProducto(datos, id || null);
-                btnCancel.click();
-            } catch (err) { alert("Error: " + err.message); }
         };
     </script>
 </body>
 </html>
+
 
 ```
