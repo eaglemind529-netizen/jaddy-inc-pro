@@ -17,8 +17,7 @@
         .product-card { background: #0F0F0F; border: 1px solid #1A1A1A; border-radius: 20px; padding: 16px; margin-bottom: 12px; position: relative; }
         .modal-full { position: fixed; inset: 0; background: var(--bg); z-index: 100; display: none; flex-direction: column; }
         .variant-tag { background: rgba(212, 175, 55, 0.1); color: var(--gold); border: 1px solid rgba(212, 175, 55, 0.3); padding: 4px 10px; border-radius: 8px; font-size: 10px; font-weight: bold; text-transform: uppercase; }
-        .action-btn { width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; border-radius: 10px; transition: transform 0.2s; }
-        .action-btn:active { transform: scale(0.9); }
+        .action-btn { width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; border-radius: 10px; }
     </style>
 </head>
 <body class="p-4 pb-24">
@@ -36,29 +35,29 @@
         </header>
 
         <div class="flex-1 overflow-y-auto">
-            <label class="text-[10px] font-black text-gray-500 uppercase mb-4 block tracking-widest">Agregar Nueva Variante</label>
+            <label class="text-[10px] font-black text-gray-500 uppercase mb-4 block tracking-widest">Variantes Disponibles</label>
             <div class="flex gap-3 mb-8">
-                <input type="text" id="inputNuevaVar" placeholder="Ej: Invictus, One Million..." class="input-field flex-1 font-bold uppercase">
+                <input type="text" id="inputNuevaVar" placeholder="NUEVA VARIANTE..." class="input-field flex-1 font-bold uppercase">
                 <button id="btnSumarVar" class="bg-white text-black px-6 rounded-xl font-black"><i class="fas fa-plus"></i></button>
             </div>
             <div id="listaVariantesModal" class="grid grid-cols-2 gap-3"></div>
         </div>
-        <button id="btnSaveVariants" class="btn-save mt-6 shadow-xl shadow-gold/10">Finalizar Edición</button>
+        <button id="btnSaveVariants" class="btn-save mt-6 shadow-xl shadow-gold/20">Guardar Cambios</button>
     </div>
 
     <div class="max-w-md mx-auto">
         <header class="flex justify-between items-center py-4 mb-6">
-            <h1 class="text-xl font-black italic uppercase tracking-tighter">PRODUCTOS <span class="text-[#D4AF37]">JADDY</span></h1>
-            <div id="statusDot" class="w-3 h-3 rounded-full bg-red-600 shadow-[0_0_8px_red]"></div>
+            <h1 class="text-xl font-black italic uppercase">PRODUCTOS <span class="text-[#D4AF37]">JADDY</span></h1>
+            <!-- El indicador de estado -->
+            <div id="statusDot" class="w-4 h-4 rounded-full bg-red-600 shadow-[0_0_10px_rgba(255,0,0,0.5)]"></div>
         </header>
 
-        <!-- Formulario Principal -->
         <section class="bg-[#0A0A0A] p-5 rounded-[24px] gold-border mb-8 shadow-2xl">
             <form id="formProd" class="space-y-4">
                 <input type="hidden" id="editId">
                 <div class="grid grid-cols-3 gap-3">
                     <input type="text" id="codigo" placeholder="CÓDIGO" class="input-field uppercase font-bold" required>
-                    <input type="text" id="nombre" placeholder="NOMBRE PRODUCTO" class="col-span-2 input-field uppercase font-bold" required>
+                    <input type="text" id="nombre" placeholder="NOMBRE" class="col-span-2 input-field uppercase font-bold" required>
                 </div>
                 <div class="grid grid-cols-2 gap-3">
                     <input type="number" step="0.01" id="costo" placeholder="COSTO $" class="input-field">
@@ -69,20 +68,19 @@
                     <input type="number" step="0.01" id="mayor" placeholder="MAYOR $" class="input-field text-gold font-bold">
                 </div>
                 <button type="submit" id="btnEnvio" class="btn-save shadow-lg shadow-gold/10">Registrar Producto</button>
-                <button type="button" id="btnCancel" class="hidden w-full text-[10px] text-gray-500 font-bold uppercase mt-3 tracking-widest">Cancelar Edición</button>
+                <button type="button" id="btnCancel" class="hidden w-full text-[10px] text-gray-500 font-bold uppercase mt-3">Cancelar Edición</button>
             </form>
         </section>
 
         <h2 class="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-4 ml-2">Lista Maestra</h2>
         <div id="displayLista" class="space-y-3">
-            <!-- Cargando... -->
+            <div class="text-center py-10 opacity-50 text-[10px] uppercase font-bold tracking-widest">Sincronizando con la nube...</div>
         </div>
     </div>
 
     <script type="module">
-        // Importamos Firebase para la función de borrar directamente
         import { doc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-        // Importamos tu archivo con el nombre EXACTO de tu captura: conexión.js
+        // Importamos con tilde ya que el archivo en tu GitHub se llama 'conexión.js'
         import { conectarCerebro, subirProducto, obtenerProductos, auth, db, onAuthStateChanged } from './conexión.js';
 
         const form = document.getElementById('formProd');
@@ -97,63 +95,62 @@
         let productoSeleccionado = null;
         let variantesTemporales = [];
 
-        // Iniciamos conexión
         conectarCerebro();
 
-        // Escuchamos el estado de autenticación de tu conexión.js
+        // Monitoreo de conexión real
         onAuthStateChanged(auth, (user) => {
             if (user) {
-                statusDot.classList.replace('bg-red-600', 'bg-green-500');
-                statusDot.style.boxShadow = "0 0 10px #22c55e";
+                console.log("Conectado con éxito");
+                statusDot.style.background = "#22c55e";
+                statusDot.style.boxShadow = "0 0 15px #22c55e";
                 obtenerProductos(dibujar);
             } else {
-                statusDot.classList.replace('bg-green-500', 'bg-red-600');
-                statusDot.style.boxShadow = "0 0 10px red";
+                statusDot.style.background = "#dc2626";
+                statusDot.style.boxShadow = "0 0 15px #dc2626";
             }
         });
 
         function dibujar(productos) {
             localCache = productos;
             if (productos.length === 0) {
-                listaDiv.innerHTML = '<p class="text-center text-gray-600 text-[10px] font-bold uppercase py-10">No hay productos en base de datos</p>';
+                listaDiv.innerHTML = '<div class="text-center py-10 text-gray-600 text-[10px] font-bold uppercase">No hay perfumes registrados</div>';
                 return;
             }
 
             listaDiv.innerHTML = productos.map(p => `
                 <div class="product-card">
-                    <div class="flex justify-between items-start mb-2">
+                    <div class="flex justify-between items-start">
                         <div onclick="abrirVariantes('${p.id}')" class="flex-1 cursor-pointer">
-                            <span class="text-[8px] font-black text-gold uppercase tracking-[0.2em]">${p.codigo || 'S/C'}</span>
-                            <h3 class="text-sm font-black uppercase text-white leading-tight">${p.nombre}</h3>
+                            <span class="text-[8px] font-black text-gold uppercase tracking-widest">${p.codigo || 'SIN COD'}</span>
+                            <h3 class="text-sm font-black uppercase text-white">${p.nombre}</h3>
                             <div class="flex gap-3 mt-1">
                                 <p class="text-xs font-black text-green-400">$${p.precio_detal || 0}</p>
-                                <p class="text-[10px] font-black text-gold opacity-50 uppercase tracking-tighter">Mayor: $${p.precio_mayor || 0}</p>
+                                <p class="text-[9px] font-bold text-gray-500 uppercase tracking-tighter">Costo: $${p.costo || 0}</p>
                             </div>
                         </div>
                         <div class="flex gap-2">
                             <button onclick="prepararEdicion('${p.id}')" class="action-btn bg-blue-500/10 text-blue-400 border border-blue-500/20">
-                                <i class="fas fa-edit text-sm"></i>
+                                <i class="fas fa-edit"></i>
                             </button>
                             <button onclick="eliminarProducto('${p.id}')" class="action-btn bg-red-500/10 text-red-500 border border-red-500/20">
-                                <i class="fas fa-trash-alt text-sm"></i>
+                                <i class="fas fa-trash-alt"></i>
                             </button>
                         </div>
                     </div>
-                    <div onclick="abrirVariantes('${p.id}')" class="flex flex-wrap gap-1 mt-2 cursor-pointer">
+                    <div onclick="abrirVariantes('${p.id}')" class="flex flex-wrap gap-1 mt-3 cursor-pointer">
                         ${(p.variantes || []).length > 0 
                             ? p.variantes.map(v => `<span class="variant-tag">${v}</span>`).join('')
-                            : '<span class="text-[8px] text-gray-600 font-bold uppercase italic tracking-tighter">Toca para gestionar variantes</span>'
+                            : '<span class="text-[8px] text-gray-600 font-bold uppercase italic">Tocar para añadir variantes</span>'
                         }
                     </div>
                 </div>
             `).join('');
         }
 
-        // --- FUNCIONES GLOBALES ---
+        // --- FUNCIONES ACCESIBLES ---
         window.prepararEdicion = (id) => {
             const p = localCache.find(x => x.id === id);
             if(!p) return;
-            
             editIdInput.value = p.id;
             document.getElementById('codigo').value = p.codigo || "";
             document.getElementById('nombre').value = p.nombre || "";
@@ -161,24 +158,17 @@
             document.getElementById('detal').value = p.precio_detal || 0;
             document.getElementById('credito').value = p.precio_credito || 0;
             document.getElementById('mayor').value = p.precio_mayor || 0;
-            
             btnEnvio.innerText = "Guardar Cambios";
             btnCancel.classList.remove('hidden');
             window.scrollTo({top: 0, behavior: 'smooth'});
         };
 
         window.eliminarProducto = async (id) => {
-            const confirmar = confirm("¿Estás seguro de que deseas eliminar este producto de forma permanente?");
-            if(confirmar){
+            if(confirm("¿Seguro que quieres borrar este perfume?")){
                 try {
-                    // Ruta exacta basada en tus reglas de Firebase
                     const docRef = doc(db, 'artifacts', 'jaddy-inc-inventario', 'public', 'data', 'productos_jaddy', id);
                     await deleteDoc(docRef);
-                    // No hace falta recargar, obtenerProductos() suele ser un listener en tiempo real
-                } catch (e) {
-                    console.error("Error al eliminar:", e);
-                    alert("No se pudo eliminar el producto.");
-                }
+                } catch (e) { alert("Error al borrar: " + e.message); }
             }
         };
 
@@ -187,7 +177,6 @@
             if(!p) return;
             productoSeleccionado = { ...p };
             variantesTemporales = [...(p.variantes || [])];
-            
             document.getElementById('modalCodigo').innerText = p.codigo;
             document.getElementById('modalNombre').innerText = p.nombre;
             renderVariantesModal();
@@ -205,14 +194,11 @@
             cont.innerHTML = variantesTemporales.map((v, i) => `
                 <div class="bg-[#111] p-3 rounded-xl border border-[#222] flex justify-between items-center">
                     <span class="text-[10px] font-bold uppercase text-gold">${v}</span>
-                    <button onclick="quitarVar(${i})" class="text-red-500 w-8 h-8 flex items-center justify-center bg-red-500/10 rounded-lg">
-                        <i class="fas fa-times"></i>
-                    </button>
+                    <button onclick="quitarVar(${i})" class="text-red-500 p-2"><i class="fas fa-times"></i></button>
                 </div>
             `).join('');
         }
 
-        // --- EVENTOS ---
         document.getElementById('btnSumarVar').onclick = () => {
             const input = document.getElementById('inputNuevaVar');
             const val = input.value.trim().toUpperCase();
@@ -226,31 +212,16 @@
         document.getElementById('btnCloseModal').onclick = () => {
             modal.style.display = 'none';
             document.body.style.overflow = 'auto';
-            productoSeleccionado = null;
         };
 
         document.getElementById('btnSaveVariants').onclick = async () => {
             if(!productoSeleccionado) return;
-            const btn = document.getElementById('btnSaveVariants');
-            const originalText = btn.innerText;
-            
-            btn.innerText = "SINCRONIZANDO...";
-            btn.disabled = true;
-
             const id = productoSeleccionado.id;
             const nuevosDatos = { ...productoSeleccionado, variantes: variantesTemporales };
-            delete nuevosDatos.id; // Limpiamos el ID para no duplicarlo en el objeto
-
-            try {
-                await subirProducto(nuevosDatos, id);
-                document.getElementById('btnCloseModal').click();
-            } catch (error) {
-                console.error(error);
-                alert("Error al actualizar variantes");
-            } finally {
-                btn.innerText = originalText;
-                btn.disabled = false;
-            }
+            delete nuevosDatos.id;
+            await subirProducto(nuevosDatos, id);
+            modal.style.display = 'none';
+            document.body.style.overflow = 'auto';
         };
 
         btnCancel.onclick = () => {
@@ -263,7 +234,6 @@
         form.onsubmit = async (e) => {
             e.preventDefault();
             const id = editIdInput.value;
-            
             const datos = {
                 codigo: document.getElementById('codigo').value.toUpperCase().trim(),
                 nombre: document.getElementById('nombre').value.toUpperCase().trim(),
@@ -273,19 +243,10 @@
                 precio_mayor: parseFloat(document.getElementById('mayor').value) || 0,
                 variantes: id ? (localCache.find(x => x.id === id).variantes || []) : []
             };
-
             try {
-                btnEnvio.disabled = true;
-                btnEnvio.innerText = "PROCESANDO...";
                 await subirProducto(datos, id || null);
-                btnCancel.click(); // Resetear form
-            } catch (err) {
-                console.error(err);
-                alert("Error al guardar producto");
-            } finally {
-                btnEnvio.disabled = false;
-                btnEnvio.innerText = id ? "Guardar Cambios" : "Registrar Producto";
-            }
+                btnCancel.click();
+            } catch (err) { alert("Error: " + err.message); }
         };
     </script>
 </body>
