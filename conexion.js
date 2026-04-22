@@ -1,7 +1,7 @@
 ```javascript
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-import { getFirestore, collection, doc, setDoc, addDoc, getDoc, updateDoc, onSnapshot, query } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+import { getFirestore, collection, doc, addDoc, updateDoc, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCrjjeOoXPOtJDXDfrHLOA4Ny0QW2zfVWk",
@@ -17,71 +17,57 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
-const appId = "jaddy-inc-elite"; 
 
-// --- LÓGICA DE CONEXIÓN Y AUTENTICACIÓN ---
 let usuarioConectado = null;
 
+// Conexión inicial
 const conectar = async () => {
     try {
         const credenciales = await signInAnonymously(auth);
         usuarioConectado = credenciales.user;
-        console.log("✅ Conectado a Jaddy INC Cloud:", usuarioConectado.uid);
+        console.log("✅ Conectado como:", usuarioConectado.uid);
     } catch (error) {
-        console.error("❌ Error de conexión:", error);
+        console.error("❌ Error Auth:", error);
     }
 };
-
 conectar();
 
-// --- FUNCIONES EXPORTADAS PARA TUS OTROS ARCHIVOS ---
+// --- FUNCIONES PARA PRODUCTOS ---
 
-/**
- * Guarda un producto en la colección global de Jaddy INC
- * @param {Object} datos - { nombre, referencia, precio, etc }
- */
 export async function guardarProductoJaddy(datos) {
-    if (!usuarioConectado) {
-        console.warn("Reintentando conexión...");
-        await conectar();
-    }
-
     try {
-        // Estructura de colección compatible con las reglas del servidor
-        const colRef = collection(db, "jaddy_inc", appId, "productos");
+        // Usamos una ruta directa para evitar errores de permisos
+        const colRef = collection(db, "productos_jaddy");
         const docRef = await addDoc(colRef, {
             ...datos,
-            stock: Number(datos.stock) || 0,
-            precio: Number(datos.precio) || 0,
-            fechaCreacion: new Date().getTime(),
-            creadoPor: usuarioConectado.uid
+            fecha: new Date().getTime()
         });
-        console.log("🚀 Producto registrado con ID:", docRef.id);
+        console.log("🚀 Registrado con ID:", docRef.id);
         return docRef.id;
     } catch (error) {
-        console.error("🔥 Error al guardar producto:", error);
+        console.error("🔥 Error al guardar:", error);
         throw error;
     }
 }
 
-/**
- * Escucha cambios en el catálogo para actualizar Inventario automáticamente
- * @param {Function} callback - Función que recibe la lista de productos
- */
 export function obtenerCatalogoJaddy(callback) {
-    const colRef = collection(db, "jaddy_inc", appId, "productos");
+    const colRef = collection(db, "productos_jaddy");
+    const q = query(colRef, orderBy("nombre", "asc"));
     
-    // onSnapshot es lo que hace que los archivos se comuniquen
-    return onSnapshot(colRef, (snapshot) => {
+    return onSnapshot(q, (snapshot) => {
         const lista = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-        console.log("📦 Catálogo actualizado:", lista.length, "items");
         callback(lista);
+    }, (error) => {
+        console.error("❌ Error en tiempo real:", error);
     });
 }
 
-// PARA QUE TUS BOTONES HTML EN PRODUCTOS Y TU INVENTARIO JS VEAN LAS FUNCIONES:
+// Exportamos para que productos.html los vea
+export { db, doc, updateDoc };
+
+// Globales por si acaso
 window.guardarProductoJaddy = guardarProductoJaddy;
 window.obtenerCatalogoJaddy = obtenerCatalogoJaddy;
-window.jaddyDb = db; // Por si necesitas acceso directo
+
 
 ```
