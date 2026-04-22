@@ -8,273 +8,233 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        :root {
-            --gold: #D4AF37;
-            --dark-gold: #996515;
-            --black: #1a1a1a;
+        :root { --gold: #D4AF37; --black: #1a1a1a; }
+        body { background-color: #0f0f0f; color: #e0e0e0; font-family: 'Inter', sans-serif; }
+        .gold-gradient { background: linear-gradient(135deg, #D4AF37 0%, #f9e29c 50%, #996515 100%); }
+        .card-producto { 
+            background: #1a1a1a; 
+            border: 1px solid #333; 
+            border-radius: 24px; 
+            transition: all 0.2s ease;
         }
-        .bg-gold { background-color: var(--gold); }
-        .text-gold { color: var(--gold); }
-        .border-gold { border-color: var(--gold); }
-        
-        body {
-            background-color: #0f0f0f;
-            color: #e0e0e0;
-            font-family: 'Inter', sans-serif;
-        }
-        
-        .modal {
-            transition: opacity 0.25s ease;
-            display: none;
-        }
-        .modal.active {
-            display: flex;
-        }
-        
-        .gold-gradient {
-            background: linear-gradient(135deg, #D4AF37 0%, #f9e29c 50%, #996515 100%);
-        }
-
-        .product-card {
-            background: #1e1e1e;
-            border: 1px solid #333;
-            position: relative;
-        }
-        .product-card:active {
-            transform: scale(0.98);
-        }
-
-        input {
-            background: #2a2a2a !important;
-            color: white !important;
-            border: 1px solid #444 !important;
-        }
-        input:focus {
-            border-color: var(--gold) !important;
-            outline: none !important;
-        }
-
-        .btn-edit {
-            background: rgba(212, 175, 55, 0.1);
-            color: var(--gold);
-            border: 1px solid rgba(212, 175, 55, 0.3);
-        }
+        .modal { display: none; }
+        .modal.active { display: flex; }
+        input { background: #222 !important; color: white !important; border: 1px solid #444 !important; }
+        input:focus { border-color: var(--gold) !important; outline: none; }
     </style>
 </head>
-<body class="min-h-screen pb-24">
+<body class="min-h-screen pb-28">
 
-    <!-- Encabezado -->
-    <header class="gold-gradient text-black p-5 shadow-2xl sticky top-0 z-10 rounded-b-3xl">
-        <div class="flex justify-between items-center max-w-4xl mx-auto">
-            <div>
-                <h1 class="text-2xl font-black tracking-tighter">JADDY INC</h1>
-                <p class="text-[10px] uppercase tracking-widest font-bold opacity-80">Luxury Inventory</p>
-            </div>
-            <button onclick="abrirModalProducto()" class="bg-black text-white px-5 py-2 rounded-full font-bold shadow-lg flex items-center gap-2 text-sm">
-                <i class="fas fa-plus-circle text-gold"></i> NUEVO
-            </button>
+    <!-- Header -->
+    <header class="gold-gradient text-black p-5 shadow-2xl sticky top-0 z-50 rounded-b-[2.5rem] flex justify-between items-center">
+        <div>
+            <h1 class="text-xl font-black italic tracking-tighter">JADDY INC</h1>
+            <p id="conexion-status" class="text-[9px] uppercase font-bold opacity-60 tracking-widest">Sincronizando...</p>
         </div>
+        <button onclick="abrirModal()" class="bg-black text-white w-12 h-12 rounded-2xl flex items-center justify-center shadow-xl active:scale-90 transition-transform">
+            <i class="fas fa-plus text-gold"></i>
+        </button>
     </header>
 
-    <!-- Buscador -->
-    <div class="p-6 max-w-4xl mx-auto">
-        <div class="relative">
-            <input type="text" id="inputBusqueda" placeholder="Buscar fragancia o código..." class="w-full p-4 pl-12 rounded-2xl shadow-inner outline-none">
-            <i class="fas fa-search absolute left-4 top-5 text-gold"></i>
+    <!-- Contenedor de Productos -->
+    <main id="listaProductos" class="p-4 max-w-4xl mx-auto grid grid-cols-1 gap-4">
+        <div id="loading" class="flex flex-col items-center justify-center py-20 opacity-30">
+            <div class="w-8 h-8 border-4 border-gold border-t-transparent rounded-full animate-spin mb-4"></div>
+            <p class="text-xs font-bold uppercase tracking-widest">Buscando productos...</p>
         </div>
-    </div>
-
-    <!-- Lista de Productos -->
-    <main id="listaProductos" class="p-4 grid grid-cols-1 sm:grid-cols-2 gap-5 max-w-4xl mx-auto">
-        <!-- Cargando... -->
-        <div class="animate-pulse bg-white/5 h-32 rounded-3xl col-span-full"></div>
     </main>
 
-    <!-- MODAL: REGISTRO/EDICIÓN -->
-    <div id="modalProducto" class="modal fixed inset-0 bg-black bg-opacity-80 z-50 items-center justify-center p-4">
-        <div class="bg-[#1a1a1a] border border-gold/30 w-full max-w-md rounded-[2.5rem] overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
-            <div class="p-5 border-b border-white/10 bg-black/50 flex justify-between items-center">
-                <h2 id="modalTitulo" class="font-bold text-gold tracking-wide uppercase text-sm">Registrar Producto</h2>
-                <button onclick="cerrarModalProducto()" class="text-white bg-white/10 w-8 h-8 rounded-full flex items-center justify-center">&times;</button>
+    <!-- Modal Formulario -->
+    <div id="modalProducto" class="modal fixed inset-0 bg-black/95 z-[60] items-center justify-center p-4 backdrop-blur-md">
+        <div class="bg-[#111] border border-gold/20 w-full max-w-md rounded-[2.5rem] flex flex-col max-h-[90vh] shadow-2xl">
+            <div class="p-6 border-b border-white/5 flex justify-between items-center">
+                <h2 id="modalTitulo" class="text-gold font-black uppercase text-xs tracking-widest">Nueva Entrada</h2>
+                <button onclick="cerrarModal()" class="text-white/40 hover:text-white text-3xl">&times;</button>
             </div>
             
             <form id="formProducto" class="p-6 overflow-y-auto space-y-5">
-                <input type="hidden" id="prodId"> <!-- ID oculto para editar -->
+                <input type="hidden" id="editId">
                 
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-[10px] font-bold text-gold uppercase mb-1 ml-1">Nombre</label>
-                        <input type="text" id="prodNombre" placeholder="Ej: Invictus" class="w-full p-3 rounded-xl outline-none" required>
-                    </div>
-                    <div>
-                        <label class="block text-[10px] font-bold text-gold uppercase mb-1 ml-1">Código Identificador</label>
-                        <input type="text" id="prodCodigo" placeholder="SKU-001" class="w-full p-3 rounded-xl outline-none">
-                    </div>
-
-                    <div class="bg-black p-5 rounded-3xl border border-gold/20 grid grid-cols-2 gap-4">
-                        <div class="col-span-2 text-gold text-[10px] font-black uppercase tracking-widest mb-1">Precios y Costos</div>
+                <div>
+                    <label class="text-[10px] text-gray-500 font-bold uppercase mb-1 block ml-1">Nombre del Item</label>
+                    <input type="text" id="nombre" placeholder="Ej: Alaciado Keratina" class="w-full p-4 rounded-2xl text-sm" required>
+                </div>
+                
+                <div>
+                    <label class="text-[10px] text-gray-500 font-bold uppercase mb-1 block ml-1">Código Referencia</label>
+                    <input type="text" id="codigo" placeholder="Ej: AL-001" class="w-full p-4 rounded-2xl text-sm">
+                </div>
+                
+                <div class="bg-black/40 p-5 rounded-[2rem] border border-white/5 space-y-4">
+                    <p class="text-[10px] text-gold font-black uppercase tracking-tighter italic">Valores ($)</p>
+                    <div class="grid grid-cols-2 gap-4">
                         <div>
-                            <label class="text-[9px] text-gray-500 uppercase font-bold">Costo ($)</label>
-                            <input type="number" id="prodCosto" step="0.01" class="w-full p-3 rounded-xl text-center" placeholder="0.00">
+                            <label class="text-[9px] text-gray-600 block mb-1">COSTO</label>
+                            <input type="number" id="costo" step="0.01" class="w-full p-3 rounded-xl text-center text-sm" placeholder="0.00">
                         </div>
                         <div>
-                            <label class="text-[9px] text-gray-500 uppercase font-bold">Detal ($)</label>
-                            <input type="number" id="prodDetal" step="0.01" class="w-full p-3 rounded-xl text-center" placeholder="0.00">
+                            <label class="text-[9px] text-gold block mb-1">P. DETAL</label>
+                            <input type="number" id="detal" step="0.01" class="w-full p-3 rounded-xl text-center text-sm border-gold/20" placeholder="0.00">
                         </div>
                         <div>
-                            <label class="text-[9px] text-gray-500 uppercase font-bold">Mayor ($)</label>
-                            <input type="number" id="prodMayor" step="0.01" class="w-full p-3 rounded-xl text-center" placeholder="0.00">
+                            <label class="text-[9px] text-gray-600 block mb-1">P. MAYOR</label>
+                            <input type="number" id="mayor" step="0.01" class="w-full p-3 rounded-xl text-center text-sm" placeholder="0.00">
                         </div>
                         <div>
-                            <label class="text-[9px] text-gray-500 uppercase font-bold">Crédito ($)</label>
-                            <input type="number" id="prodCredito" step="0.01" class="w-full p-3 rounded-xl text-center" placeholder="0.00">
+                            <label class="text-[9px] text-gray-600 block mb-1">P. CRÉDITO</label>
+                            <input type="number" id="credito" step="0.01" class="w-full p-3 rounded-xl text-center text-sm" placeholder="0.00">
                         </div>
                     </div>
                 </div>
 
-                <button type="submit" id="btnGuardar" class="w-full gold-gradient text-black font-black py-4 rounded-2xl shadow-xl active:scale-95 transition-transform uppercase">
-                    Guardar Producto
+                <button type="submit" id="btnSubmit" class="w-full gold-gradient text-black font-black py-5 rounded-2xl shadow-xl uppercase text-xs tracking-widest active:scale-95 transition-all">
+                    Confirmar Registro
                 </button>
             </form>
         </div>
     </div>
 
-    <!-- Navegación -->
-    <nav class="fixed bottom-0 left-0 right-0 bg-[#0a0a0a]/90 backdrop-blur-md border-t border-white/5 flex justify-around p-4 text-gray-500 max-w-4xl mx-auto z-40 rounded-t-3xl">
-        <a href="index.html" class="flex flex-col items-center"><i class="fas fa-th-large text-lg"></i></a>
-        <a href="productos.html" class="flex flex-col items-center text-gold">
-            <div class="bg-gold/10 p-2 rounded-xl -mt-6 border border-gold/20 shadow-lg"><i class="fas fa-box-open text-xl"></i></div>
-            <span class="text-[9px] mt-1 font-bold uppercase">Productos</span>
-        </a>
-        <a href="inventario.html" class="flex flex-col items-center"><i class="fas fa-chart-line text-lg"></i></a>
+    <!-- Navegación Inferior -->
+    <nav class="fixed bottom-0 left-0 right-0 bg-[#0a0a0a]/90 backdrop-blur-xl border-t border-white/5 flex justify-around p-4 z-50 max-w-4xl mx-auto rounded-t-[2.5rem]">
+        <a href="index.html" class="p-3 text-gray-600"><i class="fas fa-home text-xl"></i></a>
+        <a href="productos.html" class="p-3 text-gold bg-gold/10 rounded-2xl px-6"><i class="fas fa-box text-xl"></i></a>
+        <a href="inventario.html" class="p-3 text-gray-600"><i class="fas fa-list-ul text-xl"></i></a>
     </nav>
 
     <script type="module">
-        import { guardarProductoJaddy, obtenerCatalogoJaddy, db, doc, updateDoc, appId } from './conexion.js';
+        import { guardarProductoJaddy, obtenerCatalogoJaddy, db, doc, updateDoc } from './conexion.js';
 
-        let todosLosProductos = [];
+        let listaLocal = [];
 
-        // 1. CARGAR Y RENDERIZAR
+        // Iniciar Escucha de Firebase
         obtenerCatalogoJaddy((productos) => {
-            todosLosProductos = productos;
-            renderizarLista(productos);
+            const status = document.getElementById('conexion-status');
+            status.innerText = "Catálogo Conectado";
+            status.classList.replace('opacity-60', 'text-green-500');
+            
+            listaLocal = productos;
+            renderizar(productos);
         });
 
-        function renderizarLista(lista) {
-            const contenedor = document.getElementById('listaProductos');
-            contenedor.innerHTML = '';
+        function renderizar(productos) {
+            const container = document.getElementById('listaProductos');
+            container.innerHTML = '';
+            
+            if (productos.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-20 opacity-20">
+                        <i class="fas fa-box-open text-5xl mb-4"></i>
+                        <p class="text-xs font-bold uppercase tracking-[0.3em]">Vaciado</p>
+                    </div>`;
+                return;
+            }
 
-            lista.forEach(p => {
+            productos.forEach(p => {
                 const div = document.createElement('div');
-                div.className = "product-card rounded-3xl overflow-hidden shadow-2xl flex";
+                div.className = "card-producto p-5 shadow-2xl relative overflow-hidden";
                 div.innerHTML = `
-                    <div class="w-24 bg-black flex items-center justify-center border-r border-white/5">
-                        <i class="fas fa-flask text-gold/30 text-3xl"></i>
-                    </div>
-                    <div class="p-4 flex-1">
-                        <div class="flex justify-between items-start">
-                            <h3 class="font-bold text-white uppercase text-sm">${p.nombre}</h3>
-                            <button onclick="editarProducto('${p.id}')" class="btn-edit w-7 h-7 rounded-full flex items-center justify-center text-[10px]">
-                                <i class="fas fa-pen"></i>
-                            </button>
-                        </div>
-                        <p class="text-[10px] text-gold font-bold">${p.codigo || 'SIN SKU'}</p>
-                        
-                        <div class="flex justify-between items-end mt-3">
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="flex gap-4 items-center">
+                            <div class="w-12 h-12 bg-black rounded-2xl flex items-center justify-center border border-white/5">
+                                <i class="fas fa-tag text-gold opacity-40"></i>
+                            </div>
                             <div>
-                                <span class="text-[8px] text-gray-500 block uppercase">Stock Actual</span>
-                                <span class="text-white font-black text-sm">${p.stock || 0} pzs</span>
+                                <h3 class="text-white font-black uppercase text-sm tracking-tighter">${p.nombre}</h3>
+                                <div class="flex items-center gap-2">
+                                    <span class="text-gold text-[10px] font-bold tracking-widest">${p.codigo || 'S/C'}</span>
+                                    <span class="w-1 h-1 bg-white/20 rounded-full"></span>
+                                    <span class="text-[9px] text-gray-500 font-bold uppercase">Stock: ${p.stock || 0}</span>
+                                </div>
                             </div>
-                            <div class="text-right">
-                                <span class="text-[8px] text-gray-500 block uppercase">Precio Detal</span>
-                                <span class="text-gold font-black text-sm">${p.precioDetal || 0}$</span>
-                            </div>
+                        </div>
+                        <button onclick="editar('${p.id}')" class="w-10 h-10 bg-white/5 rounded-xl flex items-center justify-center text-gold active:bg-gold/20">
+                            <i class="fas fa-pen text-[10px]"></i>
+                        </button>
+                    </div>
+                    <div class="grid grid-cols-4 gap-2 text-center bg-black/40 p-4 rounded-2xl border border-white/5">
+                        <div>
+                            <p class="text-[7px] text-gray-600 uppercase font-bold mb-1">Costo</p>
+                            <p class="text-[10px] font-bold">$${Number(p.costo || 0).toFixed(2)}</p>
+                        </div>
+                        <div class="border-x border-white/5">
+                            <p class="text-[7px] text-gold uppercase font-bold mb-1">Detal</p>
+                            <p class="text-[10px] font-black text-gold">$${Number(p.precioDetal || 0).toFixed(2)}</p>
+                        </div>
+                        <div class="border-r border-white/5">
+                            <p class="text-[7px] text-gray-600 uppercase font-bold mb-1">Mayor</p>
+                            <p class="text-[10px] font-bold">$${Number(p.precioMayor || 0).toFixed(2)}</p>
+                        </div>
+                        <div>
+                            <p class="text-[7px] text-gray-600 uppercase font-bold mb-1">Crédito</p>
+                            <p class="text-[10px] font-bold">$${Number(p.precioCredito || 0).toFixed(2)}</p>
                         </div>
                     </div>
                 `;
-                contenedor.appendChild(div);
+                container.appendChild(div);
             });
         }
 
-        // 2. BUSCADOR
-        document.getElementById('inputBusqueda').addEventListener('input', (e) => {
-            const term = e.target.value.toLowerCase();
-            const filtrados = todosLosProductos.filter(p => p.nombre.toLowerCase().includes(term) || p.codigo?.toLowerCase().includes(term));
-            renderizarLista(filtrados);
-        });
-
-        // 3. GUARDAR / EDITAR
+        // Acción Guardar/Editar
         document.getElementById('formProducto').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const id = document.getElementById('prodId').value;
-            const btn = document.getElementById('btnGuardar');
+            const id = document.getElementById('editId').value;
+            const btn = document.getElementById('btnSubmit');
             
             const datos = {
-                nombre: document.getElementById('prodNombre').value,
-                codigo: document.getElementById('prodCodigo').value,
-                costo: parseFloat(document.getElementById('prodCosto').value) || 0,
-                precioDetal: parseFloat(document.getElementById('prodDetal').value) || 0,
-                precioMayor: parseFloat(document.getElementById('prodMayor').value) || 0,
-                precioCredito: parseFloat(document.getElementById('prodCredito').value) || 0
+                nombre: document.getElementById('nombre').value,
+                codigo: document.getElementById('codigo').value,
+                costo: parseFloat(document.getElementById('costo').value || 0),
+                precioDetal: parseFloat(document.getElementById('detal').value || 0),
+                precioMayor: parseFloat(document.getElementById('mayor').value || 0),
+                precioCredito: parseFloat(document.getElementById('credito').value || 0)
             };
 
             try {
-                btn.innerText = "PROCESANDO...";
                 btn.disabled = true;
+                btn.innerText = "Sincronizando...";
 
-                if (id) {
-                    // EDITAR EXISTENTE
-                    const docRef = doc(db, "jaddy_inc", appId, "productos", id);
-                    await updateDoc(docRef, datos);
-                    alert("✅ Producto actualizado");
+                if(id) {
+                    // Colección productos_jaddy como en conexion.js
+                    await updateDoc(doc(db, "productos_jaddy", id), datos);
                 } else {
-                    // NUEVO (Inicia stock en 0)
-                    await guardarProductoJaddy({ ...datos, stock: 0 });
-                    alert("✅ Producto guardado en la nube");
+                    await guardarProductoJaddy({...datos, stock: 0});
                 }
-                
-                cerrarModalProducto();
-                document.getElementById('formProducto').reset();
+                cerrarModal();
             } catch (err) {
-                alert("❌ Error de conexión");
+                alert("Error crítico: " + err.message);
             } finally {
-                btn.innerText = "GUARDAR PRODUCTO";
                 btn.disabled = false;
+                btn.innerText = "Confirmar Registro";
             }
         });
 
-        // Hacer disponible la función de editar globalmente
-        window.editarProducto = (id) => {
-            const p = todosLosProductos.find(item => item.id === id);
-            if (!p) return;
-
-            document.getElementById('modalTitulo').innerText = "EDITAR PRODUCTO";
-            document.getElementById('prodId').value = p.id;
-            document.getElementById('prodNombre').value = p.nombre;
-            document.getElementById('prodCodigo').value = p.codigo || '';
-            document.getElementById('prodCosto').value = p.costo || 0;
-            document.getElementById('prodDetal').value = p.precioDetal || 0;
-            document.getElementById('prodMayor').value = p.precioMayor || 0;
-            document.getElementById('prodCredito').value = p.precioCredito || 0;
+        window.editar = (id) => {
+            const p = listaLocal.find(x => x.id === id);
+            if(!p) return;
             
-            abrirModalProducto();
+            document.getElementById('modalTitulo').innerText = "Editar Registro";
+            document.getElementById('editId').value = p.id;
+            document.getElementById('nombre').value = p.nombre;
+            document.getElementById('codigo').value = p.codigo || '';
+            document.getElementById('costo').value = p.costo || 0;
+            document.getElementById('detal').value = p.precioDetal || 0;
+            document.getElementById('mayor').value = p.precioMayor || 0;
+            document.getElementById('credito').value = p.precioCredito || 0;
+            abrirModal();
         };
     </script>
-
+    
     <script>
-        function abrirModalProducto() { 
-            if(!document.getElementById('prodId').value) {
-                document.getElementById('modalTitulo').innerText = "REGISTRAR PRODUCTO";
-                document.getElementById('formProducto').reset();
-            }
-            document.getElementById('modalProducto').classList.add('active'); 
-        }
-        function cerrarModalProducto() { 
+        function abrirModal() { document.getElementById('modalProducto').classList.add('active'); }
+        function cerrarModal() { 
             document.getElementById('modalProducto').classList.remove('active'); 
-            document.getElementById('prodId').value = ""; // Limpiar ID al cerrar
+            document.getElementById('formProducto').reset(); 
+            document.getElementById('editId').value = '';
+            document.getElementById('modalTitulo').innerText = "Nueva Entrada";
         }
     </script>
 </body>
 </html>
 
 ```
+
