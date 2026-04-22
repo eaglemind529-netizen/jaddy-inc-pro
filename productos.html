@@ -14,9 +14,12 @@
         .input-field { background: #111; border: 1px solid #222; border-radius: 12px; padding: 14px; width: 100%; color: white; font-size: 14px; }
         .input-field:focus { border-color: var(--gold); outline: none; }
         .btn-save { background: var(--gold); color: black; font-weight: 800; border-radius: 12px; width: 100%; padding: 16px; text-transform: uppercase; }
-        .product-card { background: #0F0F0F; border: 1px solid #1A1A1A; border-radius: 20px; padding: 16px; margin-bottom: 12px; }
+        .product-card { background: #0F0F0F; border: 1px solid #1A1A1A; border-radius: 20px; padding: 16px; margin-bottom: 12px; position: relative; }
         .modal-full { position: fixed; inset: 0; background: var(--bg); z-index: 100; display: none; flex-direction: column; }
         .variant-tag { background: rgba(212, 175, 55, 0.1); color: var(--gold); border: 1px solid rgba(212, 175, 55, 0.3); padding: 4px 10px; border-radius: 8px; font-size: 10px; font-weight: bold; text-transform: uppercase; }
+        .action-btn { width: 32px; height: 32px; border-radius: 8px; display: flex; items-center: center; justify-content: center; font-size: 12px; transition: all 0.2s; }
+        .btn-delete { background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.2); }
+        .btn-edit { background: rgba(212, 175, 55, 0.1); color: var(--gold); border: 1px solid rgba(212, 175, 55, 0.2); }
     </style>
 </head>
 <body class="p-4 pb-24">
@@ -58,6 +61,7 @@
         <!-- Formulario Principal -->
         <section class="bg-[#0A0A0A] p-5 rounded-[24px] gold-border mb-8 shadow-2xl">
             <form id="formProd" class="space-y-4">
+                <input type="hidden" id="prodId"> <!-- Campo oculto para edición -->
                 <div class="grid grid-cols-3 gap-3">
                     <input type="text" id="codigo" placeholder="CÓDIGO" class="input-field uppercase font-bold" required>
                     <input type="text" id="nombre" placeholder="NOMBRE PRODUCTO" class="col-span-2 input-field uppercase font-bold" required>
@@ -74,6 +78,7 @@
                 </div>
 
                 <button type="submit" id="btnEnvio" class="btn-save">Registrar Producto</button>
+                <button type="button" id="btnCancelarEdicion" class="hidden w-full text-[10px] font-bold text-gray-500 uppercase py-2">Cancelar Edición</button>
             </form>
         </section>
 
@@ -84,35 +89,39 @@
     <script type="module">
         // Importamos exactamente lo que ya funciona en tu conexion.js
         import { conectarCerebro, subirProducto, obtenerProductos, auth, onAuthStateChanged } from './conexion.js';
+        // Importamos deleteDoc y doc adicionalmente para la función de eliminar
+        import { getFirestore, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        const db = getFirestore();
+        const appId = "jaddy-inc-inventario"; 
 
         const form = document.getElementById('formProd');
         const listaDiv = document.getElementById('displayLista');
         const modal = document.getElementById('modalVariantes');
         const statusDot = document.getElementById('statusDot');
+        const btnEnvio = document.getElementById('btnEnvio');
+        const btnCancelar = document.getElementById('btnCancelarEdicion');
+        const prodIdInput = document.getElementById('prodId');
 
         let productoSeleccionado = null;
         let variantesTemporales = [];
 
-        // Iniciamos conexión una sola vez
         conectarCerebro();
 
-        // Control de estado de conexión visual
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 statusDot.classList.replace('bg-red-600', 'bg-green-500');
-                // Llamamos a obtenerProductos que ya tiene el onSnapshot en conexion.js
                 obtenerProductos((productos) => {
                     dibujar(productos);
                 });
             }
         });
 
-        // Función para pintar la lista
         function dibujar(productos) {
             listaDiv.innerHTML = productos.map(p => `
-                <div class="product-card active:scale-95 transition-transform" onclick="abrirVariantes('${p.id}', ${JSON.stringify(p).replace(/"/g, '&quot;')})">
-                    <div class="flex justify-between items-start mb-2">
-                        <div>
+                <div class="product-card active:scale-[0.98] transition-transform">
+                    <div class="flex justify-between items-start mb-2" onclick="abrirVariantes('${p.id}', ${JSON.stringify(p).replace(/"/g, '&quot;')})">
+                        <div class="flex-1">
                             <span class="text-[8px] font-black text-gold uppercase tracking-[0.2em]">${p.codigo || 'S/C'}</span>
                             <h3 class="text-sm font-black uppercase text-white">${p.nombre || 'Sin Nombre'}</h3>
                         </div>
@@ -121,17 +130,62 @@
                             <p class="text-[7px] text-gray-500 font-bold uppercase">Detal</p>
                         </div>
                     </div>
-                    <div class="flex flex-wrap gap-1 mt-2">
-                        ${(p.variantes || []).length > 0 
-                            ? p.variantes.map(v => `<span class="variant-tag">${v}</span>`).join('')
-                            : '<span class="text-[8px] text-gray-600 font-bold uppercase tracking-tighter italic">Toca para agregar variantes</span>'
-                        }
+                    
+                    <div class="flex justify-between items-center mt-3 pt-3 border-t border-white/5">
+                        <div class="flex flex-wrap gap-1 flex-1 pr-4" onclick="abrirVariantes('${p.id}', ${JSON.stringify(p).replace(/"/g, '&quot;')})">
+                            ${(p.variantes || []).length > 0 
+                                ? p.variantes.map(v => `<span class="variant-tag">${v}</span>`).join('')
+                                : '<span class="text-[8px] text-gray-600 font-bold uppercase tracking-tighter italic">Agregar variantes</span>'
+                            }
+                        </div>
+                        <div class="flex gap-2">
+                            <button onclick="prepararEdicion(${JSON.stringify(p).replace(/"/g, '&quot;')})" class="action-btn btn-edit">
+                                <i class="fas fa-pen"></i>
+                            </button>
+                            <button onclick="confirmarEliminar('${p.id}', '${p.nombre}')" class="action-btn btn-delete">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
                     </div>
                 </div>
             `).join('');
         }
 
-        // Lógica del Modal (Global para que el onclick del HTML funcione)
+        // --- FUNCIONES DE EDICIÓN ---
+        window.prepararEdicion = (p) => {
+            prodIdInput.value = p.id;
+            document.getElementById('codigo').value = p.codigo;
+            document.getElementById('nombre').value = p.nombre;
+            document.getElementById('costo').value = p.costo || 0;
+            document.getElementById('detal').value = p.precio_detal || 0;
+            document.getElementById('credito').value = p.precio_credito || 0;
+            document.getElementById('mayor').value = p.precio_mayor || 0;
+            
+            btnEnvio.innerText = "Actualizar Producto";
+            btnCancelar.classList.remove('hidden');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        };
+
+        btnCancelar.onclick = () => {
+            form.reset();
+            prodIdInput.value = "";
+            btnEnvio.innerText = "Registrar Producto";
+            btnCancelar.classList.add('hidden');
+        };
+
+        // --- FUNCIÓN DE ELIMINAR ---
+        window.confirmarEliminar = async (id, nombre) => {
+            if (confirm(`¿Estás seguro de eliminar el producto "${nombre}"? Esta acción no se puede deshacer.`)) {
+                try {
+                    const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'productos_jaddy', id);
+                    await deleteDoc(docRef);
+                } catch (error) {
+                    console.error("Error al eliminar:", error);
+                }
+            }
+        };
+
+        // Lógica del Modal
         window.abrirVariantes = (id, p) => {
             productoSeleccionado = { id, ...p };
             variantesTemporales = [...(p.variantes || [])];
@@ -176,11 +230,9 @@
         window.guardarVariantes = async () => {
             if (!productoSeleccionado) return;
             const btn = document.querySelector('#modalVariantes .btn-save');
-            const originalText = btn.innerText;
             btn.innerText = "Sincronizando...";
             btn.disabled = true;
 
-            // Mantenemos la estructura de datos que espera tu subirProducto
             const nuevosDatos = {
                 codigo: productoSeleccionado.codigo,
                 nombre: productoSeleccionado.nombre,
@@ -192,14 +244,14 @@
             };
 
             await subirProducto(nuevosDatos, productoSeleccionado.id);
-            btn.innerText = originalText;
+            btn.innerText = "Finalizar Edición";
             btn.disabled = false;
             cerrarModal();
         };
 
-        // Guardar producto nuevo
         form.onsubmit = async (e) => {
             e.preventDefault();
+            const id = prodIdInput.value;
             const datos = {
                 codigo: document.getElementById('codigo').value.toUpperCase().trim(),
                 nombre: document.getElementById('nombre').value.toUpperCase().trim(),
@@ -207,14 +259,19 @@
                 precio_detal: parseFloat(document.getElementById('detal').value) || 0,
                 precio_credito: parseFloat(document.getElementById('credito').value) || 0,
                 precio_mayor: parseFloat(document.getElementById('mayor').value) || 0,
-                variantes: []
+                // Si es nuevo, variantes vacías. Si es edición, mantenemos las que tiene (se gestionan en el modal)
+                variantes: id ? productoSeleccionado?.variantes || [] : []
             };
 
-            await subirProducto(datos);
+            await subirProducto(datos, id || null);
             form.reset();
+            prodIdInput.value = "";
+            btnEnvio.innerText = "Registrar Producto";
+            btnCancelar.classList.add('hidden');
         };
     </script>
 </body>
 </html>
 
 ```
+
