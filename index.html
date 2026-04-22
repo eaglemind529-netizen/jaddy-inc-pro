@@ -1,3 +1,4 @@
+
 ```html
 <!DOCTYPE html>
 <html lang="es">
@@ -13,7 +14,6 @@
         :root {
             --oro: #D4AF37;
             --negro-puro: #050505;
-            --tarjeta: #0F0F0F;
         }
 
         body {
@@ -40,13 +40,13 @@
             color: var(--oro);
         }
 
-        /* Cuadritos Compactos */
+        /* Cuadritos Compactos Centrados */
         .grid-menu {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
-            gap: 15px;
+            gap: 20px;
             width: 100%;
-            max-width: 400px;
+            max-width: 320px; 
         }
 
         .box-item {
@@ -57,9 +57,9 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            border-radius: 28px;
+            border-radius: 32px;
             transition: all 0.2s ease;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
 
         .box-item:active {
@@ -69,14 +69,14 @@
         }
 
         .icon-circle {
-            width: 50px;
-            height: 50px;
-            border-radius: 18px;
+            width: 54px;
+            height: 54px;
+            border-radius: 20px;
             display: flex;
             align-items: center;
             justify-content: center;
             margin-bottom: 12px;
-            font-size: 20px;
+            font-size: 22px;
         }
 
         .gold-box {
@@ -87,7 +87,7 @@
             animation: fadeIn 0.5s ease-out;
         }
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(15px); }
+            from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
         }
     </style>
@@ -102,55 +102,46 @@
         </div>
         <div class="flex items-center gap-2">
             <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-            <span class="text-[8px] text-gray-500 font-bold uppercase tracking-widest">En Línea</span>
+            <span class="text-[8px] text-gray-500 font-bold uppercase tracking-widest">Conectado</span>
         </div>
     </header>
 
-    <!-- Contenido Principal -->
-    <main id="main-content" class="flex-1 flex flex-col items-center justify-center px-6 pb-28 overflow-y-auto">
+    <!-- Contenido Principal (Centrado) -->
+    <main id="main-content" class="flex-1 flex flex-col items-center justify-center px-6 pb-28">
         
         <div id="default-view" class="fade-in w-full flex flex-col items-center">
             
             <div class="text-center mb-10">
-                <h2 class="text-white text-xs font-bold tracking-[0.3em] uppercase opacity-40 mb-2">Módulos de Gestión</h2>
-                <div class="w-10 h-[1px] bg-gold-box mx-auto opacity-30"></div>
+                <h2 class="text-white text-[10px] font-black tracking-[0.4em] uppercase opacity-40 mb-4 italic">Módulos de Élite</h2>
+                <div class="w-12 h-[2px] gold-box mx-auto rounded-full"></div>
             </div>
 
             <!-- Rejilla de Cuadritos -->
             <div class="grid-menu">
                 
-                <!-- Cuadrito PRODUCTOS (Cambiado a App.abrir para prueba) -->
+                <!-- Cuadrito PRODUCTOS (Va a productos.html o abre módulo interno) -->
                 <button onclick="App.abrir('productos')" class="box-item">
-                    <div class="icon-circle gold-box text-black shadow-lg shadow-yellow-900/20">
-                        <i class="fas fa-box-open"></i>
+                    <div class="icon-circle gold-box text-black shadow-lg shadow-yellow-900/30">
+                        <i class="fas fa-box"></i>
                     </div>
-                    <span class="texto-dorado font-black text-[11px] tracking-widest uppercase">Productos</span>
-                    <span class="text-gray-600 text-[7px] font-bold mt-1 uppercase">Catálogo</span>
+                    <span class="texto-dorado font-black text-[11px] tracking-tighter uppercase">Productos</span>
                 </button>
 
                 <!-- Cuadrito INVENTARIO -->
                 <button onclick="App.abrir('inventario')" class="box-item">
-                    <div class="icon-circle bg-white/5 border border-white/10 text-white shadow-lg">
-                        <i class="fas fa-list-check opacity-70"></i>
+                    <div class="icon-circle bg-white/5 border border-white/10 text-white">
+                        <i class="fas fa-list-ul opacity-70"></i>
                     </div>
-                    <span class="text-white font-black text-[11px] tracking-widest uppercase">Inventario</span>
-                    <span class="text-gray-600 text-[7px] font-bold mt-1 uppercase">Stock/Ventas</span>
+                    <span class="text-white font-black text-[11px] tracking-tighter uppercase">Inventario</span>
                 </button>
 
-                <!-- Espacio para FUTUROS MÓDULOS -->
-                <button onclick="App.abrir('caja')" class="box-item">
-                    <div class="icon-circle bg-white/5 border border-white/10 text-white shadow-lg">
-                        <i class="fas fa-cash-register opacity-70"></i>
-                    </div>
-                    <span class="text-white font-black text-[11px] tracking-widest uppercase">Caja</span>
-                    <span class="text-gray-600 text-[7px] font-bold mt-1 uppercase">Flujo Diario</span>
-                </button>
+                <!-- Espacios futuros -->
+                <div class="box-item opacity-10 border-dashed">
+                    <i class="fas fa-plus text-gray-500"></i>
+                </div>
 
-                <div class="box-item opacity-20 border-dashed">
-                    <div class="icon-circle bg-gray-800 text-gray-500">
-                        <i class="fas fa-plus"></i>
-                    </div>
-                    <span class="text-gray-500 text-[9px] uppercase font-bold italic">Próximamente</span>
+                <div class="box-item opacity-10 border-dashed">
+                    <i class="fas fa-plus text-gray-500"></i>
                 </div>
 
             </div>
@@ -161,7 +152,7 @@
 
     <!-- Menú Inferior -->
     <nav id="bottom-bar" class="fixed bottom-0 left-0 right-0 h-20 bg-black border-t border-gray-900 flex items-center justify-around z-50 shadow-2xl">
-        <div id="loading-msg" class="text-[9px] text-gray-700 tracking-widest uppercase animate-pulse">Sincronizando...</div>
+        <div id="loading-msg" class="text-[8px] text-gray-700 tracking-[0.3em] uppercase animate-pulse">Sincronizando Base de Datos...</div>
     </nav>
 
     <!-- Lógica del Cerebro -->
@@ -191,41 +182,42 @@
                 const main = document.getElementById('main-content');
                 const modulo = this.modulos[id];
 
+                main.classList.remove('justify-center');
+                main.classList.add('justify-start', 'pt-6');
+
                 main.innerHTML = `
-                    <div class="fade-in w-full h-full p-2 max-w-md mx-auto">
-                        <div class="flex justify-between items-center mb-6 border-b border-gray-900 pb-4">
+                    <div class="fade-in w-full max-w-md mx-auto">
+                        <div class="flex justify-between items-center mb-6 px-2">
                             <h2 class="text-[#D4AF37] text-xl font-black uppercase tracking-tighter">${modulo.nombre}</h2>
-                            <button onclick="window.location.reload()" class="bg-gray-900 text-[9px] text-gray-400 font-black px-4 py-2 rounded-full uppercase">Cerrar</button>
+                            <button onclick="window.location.reload()" class="bg-gray-900 text-[10px] text-gray-500 font-bold px-4 py-2 rounded-full uppercase border border-gray-800">Cerrar</button>
                         </div>
-                        <div id="render-${id}"></div>
+                        <div id="render-${id}" class="px-2"></div>
                     </div>
                 `;
                 modulo.dibujar(`render-${id}`);
             }
         };
 
-        // Autocarga de módulos para prueba de interfaz
+        // Simulación de carga para que el Canvas sea interactivo inmediatamente
         window.onload = () => {
             App.registrar({
                 id: 'productos',
                 nombre: 'Productos',
                 icono: '📦',
-                dibujar: (c) => document.getElementById(c).innerHTML = '<p class="text-gray-500 text-xs">Cargando catálogo...</p>'
+                dibujar: (id) => document.getElementById(id).innerHTML = '<div class="p-6 bg-[#0F0F0F] rounded-3xl border border-gray-900 text-center"><p class="text-xs text-gray-500 uppercase tracking-widest">Cargando catálogo de lujo...</p></div>'
             });
             App.registrar({
                 id: 'inventario',
                 nombre: 'Inventario',
                 icono: '📊',
-                dibujar: (c) => document.getElementById(c).innerHTML = '<p class="text-gray-500 text-xs">Verificando Stock...</p>'
+                dibujar: (id) => document.getElementById(id).innerHTML = '<div class="p-6 bg-[#0F0F0F] rounded-3xl border border-gray-900 text-center"><p class="text-xs text-gray-500 uppercase tracking-widest">Sincronizando stock real...</p></div>'
             });
-            App.registrar({
-                id: 'caja',
-                nombre: 'Caja',
-                icono: '💰',
-                dibujar: (c) => document.getElementById(c).innerHTML = '<p class="text-gray-500 text-xs">Cierre de caja en proceso...</p>'
-            });
-        };
+        }
     </script>
+
+    <script type="module" src="conexion.js"></script>
+    <script src="inventario.js"></script>
+
 </body>
 </html>
 
