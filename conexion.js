@@ -1,72 +1,53 @@
-```javascript
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
 import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-import { getFirestore, collection, doc, addDoc, updateDoc, onSnapshot, query } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+import { getFirestore, collection, doc, addDoc, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-// Usamos la configuración dinámica del entorno si existe, o la tuya como respaldo
-const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
-  apiKey: "AIzaSyCrjjeOoXPOtJDXDfrHLOA4Ny0QW2zfVWk",
-  authDomain: "apps-d45d6.firebaseapp.com",
-  projectId: "apps-d45d6",
-  storageBucket: "apps-d45d6.firebasestorage.app",
-  messagingSenderId: "502648373937",
-  appId: "1:502648373937:web:8c3beaa2a6c9289a4d9890"
+// Configuración de tu base de datos
+const firebaseConfig = {
+    apiKey: "AIzaSyCrjjeOoXPOtJDXDfrHLOA4Ny0QW2zfVWk",
+    authDomain: "apps-d45d6.firebaseapp.com",
+    projectId: "apps-d45d6",
+    storageBucket: "apps-d45d6.firebasestorage.app",
+    messagingSenderId: "502648373937",
+    appId: "1:502648373937:web:8c3beaa2a6c9289a4d9890"
 };
 
-const appId = typeof __app_id !== 'undefined' ? __app_id : 'jaddy-inc-inventario';
-
-// Inicialización de servicios
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
+const appId = "jaddy-inc-inventario"; // ID del proyecto en el sistema
 
-// Autenticación Anónima Obligatoria para Firestore
-const conectar = async () => {
+// Conectar anónimamente para tener permiso de escritura
+export const conectarCerebro = async () => {
     try {
         await signInAnonymously(auth);
-        console.log("✅ Sistema Jaddy INC Conectado");
-    } catch (error) {
-        console.error("❌ Error de enlace:", error);
+        console.log("🧠 Conexión establecida con éxito");
+    } catch (e) {
+        console.error("Error de conexión:", e);
     }
 };
-conectar();
 
-// --- FUNCIONES MEJORADAS ---
-
-// Guardar producto con la ruta de seguridad correcta
-export async function guardarProductoJaddy(datos) {
-    try {
-        // RUTA REQUERIDA: artifacts/{appId}/public/data/{collection}
-        const colRef = collection(db, 'artifacts', appId, 'public', 'data', 'productos_jaddy');
-        const docRef = await addDoc(colRef, {
-            ...datos,
-            timestamp: new Date().getTime()
-        });
-        return docRef.id;
-    } catch (error) {
-        console.error("🔥 Error al insertar:", error);
-        throw error;
+// Guardar o Actualizar un Producto
+export async function subirProducto(datos, id = null) {
+    const ruta = ['artifacts', appId, 'public', 'data', 'productos_jaddy'];
+    if (id) {
+        const docRef = doc(db, ...ruta, id);
+        return await updateDoc(docRef, { ...datos, editado: new Date().getTime() });
+    } else {
+        const colRef = collection(db, ...ruta);
+        return await addDoc(colRef, { ...datos, creado: new Date().getTime() });
     }
 }
 
-// Obtener catálogo con manejo de errores y ordenado manual (más seguro)
-export function obtenerCatalogoJaddy(callback) {
+// Escuchar cambios en la lista de productos
+export function obtenerProductos(callback) {
     const colRef = collection(db, 'artifacts', appId, 'public', 'data', 'productos_jaddy');
-    
-    // Usamos una consulta simple para evitar errores de índices (Regla 2)
-    return onSnapshot(colRef, (snapshot) => {
-        const lista = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-        
-        // Ordenamos por nombre alfabéticamente en la memoria
+    return onSnapshot(colRef, (snap) => {
+        const lista = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        // Ordenar por nombre
         lista.sort((a, b) => (a.nombre || "").localeCompare(b.nombre || ""));
-        
         callback(lista);
-    }, (error) => {
-        console.error("❌ Fallo en tiempo real:", error);
     });
 }
 
-// Exportamos lo necesario para actualizar productos existentes
-export { db, doc, updateDoc, auth, onAuthStateChanged, appId, collection };
-
-```
+export { auth, onAuthStateChanged };
