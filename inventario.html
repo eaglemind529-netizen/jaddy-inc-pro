@@ -4,332 +4,176 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>JADDY INC - CONTROL DE ENTRADAS</title>
+    <title>Inventario | Jaddy INC</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        :root {
-            --dorado: #D4AF37;
-            --negro: #0a0a0a;
-            --gris-oscuro: #121212;
-            --gris-claro: #1e1e1e;
-        }
-
-        body {
-            background-color: var(--negro);
-            color: #ffffff;
-            font-family: 'Segoe UI', Roboto, sans-serif;
-            margin: 0;
-            padding: 15px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        /* --- HEADER --- */
-        .header {
-            width: 100%;
-            max-width: 500px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            border-bottom: 1px solid var(--dorado);
-            padding-bottom: 10px;
-        }
-
-        .btn-volver {
-            color: var(--dorado);
-            text-decoration: none;
-            font-size: 14px;
-            font-weight: bold;
-            border: 1px solid var(--dorado);
-            padding: 6px 12px;
-            border-radius: 5px;
-        }
-
-        /* --- FORMULARIO DE ENTRADA --- */
-        .panel-registro {
-            background-color: var(--gris-oscuro);
-            width: 100%;
-            max-width: 450px;
-            padding: 20px;
-            border-radius: 15px;
-            border: 1px solid #222;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            margin-bottom: 25px;
-            box-sizing: border-box;
-        }
-
-        .seccion-titulo {
-            color: var(--dorado);
-            font-size: 14px;
-            font-weight: bold;
-            text-align: center;
-            margin-bottom: 20px;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-        }
-
-        .campo { margin-bottom: 15px; }
-
-        label {
-            display: block;
-            color: var(--dorado);
-            font-size: 11px;
-            margin-bottom: 6px;
-            text-transform: uppercase;
-        }
-
-        input, select {
-            width: 100%;
-            background: #1a1a1a;
-            border: 1px solid #333;
-            color: white;
-            padding: 14px;
-            border-radius: 10px;
-            box-sizing: border-box;
-            font-size: 16px;
-            appearance: none; /* Quita estilo nativo en iOS */
-        }
-
-        input:focus { border-color: var(--dorado); outline: none; }
-
-        .btn-guardar {
-            width: 100%;
-            background: var(--dorado);
-            color: black;
-            padding: 16px;
-            border: none;
-            border-radius: 10px;
-            font-weight: bold;
-            font-size: 16px;
-            cursor: pointer;
-            text-transform: uppercase;
-            margin-top: 10px;
-        }
-
-        /* --- LISTADO DE STOCK --- */
-        .contenedor-lista { width: 100%; max-width: 500px; }
-
-        .producto-card {
-            background: var(--gris-claro);
-            border-radius: 12px;
-            margin-bottom: 12px;
-            border: 1px solid #2a2a2a;
-            overflow: hidden;
-        }
-
-        .card-header {
-            padding: 15px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .card-info h3 {
-            margin: 0;
-            color: var(--dorado);
-            font-size: 17px;
-            text-transform: uppercase;
-        }
-
-        .card-info span {
-            color: #777;
-            font-size: 11px;
-        }
-
-        .badge-total {
-            background: var(--dorado);
-            color: black;
-            padding: 5px 12px;
-            border-radius: 20px;
-            font-weight: bold;
-            font-size: 12px;
-        }
-
-        /* --- VARIANTES INTERNAS --- */
-        .variantes-lista {
-            background: rgba(0,0,0,0.3);
-            padding: 0 15px;
-            border-top: 1px solid #222;
-        }
-
-        .variante-item {
-            padding: 15px 0;
-            border-bottom: 1px solid #222;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .variante-item:last-child { border-bottom: none; }
-
-        .v-nombre {
-            font-weight: bold;
-            font-size: 15px;
-            display: block;
-        }
-
-        .v-fecha {
-            font-size: 10px;
-            color: #555;
-            display: block;
-            margin-top: 4px;
-        }
-
-        .v-stock {
-            color: var(--dorado);
-            font-size: 20px;
-            font-weight: bold;
-            margin-right: 15px;
-        }
-
-        .btn-vender {
-            background: #8b0000;
-            color: white;
-            border: none;
-            padding: 8px 15px;
-            border-radius: 6px;
-            font-size: 12px;
-            font-weight: bold;
-        }
+        :root { --gold: #D4AF37; --bg: #050505; }
+        body { background: var(--bg); color: white; font-family: 'Inter', sans-serif; }
+        .gold-border { border: 1px solid rgba(212, 175, 55, 0.2); }
+        .input-field { background: #111; border: 1px solid #222; border-radius: 12px; padding: 14px; width: 100%; color: white; font-size: 14px; }
+        .input-field:focus { border-color: var(--gold); outline: none; }
+        .card-stat { background: #0F0F0F; border: 1px solid #1A1A1A; border-radius: 20px; padding: 16px; margin-bottom: 15px; }
+        .stat-number { font-size: 18px; font-weight: 900; color: var(--gold); }
+        .label-stat { font-size: 9px; text-transform: uppercase; color: #555; letter-spacing: 1px; font-weight: 800; }
     </style>
 </head>
-<body>
+<body class="p-4 pb-24 max-w-md mx-auto">
 
-    <div class="header">
-        <a href="index.html" class="btn-volver">← VOLVER</a>
-        <span style="color:var(--dorado); font-weight:bold; letter-spacing:1px;">JADDY INC.</span>
-    </div>
+    <header class="flex justify-between items-center mb-6">
+        <a href="index.html" class="text-[10px] font-black border border-gold/30 px-4 py-2 rounded-full text-gold uppercase">← Volver</a>
+        <div id="statusDot" class="w-2 h-2 rounded-full bg-red-600"></div>
+    </header>
 
-    <div class="panel-registro">
-        <div class="seccion-titulo">Cargar Mercancía</div>
+    <!-- Panel de Carga (Compras) -->
+    <section class="bg-[#0A0A0A] p-5 rounded-[24px] gold-border mb-8 shadow-2xl">
+        <h2 class="text-center text-gold font-black uppercase text-[10px] tracking-[3px] mb-6" style="color:var(--gold)">Registrar Entrada de Mercancía</h2>
         
-        <div class="campo">
-            <label>Seleccionar Producto</label>
-            <select id="sel-producto">
-                <option value="">-- ¿Qué producto entró? --</option>
-                <!-- Aquí puedes añadir o quitar los productos base que manejas -->
-                <option value="GENÉRICO-PERFUME 30ML-UDS">PERFUMES 30ML</option>
-                <option value="GENÉRICO-PERFUME 100ML-UDS">PERFUMES 100ML</option>
-                <option value="JADDY-JABÓN ARTESANAL-UDS">JABONES JADDY</option>
-                <option value="GRANJA-POLLO ENTERO-KG">POLLO (POR KG)</option>
-            </select>
-        </div>
+        <div class="space-y-4">
+            <div>
+                <label class="text-[9px] font-bold text-gray-500 uppercase ml-2 mb-1 block">Producto Maestro</label>
+                <select id="sel-producto" class="input-field font-bold uppercase"></select>
+            </div>
 
-        <div class="campo">
-            <label>Variante (Fragancia / Sabor / Otros)</label>
-            <input type="text" id="inp-variante" placeholder="Ej: Bad Boy, Fresa, etc.">
+            <div>
+                <label class="text-[9px] font-bold text-gray-500 uppercase ml-2 mb-1 block">Variante / Fragancia</label>
+                <select id="sel-variante" class="input-field font-bold uppercase">
+                    <option value="">Selecciona Producto Primero</option>
+                </select>
+            </div>
+            
+            <div>
+                <label class="text-[9px] font-bold text-gray-500 uppercase ml-2 mb-1 block">Cantidad a Ingresar</label>
+                <input type="number" id="inp-cantidad" placeholder="0" class="input-field font-black text-xl text-center">
+            </div>
+
+            <button onclick="registrarEntrada()" class="w-full bg-white text-black font-black py-4 rounded-xl uppercase tracking-widest text-sm active:scale-95 transition-transform">
+                Guardar en Stock
+            </button>
         </div>
+    </section>
+
+    <h2 class="text-[10px] font-black text-gray-500 uppercase tracking-[2px] mb-4 ml-2">Estado Real del Inventario</h2>
+    <div id="displayStock" class="space-y-4"></div>
+
+    <script type="module">
+        import { conectarCerebro, obtenerProductos, auth, onAuthStateChanged } from './conexion.js';
+        import { getFirestore, doc, setDoc, onSnapshot, collection, increment } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        const db = getFirestore();
+        const appId = "jaddy-inc-inventario";
+        const statusDot = document.getElementById('statusDot');
         
-        <div class="campo">
-            <label>Cantidad Ingresada</label>
-            <input type="number" id="inp-cantidad" placeholder="0">
-        </div>
+        let productosMaestros = [];
+        let stockData = {};
 
-        <button class="btn-guardar" onclick="registrar()">REGISTRAR ENTRADA</button>
-    </div>
+        conectarCerebro();
 
-    <div class="contenedor-lista" id="lista-inventario"></div>
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                statusDot.classList.replace('bg-red-600', 'bg-green-500');
+                
+                // 1. Cargar Productos Maestros
+                obtenerProductos((lista) => {
+                    productosMaestros = lista;
+                    const sel = document.getElementById('sel-producto');
+                    sel.innerHTML = '<option value="">-- SELECCIONAR --</option>' + 
+                        lista.map(p => `<option value="${p.id}">${p.nombre}</option>`).join('');
+                });
 
-    <script>
-        // Memoria de Stock
-        let inventario = JSON.parse(localStorage.getItem('jaddy_stock_v3')) || {};
-
-        function registrar() {
-            const selectVal = document.getElementById('sel-producto').value;
-            const variante = document.getElementById('inp-variante').value.trim().toUpperCase();
-            const cantidad = parseInt(document.getElementById('inp-cantidad').value);
-            
-            // Fecha y Hora actual (Venezuela)
-            const ahora = new Date().toLocaleString('es-VE', {
-                day: '2-digit', month: '2-digit', year: 'numeric',
-                hour: '2-digit', minute: '2-digit'
-            });
-
-            if(!selectVal) return alert("Selecciona un producto.");
-            if(!variante || isNaN(cantidad) || cantidad <= 0) return alert("Pon variante y cantidad.");
-
-            if(!inventario[selectVal]) {
-                const partes = selectVal.split('-');
-                inventario[selectVal] = {
-                    marca: partes[0],
-                    nombre: partes[1],
-                    medida: partes[2],
-                    items: {}
-                };
+                // 2. Escuchar Inventario (Entradas, Ventas, Stock)
+                const invRef = collection(db, 'artifacts', appId, 'public', 'data', 'inventario_master');
+                onSnapshot(invRef, (snap) => {
+                    stockData = {};
+                    snap.docs.forEach(d => stockData[d.id] = d.data());
+                    renderizarInventario();
+                });
             }
+        });
 
-            // Si ya existe la variante, sumamos. Si no, creamos.
-            if(!inventario[selectVal].items[variante]) {
-                inventario[selectVal].items[variante] = { stock: 0, fecha: "" };
+        // Actualizar variantes al cambiar producto
+        document.getElementById('sel-producto').onchange = (e) => {
+            const prod = productosMaestros.find(p => p.id === e.target.value);
+            const selVar = document.getElementById('sel-variante');
+            if (prod && prod.variantes && prod.variantes.length > 0) {
+                selVar.innerHTML = prod.variantes.map(v => `<option value="${v}">${v}</option>`).join('');
+            } else {
+                selVar.innerHTML = '<option value="GENERAL">SIN VARIANTES</option>';
             }
+        };
 
-            inventario[selectVal].items[variante].stock += cantidad;
-            inventario[selectVal].items[variante].fecha = ahora;
+        window.registrarEntrada = async () => {
+            const prodId = document.getElementById('sel-producto').value;
+            const variante = document.getElementById('sel-variante').value;
+            const cant = parseInt(document.getElementById('inp-cantidad').value);
 
-            // Guardar en el teléfono
-            localStorage.setItem('jaddy_stock_v3', JSON.stringify(inventario));
-            
-            // Limpiar campos
-            document.getElementById('inp-variante').value = "";
+            if (!prodId || !variante || isNaN(cant) || cant <= 0) return;
+
+            const prod = productosMaestros.find(p => p.id === prodId);
+            const docId = `${prodId}_${variante}`;
+            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'inventario_master', docId);
+
+            await setDoc(docRef, {
+                prodId,
+                nombre: prod.nombre,
+                codigo: prod.codigo,
+                variante,
+                entradas: increment(cant),
+                ventas: increment(0), // Inicializamos ventas en 0 si no existe
+                stock_actual: increment(cant),
+                actualizado: new Date().getTime()
+            }, { merge: true });
+
             document.getElementById('inp-cantidad').value = "";
-            
-            render();
-        }
+        };
 
-        function vender(prodID, varName) {
-            if(inventario[prodID].items[varName].stock > 0) {
-                inventario[prodID].items[varName].stock--;
-                localStorage.setItem('jaddy_stock_v3', JSON.stringify(inventario));
-                render();
-            }
-        }
-
-        function render() {
-            const container = document.getElementById('lista-inventario');
+        function renderizarInventario() {
+            const container = document.getElementById('displayStock');
             container.innerHTML = '';
 
-            for(let id in inventario) {
-                const prod = inventario[id];
-                let totalGrupo = 0;
-                let itemsHtml = '';
+            // Agrupar por producto principal
+            const grupos = {};
+            Object.values(stockData).forEach(item => {
+                if (!grupos[item.prodId]) grupos[item.prodId] = { nombre: item.nombre, codigo: item.codigo, subitems: [] };
+                grupos[item.prodId].subitems.push(item);
+            });
 
-                for(let vName in prod.items) {
-                    const item = prod.items[vName];
-                    totalGrupo += item.stock;
-                    itemsHtml += `
-                        <div class="variante-item">
-                            <div>
-                                <span class="v-nombre">${vName}</span>
-                                <span class="v-fecha">Última carga: ${item.fecha}</span>
-                            </div>
-                            <div style="display:flex; align-items:center;">
-                                <span class="v-stock">${item.stock}</span>
-                                <button class="btn-vender" onclick="vender('${id}','${vName}')">VENTA</button>
-                            </div>
-                        </div>
-                    `;
-                }
-
+            for (let id in grupos) {
+                const g = grupos[id];
                 container.innerHTML += `
-                    <div class="producto-card">
-                        <div class="card-header">
-                            <div class="card-info">
-                                <h3>${prod.marca} ${prod.nombre}</h3>
-                                <span>${prod.medida}</span>
+                    <div class="card-stat">
+                        <div class="flex justify-between items-start mb-4 border-b border-white/5 pb-2">
+                            <div>
+                                <h3 class="text-xs font-black uppercase text-white">${g.nombre}</h3>
+                                <span class="text-[8px] text-gold font-bold tracking-widest">${g.codigo}</span>
                             </div>
-                            <div class="badge-total">TOTAL: ${totalGrupo}</div>
                         </div>
-                        <div class="variantes-lista">
-                            ${itemsHtml}
+                        
+                        <div class="space-y-3">
+                            ${g.subitems.map(s => `
+                                <div class="bg-black/40 p-3 rounded-xl border border-white/5">
+                                    <div class="text-[10px] font-black text-gray-400 uppercase mb-2">${s.variante}</div>
+                                    <div class="grid grid-cols-3 gap-2 text-center">
+                                        <div>
+                                            <div class="stat-number text-blue-400">${s.entradas || 0}</div>
+                                            <div class="label-stat">Entradas</div>
+                                        </div>
+                                        <div>
+                                            <div class="stat-number text-red-500">${s.ventas || 0}</div>
+                                            <div class="label-stat">Ventas</div>
+                                        </div>
+                                        <div class="bg-gold/10 rounded-lg p-1">
+                                            <div class="stat-number" style="color:var(--gold)">${s.stock_actual || 0}</div>
+                                            <div class="label-stat" style="color:var(--gold)">Quedan</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            `).join('')}
                         </div>
                     </div>
                 `;
             }
         }
-
-        // Cargar al abrir
-        render();
     </script>
 </body>
 </html>
