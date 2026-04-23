@@ -12,10 +12,11 @@
         body { background: var(--bg); color: white; font-family: 'Inter', sans-serif; }
         .gold-border { border: 1px solid rgba(212, 175, 55, 0.2); }
         .input-field { background: #111; border: 1px solid #222; border-radius: 12px; padding: 14px; width: 100%; color: white; font-size: 14px; }
-        .input-field:focus { border-color: var(--gold); outline: none; }
-        .card-stat { background: #0F0F0F; border: 1px solid #1A1A1A; border-radius: 20px; padding: 16px; margin-bottom: 15px; }
-        .stat-number { font-size: 18px; font-weight: 900; color: var(--gold); }
-        .label-stat { font-size: 9px; text-transform: uppercase; color: #555; letter-spacing: 1px; font-weight: 800; }
+        .card-master { background: #0F0F0F; border: 1px solid #1A1A1A; border-radius: 20px; margin-bottom: 12px; overflow: hidden; }
+        .stat-number { font-size: 16px; font-weight: 900; color: var(--gold); }
+        .label-stat { font-size: 8px; text-transform: uppercase; color: #555; font-weight: 800; }
+        .detalle-variante { display: none; }
+        .detalle-variante.active { display: block; }
     </style>
 </head>
 <body class="p-4 pb-24 max-w-md mx-auto">
@@ -25,35 +26,21 @@
         <div id="statusDot" class="w-2 h-2 rounded-full bg-red-600"></div>
     </header>
 
-    <!-- Panel de Carga (Compras) -->
     <section class="bg-[#0A0A0A] p-5 rounded-[24px] gold-border mb-8 shadow-2xl">
-        <h2 class="text-center text-gold font-black uppercase text-[10px] tracking-[3px] mb-6" style="color:var(--gold)">Registrar Entrada de Mercancía</h2>
-        
+        <h2 class="text-center text-gold font-black uppercase text-[10px] tracking-[3px] mb-6">Entrada de Mercancía</h2>
         <div class="space-y-4">
-            <div>
-                <label class="text-[9px] font-bold text-gray-500 uppercase ml-2 mb-1 block">Producto Maestro</label>
-                <select id="sel-producto" class="input-field font-bold uppercase"></select>
-            </div>
-
-            <div>
-                <label class="text-[9px] font-bold text-gray-500 uppercase ml-2 mb-1 block">Variante / Fragancia</label>
-                <select id="sel-variante" class="input-field font-bold uppercase">
-                    <option value="">Selecciona Producto Primero</option>
-                </select>
-            </div>
-            
-            <div>
-                <label class="text-[9px] font-bold text-gray-500 uppercase ml-2 mb-1 block">Cantidad a Ingresar</label>
-                <input type="number" id="inp-cantidad" placeholder="0" class="input-field font-black text-xl text-center">
-            </div>
-
+            <select id="sel-producto" class="input-field font-bold uppercase"></select>
+            <select id="sel-variante" class="input-field font-bold uppercase">
+                <option value="">Selecciona Producto</option>
+            </select>
+            <input type="number" id="inp-cantidad" placeholder="Cantidad" class="input-field font-black text-xl text-center">
             <button onclick="registrarEntrada()" class="w-full bg-white text-black font-black py-4 rounded-xl uppercase tracking-widest text-sm active:scale-95 transition-transform">
                 Guardar en Stock
             </button>
         </div>
     </section>
 
-    <h2 class="text-[10px] font-black text-gray-500 uppercase tracking-[2px] mb-4 ml-2">Estado Real del Inventario</h2>
+    <h2 class="text-[10px] font-black text-gray-500 uppercase tracking-[2px] mb-4 ml-2">Stock por Categoría</h2>
     <div id="displayStock" class="space-y-4"></div>
 
     <script type="module">
@@ -63,7 +50,6 @@
         const db = getFirestore();
         const appId = "jaddy-inc-inventario";
         const statusDot = document.getElementById('statusDot');
-        
         let productosMaestros = [];
         let stockData = {};
 
@@ -72,18 +58,13 @@
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 statusDot.classList.replace('bg-red-600', 'bg-green-500');
-                
-                // 1. Cargar Productos Maestros
                 obtenerProductos((lista) => {
                     productosMaestros = lista;
-                    const sel = document.getElementById('sel-producto');
-                    sel.innerHTML = '<option value="">-- SELECCIONAR --</option>' + 
+                    document.getElementById('sel-producto').innerHTML = '<option value="">-- CATEGORÍA --</option>' + 
                         lista.map(p => `<option value="${p.id}">${p.nombre}</option>`).join('');
                 });
 
-                // 2. Escuchar Inventario (Entradas, Ventas, Stock)
-                const invRef = collection(db, 'artifacts', appId, 'public', 'data', 'inventario_master');
-                onSnapshot(invRef, (snap) => {
+                onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'inventario_master'), (snap) => {
                     stockData = {};
                     snap.docs.forEach(d => stockData[d.id] = d.data());
                     renderizarInventario();
@@ -91,91 +72,71 @@
             }
         });
 
-        // Actualizar variantes al cambiar producto
         document.getElementById('sel-producto').onchange = (e) => {
             const prod = productosMaestros.find(p => p.id === e.target.value);
             const selVar = document.getElementById('sel-variante');
-            if (prod && prod.variantes && prod.variantes.length > 0) {
-                selVar.innerHTML = prod.variantes.map(v => `<option value="${v}">${v}</option>`).join('');
-            } else {
-                selVar.innerHTML = '<option value="GENERAL">SIN VARIANTES</option>';
-            }
+            selVar.innerHTML = (prod && prod.variantes) ? prod.variantes.map(v => `<option value="${v}">${v}</option>`).join('') : '<option value="GENERAL">GENERAL</option>';
         };
 
         window.registrarEntrada = async () => {
             const prodId = document.getElementById('sel-producto').value;
             const variante = document.getElementById('sel-variante').value;
             const cant = parseInt(document.getElementById('inp-cantidad').value);
-
-            if (!prodId || !variante || isNaN(cant) || cant <= 0) return;
+            if (!prodId || !variante || isNaN(cant)) return;
 
             const prod = productosMaestros.find(p => p.id === prodId);
             const docId = `${prodId}_${variante}`;
-            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'inventario_master', docId);
-
-            await setDoc(docRef, {
-                prodId,
-                nombre: prod.nombre,
-                codigo: prod.codigo,
-                variante,
-                entradas: increment(cant),
-                ventas: increment(0), // Inicializamos ventas en 0 si no existe
-                stock_actual: increment(cant),
-                actualizado: new Date().getTime()
+            await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'inventario_master', docId), {
+                prodId, nombre: prod.nombre, variante, entradas: increment(cant), ventas: increment(0), stock_actual: increment(cant)
             }, { merge: true });
-
             document.getElementById('inp-cantidad').value = "";
+        };
+
+        window.toggleDetalle = (id) => {
+            const el = document.getElementById('det-' + id);
+            el.classList.toggle('active');
         };
 
         function renderizarInventario() {
             const container = document.getElementById('displayStock');
             container.innerHTML = '';
-
-            // Agrupar por producto principal
             const grupos = {};
             Object.values(stockData).forEach(item => {
-                if (!grupos[item.prodId]) grupos[item.prodId] = { nombre: item.nombre, codigo: item.codigo, subitems: [] };
+                if (!grupos[item.prodId]) grupos[item.prodId] = { nombre: item.nombre, subitems: [] };
                 grupos[item.prodId].subitems.push(item);
             });
 
             for (let id in grupos) {
                 const g = grupos[id];
+                const totalStock = g.subitems.reduce((acc, s) => acc + (s.stock_actual || 0), 0);
                 container.innerHTML += `
-                    <div class="card-stat">
-                        <div class="flex justify-between items-start mb-4 border-b border-white/5 pb-2">
-                            <div>
+                    <div class="card-master">
+                        <button onclick="toggleDetalle('${id}')" class="w-full flex justify-between items-center p-5 bg-[#111] active:bg-[#1a1a1a]">
+                            <div class="text-left">
                                 <h3 class="text-xs font-black uppercase text-white">${g.nombre}</h3>
-                                <span class="text-[8px] text-gold font-bold tracking-widest">${g.codigo}</span>
+                                <span class="text-[8px] text-gray-500 font-bold uppercase tracking-widest">${g.subitems.length} Fragancias</span>
                             </div>
-                        </div>
-                        
-                        <div class="space-y-3">
+                            <div class="text-right">
+                                <div class="text-gold font-black text-lg">${totalStock}</div>
+                                <div class="label-stat">Total Stock</div>
+                            </div>
+                        </button>
+                        <div id="det-${id}" class="detalle-variante border-t border-white/5 bg-black/50">
                             ${g.subitems.map(s => `
-                                <div class="bg-black/40 p-3 rounded-xl border border-white/5">
-                                    <div class="text-[10px] font-black text-gray-400 uppercase mb-2">${s.variante}</div>
-                                    <div class="grid grid-cols-3 gap-2 text-center">
-                                        <div>
-                                            <div class="stat-number text-blue-400">${s.entradas || 0}</div>
-                                            <div class="label-stat">Entradas</div>
-                                        </div>
-                                        <div>
-                                            <div class="stat-number text-red-500">${s.ventas || 0}</div>
-                                            <div class="label-stat">Ventas</div>
-                                        </div>
-                                        <div class="bg-gold/10 rounded-lg p-1">
-                                            <div class="stat-number" style="color:var(--gold)">${s.stock_actual || 0}</div>
-                                            <div class="label-stat" style="color:var(--gold)">Quedan</div>
-                                        </div>
+                                <div class="p-4 border-b border-white/5 last:border-0 flex justify-between items-center">
+                                    <div class="text-[10px] font-bold text-gray-400 uppercase">${s.variante}</div>
+                                    <div class="flex gap-4">
+                                        <div class="text-center"><div class="stat-number">${s.stock_actual}</div><div class="label-stat">Quedan</div></div>
                                     </div>
                                 </div>
                             `).join('')}
                         </div>
-                    </div>
-                `;
+                    </div>`;
             }
         }
     </script>
 </body>
 </html>
+
 
 ```
