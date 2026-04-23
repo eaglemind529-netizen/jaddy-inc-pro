@@ -3,9 +3,8 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Luxury System - Jaddy INC</title>
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
@@ -30,15 +29,6 @@
             -webkit-text-fill-color: transparent;
         }
 
-        .nav-item {
-            @apply flex flex-col items-center justify-center flex-1 transition-all duration-300;
-            color: #444;
-        }
-
-        .nav-item.active {
-            color: var(--oro);
-        }
-
         .grid-menu {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
@@ -58,6 +48,7 @@
             border-radius: 32px;
             transition: all 0.2s ease;
             box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            text-decoration: none;
         }
 
         .box-item:active { transform: scale(0.92); border-color: var(--oro); }
@@ -78,7 +69,6 @@
 </head>
 <body class="flex flex-col">
 
-    <!-- Encabezado -->
     <header class="h-16 border-b border-gray-900 bg-black flex items-center justify-between px-6 z-50">
         <div class="flex items-center gap-3">
             <div class="w-7 h-7 gold-box rounded flex items-center justify-center text-black text-[10px] font-bold">JI</div>
@@ -86,45 +76,41 @@
         </div>
         <div class="flex items-center gap-2">
             <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-            <span class="text-[8px] text-gray-500 font-bold uppercase tracking-widest">Conectado</span>
+            <span class="text-[8px] text-gray-500 font-bold uppercase tracking-widest">SISTEMA ACTIVO</span>
         </div>
     </header>
 
-    <!-- Contenido Principal -->
     <main id="main-content" class="flex-1 flex flex-col items-center justify-center px-6 pb-28">
         
-        <div id="default-view" class="fade-in w-full flex flex-col items-center">
+        <div class="fade-in w-full flex flex-col items-center">
             
             <div class="text-center mb-10">
                 <h2 class="text-white text-[10px] font-black tracking-[0.4em] uppercase opacity-40 mb-4 italic">Módulos de Élite</h2>
                 <div class="w-12 h-[2px] gold-box mx-auto rounded-full"></div>
             </div>
 
-            <!-- Rejilla de Cuadritos -->
             <div class="grid-menu">
                 
-                <!-- PRODUCTOS: Redirige a tu archivo productos.html -->
-                <button onclick="window.location.href='productos.html'" class="box-item">
+                <a href="productos.html" class="box-item">
                     <div class="icon-circle gold-box text-black shadow-lg shadow-yellow-900/30">
                         <i class="fas fa-box"></i>
                     </div>
                     <span class="texto-dorado font-black text-[11px] tracking-tighter uppercase">Productos</span>
-                </button>
+                </a>
 
-                <!-- INVENTARIO: Llama a la lógica de inventario.js -->
-                <button onclick="App.abrir('inventario')" class="box-item">
+                <a href="inventario.html" class="box-item">
                     <div class="icon-circle bg-white/5 border border-white/10 text-white">
                         <i class="fas fa-list-ul opacity-70"></i>
                     </div>
                     <span class="text-white font-black text-[11px] tracking-tighter uppercase">Inventario</span>
-                </button>
+                </a>
 
                 <div class="box-item opacity-10 border-dashed">
-                    <i class="fas fa-plus text-gray-500"></i>
+                    <i class="fas fa-lock text-gray-500"></i>
                 </div>
 
                 <div class="box-item opacity-10 border-dashed">
-                    <i class="fas fa-plus text-gray-500"></i>
+                    <i class="fas fa-lock text-gray-500"></i>
                 </div>
 
             </div>
@@ -133,61 +119,12 @@
 
     </main>
 
-    <!-- Menú Inferior -->
-    <nav id="bottom-bar" class="fixed bottom-0 left-0 right-0 h-20 bg-black border-t border-gray-900 flex items-center justify-around z-50 shadow-2xl">
-        <div id="loading-msg" class="text-[8px] text-gray-700 tracking-[0.3em] uppercase animate-pulse">Cargando Scripts...</div>
+    <nav class="fixed bottom-0 left-0 right-0 h-20 bg-black border-t border-gray-900 flex items-center justify-around z-50">
+        <div class="text-[8px] text-gold tracking-[0.3em] uppercase opacity-50" style="color:#D4AF37">Luxury System Master v1.0</div>
     </nav>
-
-    <script>
-        window.App = {
-            modulos: {},
-            // Esta función la llaman tus archivos externos (inventario.js, etc)
-            registrar: function(config) {
-                const loadingMsg = document.getElementById('loading-msg');
-                if (loadingMsg) loadingMsg.remove();
-
-                this.modulos[config.id] = config;
-
-                const navBar = document.getElementById('bottom-bar');
-                const btn = document.createElement('button');
-                btn.id = `nav-${config.id}`;
-                btn.className = "nav-item";
-                btn.innerHTML = `<span class="text-2xl">${config.icono}</span><span class="text-[9px] font-bold uppercase mt-1">${config.nombre}</span>`;
-
-                btn.onclick = () => this.abrir(config.id);
-                navBar.appendChild(btn);
-            },
-            abrir: function(id) {
-                document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-                const navBtn = document.getElementById(`nav-${id}`);
-                if(navBtn) navBtn.classList.add('active');
-
-                const main = document.getElementById('main-content');
-                const modulo = this.modulos[id];
-
-                main.classList.remove('justify-center');
-                main.classList.add('justify-start', 'pt-6');
-
-                main.innerHTML = `
-                    <div class="fade-in w-full">
-                        <div class="flex justify-between items-center mb-6 px-2">
-                            <h2 class="text-[#D4AF37] text-xl font-black uppercase tracking-tighter">${modulo.nombre}</h2>
-                            <button onclick="window.location.reload()" class="bg-gray-900 text-[10px] text-gray-500 font-bold px-4 py-2 rounded-full uppercase border border-gray-800">Cerrar</button>
-                        </div>
-                        <div id="render-${id}"></div>
-                    </div>
-                `;
-                // Aquí es donde tu inventario.js toma el control del div
-                if(modulo.dibujar) modulo.dibujar(`render-${id}`);
-            }
-        };
-    </script>
-
-    <!-- Tus conexiones reales -->
-    <script type="module" src="conexion.js"></script>
-    <script src="inventario.js"></script>
 
 </body>
 </html>
+
 
 ```
