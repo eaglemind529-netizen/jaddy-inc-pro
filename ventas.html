@@ -30,6 +30,14 @@
         <h2 class="text-center text-gold font-black uppercase text-[10px] tracking-[4px] mb-6 italic">Panel de Despacho</h2>
         
         <div class="space-y-4">
+            <!-- Selección de Vendedor (NUEVO) -->
+            <div class="relative">
+                <p class="text-[7px] text-gold font-black absolute -top-2 left-3 bg-[#0A0A0A] px-2 uppercase">Despachado por:</p>
+                <select id="sel-vendedor" class="input-field border-gold/30 text-gold">
+                    <option value="">-- SELECCIONAR VENDEDOR --</option>
+                </select>
+            </div>
+
             <!-- Tipo de Cliente -->
             <div class="flex gap-2">
                 <button id="btn-cli-reg" onclick="switchCliente(true)" class="tab-btn active">Registrado</button>
@@ -37,7 +45,7 @@
             </div>
 
             <div id="area-cliente-reg">
-                <select id="sel-cliente" class="input-field text-gold">
+                <select id="sel-cliente" class="input-field">
                     <option value="">-- SELECCIONAR CLIENTE --</option>
                 </select>
             </div>
@@ -101,6 +109,7 @@
 
         const statusDot = document.getElementById('statusDot');
         let productosGlobal = [];
+        let vendedoresGlobal = [];
         let productoSeleccionado = null;
         let tipoVenta = 'CONTADO';
         let esRegistrado = true;
@@ -112,9 +121,18 @@
                 statusDot.style.backgroundColor = "#22c55e";
                 statusDot.style.boxShadow = "0 0 10px rgba(34, 197, 94, 0.5)";
                 cargarProductos();
+                cargarVendedores();
                 cargarVentas();
             }
         });
+
+        function cargarVendedores() {
+            onSnapshot(collection(db, "vendedores"), (snap) => {
+                vendedoresGlobal = snap.docs.map(d => d.data());
+                document.getElementById('sel-vendedor').innerHTML = '<option value="">-- SELECCIONAR VENDEDOR --</option>' + 
+                    vendedoresGlobal.map(v => `<option value="${v.id}">${v.codigo} - ${v.nombre}</option>`).join('');
+            });
+        }
 
         function cargarProductos() {
             onSnapshot(collection(db, "productos"), (snap) => {
@@ -128,7 +146,6 @@
             const p = productosGlobal.find(x => x.id === e.target.value);
             productoSeleccionado = p;
             const selVar = document.getElementById('sel-variante');
-            
             if (p && p.variantes) {
                 selVar.innerHTML = p.variantes.map(v => `<option value="${v}">${v}</option>`).join('');
             } else {
@@ -153,52 +170,51 @@
             calcularTotal();
         };
 
-        // FUNCIÓN DE CÁLCULO AUTOMÁTICO
         window.calcularTotal = () => {
             const inputTotal = document.getElementById('inp-precio');
             const inputCant = document.getElementById('inp-cantidad');
             const cant = parseInt(inputCant.value) || 0;
-
             if (!productoSeleccionado || cant <= 0) {
                 inputTotal.value = "0.00";
                 return;
             }
-
             let precioUnitario = 0;
             if (tipoVenta === 'CONTADO') precioUnitario = productoSeleccionado.precio_detal || 0;
             if (tipoVenta === 'CREDITO') precioUnitario = productoSeleccionado.precio_credito || 0;
             if (tipoVenta === 'MAYOR') precioUnitario = productoSeleccionado.precio_mayor || 0;
-
-            const total = (precioUnitario * cant).toFixed(2);
-            inputTotal.value = total;
+            inputTotal.value = (precioUnitario * cant).toFixed(2);
         };
 
         window.registrarVenta = async () => {
+            const vId = document.getElementById('sel-vendedor').value;
             const prodId = document.getElementById('sel-producto').value;
             const variante = document.getElementById('sel-variante').value;
             const cant = parseInt(document.getElementById('inp-cantidad').value);
             const precioTotal = parseFloat(document.getElementById('inp-precio').value);
-            const cliNomOcu = document.getElementById('inp-cliente-nom').value.toUpperCase();
             
-            if (!prodId || isNaN(cant) || isNaN(precioTotal) || cant <= 0) {
-                alert("Completa los datos de la venta y asegúrate de elegir un producto.");
+            if (!vId || !prodId || cant <= 0) {
+                alert("Selecciona un Vendedor y Producto.");
                 return;
             }
 
+            const ven = vendedoresGlobal.find(x => x.id === vId);
             const btn = document.getElementById('btn-venta');
             btn.innerText = "PROCESANDO...";
             btn.disabled = true;
 
-            const clienteFinal = esRegistrado ? (document.getElementById('sel-cliente').value || "CLIENTE REGISTRADO") : (cliNomOcu || "OCASIONAL");
+            const clienteFinal = esRegistrado ? document.getElementById('sel-cliente').value : document.getElementById('inp-cliente-nom').value.toUpperCase();
 
             try {
                 await addDoc(collection(db, "ventas_realizadas"), {
-                    cliente: clienteFinal,
+                    cliente: clienteFinal || "OCASIONAL",
+                    vendedorId: vId,
+                    vendedorNombre: ven.nombre,
+                    vendedorCodigo: ven.codigo,
                     prodId: prodId,
                     nombre: productoSeleccionado.nombre,
                     variante: variante,
                     cantidad: cant,
-                    precio: precioTotal, // Guardamos el total calculado
+                    precio: precioTotal,
                     tipo: tipoVenta,
                     fecha: new Date().toISOString(),
                     timestamp: new Date().getTime()
@@ -210,9 +226,8 @@
                     stock: increment(-cant)
                 }, { merge: true });
 
-                alert("¡Venta procesada y stock descontado!");
+                alert("¡Venta registrada con éxito!");
                 document.getElementById('inp-cantidad').value = "1";
-                document.getElementById('inp-cliente-nom').value = "";
                 calcularTotal(); 
             } catch (e) {
                 alert("Error: " + e.message);
@@ -233,24 +248,20 @@
         function renderizarVentas(ventas) {
             const container = document.getElementById('listaVentas');
             if (ventas.length === 0) {
-                container.innerHTML = '<div class="text-center py-10 opacity-20 text-xs">No hay ventas registradas</div>';
+                container.innerHTML = '<div class="text-center py-10 opacity-20 text-xs">No hay registros</div>';
                 return;
             }
             container.innerHTML = ventas.map(v => `
                 <div class="sale-card">
                     <div class="flex justify-between items-start mb-2">
                         <div>
-                            <div class="text-[7px] text-gold font-black uppercase tracking-[2px]">${v.tipo}</div>
+                            <div class="text-[7px] text-gold font-black uppercase tracking-[2px]">${v.tipo} | VEN: ${v.vendedorCodigo}</div>
                             <div class="text-xs font-black text-white uppercase tracking-tighter">${v.cliente}</div>
                         </div>
                         <div class="text-right">
                             <div class="text-sm font-black text-green-400">$${v.precio}</div>
-                            <div class="text-[8px] text-gray-500 font-bold">${v.cantidad} UD.</div>
+                            <div class="text-[7px] text-gray-500 font-bold">${v.cantidad} UD.</div>
                         </div>
-                    </div>
-                    <div class="text-[8px] text-gray-400 border-t border-white/5 pt-2 uppercase font-bold flex justify-between">
-                        <span>${v.nombre} <span class="text-gold">/</span> ${v.variante}</span>
-                        <span class="text-[7px] opacity-50">${new Date(v.fecha).toLocaleTimeString()}</span>
                     </div>
                 </div>`).join('');
         }
