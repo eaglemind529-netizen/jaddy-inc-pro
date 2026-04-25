@@ -1,8 +1,9 @@
+```javascript
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
 import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 import { getFirestore, collection, doc, addDoc, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-// Configuración de tu base de datos
+// Configuración de tu base de datos (Verificada)
 const firebaseConfig = {
     apiKey: "AIzaSyCrjjeOoXPOtJDXDfrHLOA4Ny0QW2zfVWk",
     authDomain: "apps-d45d6.firebaseapp.com",
@@ -15,26 +16,34 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
-const appId = "jaddy-inc-inventario"; // ID del proyecto en el sistema
+const appId = "jaddy-inc-inventario"; 
 
-// Conectar anónimamente para tener permiso de escritura
+// Conectar con reintentos para asegurar el Punto Verde
 export const conectarCerebro = async () => {
-    try {
-        await signInAnonymously(auth);
-        console.log("🧠 Conexión establecida con éxito");
-    } catch (e) {
-        console.error("Error de conexión:", e);
-    }
+    const intentar = async (reintentos = 5) => {
+        try {
+            await signInAnonymously(auth);
+            console.log("🧠 Conexión establecida con éxito");
+        } catch (e) {
+            if (reintentos > 0) {
+                console.log(`Reintentando conexión... (${reintentos} restantes)`);
+                setTimeout(() => intentar(reintentos - 1), 2000);
+            } else {
+                console.error("Error definitivo de conexión:", e);
+            }
+        }
+    };
+    await intentar();
 };
 
 // Guardar o Actualizar un Producto
 export async function subirProducto(datos, id = null) {
     const ruta = ['artifacts', appId, 'public', 'data', 'productos_jaddy'];
+    const colRef = collection(db, ...ruta);
     if (id) {
         const docRef = doc(db, ...ruta, id);
         return await updateDoc(docRef, { ...datos, editado: new Date().getTime() });
     } else {
-        const colRef = collection(db, ...ruta);
         return await addDoc(colRef, { ...datos, creado: new Date().getTime() });
     }
 }
@@ -44,10 +53,14 @@ export function obtenerProductos(callback) {
     const colRef = collection(db, 'artifacts', appId, 'public', 'data', 'productos_jaddy');
     return onSnapshot(colRef, (snap) => {
         const lista = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-        // Ordenar por nombre
         lista.sort((a, b) => (a.nombre || "").localeCompare(b.nombre || ""));
         callback(lista);
+    }, (error) => {
+        console.error("Error en tiempo real:", error);
     });
 }
 
-export { auth, onAuthStateChanged };
+// Exportamos todo lo necesario para los otros archivos
+export { auth, onAuthStateChanged, db, appId };
+
+```
