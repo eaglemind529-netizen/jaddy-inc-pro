@@ -4,136 +4,228 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Equipo | Jaddy INC</title>
+    <title>Vendedores y Finanzas | Jaddy INC</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root { --gold: #D4AF37; --bg: #050505; }
         body { background: var(--bg); color: white; font-family: 'Inter', sans-serif; margin: 0; }
         .gold-border { border: 1px solid rgba(212, 175, 55, 0.2); }
-        .input-field { background: #111; border: 1px solid #222; border-radius: 12px; padding: 14px; width: 100%; color: white; font-size: 14px; text-transform: uppercase; }
-        .vendedor-card { background: #0F0F0F; border: 1px solid #1A1A1A; border-radius: 20px; padding: 15px; margin-bottom: 12px; }
-        .btn-action { width: 35px; height: 35px; display: flex; items-center: center; justify-content: center; border-radius: 10px; border: 1px solid rgba(212, 175, 55, 0.2); color: var(--gold); }
+        .input-field { background: #111; border: 1px solid #222; border-radius: 12px; padding: 14px; width: 100%; color: white; font-size: 14px; font-weight: bold; text-transform: uppercase; }
+        .vendor-card { background: #0F0F0F; border: 1px solid #1A1A1A; border-radius: 24px; padding: 15px; margin-bottom: 12px; transition: all 0.3s ease; cursor: pointer; }
+        .vendor-card:active { transform: scale(0.98); }
+        .avatar { width: 48px; height: 48px; background: linear-gradient(135deg, #D4AF37 0%, #996515 100%); border-radius: 16px; display: flex; align-items: center; justify-content: center; color: black; font-weight: 900; font-size: 1.2rem; }
+        .detalle-vendedor { display: none; overflow: hidden; animation: slideDown 0.4s ease-out forwards; }
+        .detalle-vendedor.active { display: block; }
+        @keyframes slideDown { from { opacity: 0; max-height: 0; } to { opacity: 1; max-height: 2000px; } }
+        .stat-box { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); border-radius: 16px; padding: 12px; text-align: center; }
+        .badge-code { background: rgba(212, 175, 55, 0.1); color: var(--gold); padding: 2px 8px; border-radius: 6px; font-size: 9px; font-weight: 900; }
     </style>
 </head>
 <body class="p-4 pb-24 max-w-md mx-auto">
 
     <header class="flex justify-between items-center mb-6">
-        <a href="index.html" class="text-[10px] font-black border border-gold/30 px-4 py-2 rounded-full text-gold uppercase">← Volver</a>
-        <div id="statusDot" class="w-2 h-2 rounded-full bg-red-600"></div>
+        <button onclick="window.location.href='index.html'" class="text-[10px] font-black border border-gold/30 px-4 py-2 rounded-full text-gold uppercase">← Inicio</button>
+        <div id="statusDot" class="w-3 h-3 rounded-full bg-red-600 shadow-[0_0_10px_rgba(220,38,38,0.5)]"></div>
     </header>
 
+    <!-- Registro de Vendedores -->
     <section class="bg-[#0A0A0A] p-5 rounded-[28px] gold-border mb-8 shadow-2xl">
-        <h2 class="text-center text-gold font-black uppercase text-[10px] tracking-[4px] mb-6">Registrar Vendedor</h2>
-        <div class="space-y-4">
+        <h2 class="text-center text-gold font-black uppercase text-[10px] tracking-[4px] mb-6 italic">Registro de Equipo</h2>
+        <div class="space-y-3">
             <div class="grid grid-cols-3 gap-2">
-                <input type="text" id="v-codigo" placeholder="CÓDIGO" class="input-field text-center font-black">
-                <input type="text" id="v-nombre" placeholder="NOMBRE COMPLETO" class="input-field col-span-2 font-bold">
+                <input type="text" id="vendedor-codigo" placeholder="CÓDIGO" class="input-field col-span-1">
+                <input type="text" id="vendedor-nombre" placeholder="Nombre Completo" class="input-field col-span-2">
             </div>
-            <input type="tel" id="v-tel" placeholder="TELÉFONO" class="input-field">
-            <input type="text" id="v-zona" placeholder="ZONA DE TRABAJO" class="input-field">
+            <input type="text" id="vendedor-ubicacion" placeholder="Ubicación / Zona" class="input-field">
+            <input type="tel" id="vendedor-telefono" placeholder="Teléfono de contacto" class="input-field">
             
-            <button id="btn-guardar" onclick="guardarVendedor()" class="w-full bg-white text-black font-black py-4 rounded-xl uppercase text-sm active:scale-95 transition-all">
-                Guardar en Equipo
+            <button id="btn-guardar" onclick="registrarVendedor()" class="w-full bg-white text-black font-black py-4 rounded-xl uppercase text-xs active:scale-95 transition-transform mt-2">
+                Vincular al Sistema
             </button>
         </div>
     </section>
 
-    <div id="listaVendedores" class="space-y-3"></div>
+    <h2 class="text-[10px] font-black text-gray-500 uppercase tracking-[2px] mb-4 ml-2">Panel de Rendimiento</h2>
+    <div id="listaVendedores" class="space-y-4">
+        <div class="text-center py-10 opacity-20 text-xs font-bold italic">Sincronizando datos bancarios...</div>
+    </div>
 
+    <!-- CEREBRO FIREBASE INTEGRADO -->
     <script type="module">
-        // Importamos las herramientas necesarias
-        import { conectarCerebro, auth, onAuthStateChanged } from './conexion.js';
-        import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, onSnapshot, collection, query, orderBy, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-        const db = getFirestore();
-        const appId = "jaddy-inc-inventario"; 
-        const statusDot = document.getElementById('statusDot');
+        const firebaseConfig = {
+            apiKey: "AIzaSyCrjjeOoXPOtJDXDfrHLOA4Ny0QW2zfVWk",
+            authDomain: "apps-d45d6.firebaseapp.com",
+            projectId: "apps-d45d6",
+            storageBucket: "apps-d45d6.firebasestorage.app",
+            messagingSenderId: "502648373937",
+            appId: "1:502648373937:web:8c3beaa2a6c9289a4d9890"
+        };
 
-        // Ruta maestra que usa tu sistema
-        const RUTA_VENDEDORES = ['artifacts', appId, 'public', 'data', 'vendedores_jaddy'];
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
 
-        conectarCerebro();
+        let todasLasVentas = [];
+        let todosLosVendedores = [];
+
+        signInAnonymously(auth);
 
         onAuthStateChanged(auth, (user) => {
             if (user) {
-                statusDot.classList.replace('bg-red-600', 'bg-green-500');
-                
-                // Escuchar la lista de vendedores
-                const colRef = collection(db, ...RUTA_VENDEDORES);
-                onSnapshot(colRef, (snap) => {
-                    const data = snap.docs.map(d => ({id: d.id, ...d.data()}));
-                    renderizarVendedores(data);
-                });
+                document.getElementById('statusDot').style.backgroundColor = "#22c55e";
+                escucharVentas();
+                escucharVendedores();
             }
         });
 
-        window.guardarVendedor = async () => {
-            const btn = document.getElementById('btn-guardar');
-            const codigo = document.getElementById('v-codigo').value.trim().toUpperCase();
-            const nombre = document.getElementById('v-nombre').value.trim().toUpperCase();
-            const tel = document.getElementById('v-tel').value.trim();
-            const zona = document.getElementById('v-zona').value.trim().toUpperCase();
+        function escucharVentas() {
+            onSnapshot(collection(db, "ventas_realizadas"), (snap) => {
+                todasLasVentas = snap.docs.map(d => ({id: d.id, ...d.data()}));
+                renderizarTodo();
+            });
+        }
 
-            if (!codigo || !nombre) return alert("Faltan datos");
+        function escucharVendedores() {
+            onSnapshot(query(collection(db, "vendedores"), orderBy("nombre", "asc")), (snap) => {
+                todosLosVendedores = snap.docs.map(d => d.data());
+                renderizarTodo();
+            });
+        }
 
-            btn.disabled = true;
-            btn.innerText = "GUARDANDO...";
-
-            try {
-                // Usamos addDoc (igual que tu función subirProducto) para que Firebase asigne el permiso correctamente
-                const colRef = collection(db, ...RUTA_VENDEDORES);
-                await addDoc(colRef, {
-                    codigo, nombre, tel, zona, creado: new Date().getTime()
-                });
-                
-                // Limpiar
-                document.getElementById('v-codigo').value = "";
-                document.getElementById('v-nombre').value = "";
-                document.getElementById('v-tel').value = "";
-                document.getElementById('v-zona').value = "";
-            } catch (e) {
-                console.error("Error:", e);
-                alert("Error al guardar. Revisa la consola.");
-            } finally {
-                btn.disabled = false;
-                btn.innerText = "GUARDAR EN EQUIPO";
-            }
-        };
-
-        window.eliminarVendedor = async (id) => {
-            if(confirm("¿Eliminar vendedor?")) {
-                await deleteDoc(doc(db, ...RUTA_VENDEDORES, id));
-            }
-        };
-
-        function renderizarVendedores(vendedores) {
-            const container = document.getElementById('listaVendedores');
-            // Ordenar por código
-            vendedores.sort((a, b) => (a.codigo || "").localeCompare(b.codigo || ""));
+        window.registrarVendedor = async () => {
+            const codigo = document.getElementById('vendedor-codigo').value.trim().toUpperCase();
+            const nombre = document.getElementById('vendedor-nombre').value.trim().toUpperCase();
+            const ubicacion = document.getElementById('vendedor-ubicacion').value.trim().toUpperCase();
+            const tel = document.getElementById('vendedor-telefono').value.trim();
             
-            container.innerHTML = vendedores.map(v => `
-                <div class="vendedor-card shadow-lg">
-                    <div class="flex justify-between items-start">
-                        <div>
+            if(!nombre || !codigo) return alert("Código y Nombre son obligatorios");
+
+            const id = "VEN-" + Date.now();
+            await setDoc(doc(db, "vendedores", id), {
+                id, codigo, nombre, ubicacion, telefono: tel, fechaRegistro: new Date().toISOString()
+            });
+            
+            // Limpiar campos
+            document.getElementById('vendedor-codigo').value = "";
+            document.getElementById('vendedor-nombre').value = "";
+            document.getElementById('vendedor-ubicacion').value = "";
+            document.getElementById('vendedor-telefono').value = "";
+        };
+
+        window.toggleDetalle = (id) => {
+            const el = document.getElementById('det-' + id);
+            el.classList.toggle('active');
+        };
+
+        function renderizarTodo() {
+            const container = document.getElementById('listaVendedores');
+            if (todosLosVendedores.length === 0) {
+                container.innerHTML = '<div class="text-center py-10 opacity-20 text-xs">Sin vendedores registrados</div>';
+                return;
+            }
+
+            const hoy = new Date();
+            const mesActual = hoy.getMonth();
+            const anioActual = hoy.getFullYear();
+
+            container.innerHTML = todosLosVendedores.map(v => {
+                const ventasVendedor = todasLasVentas.filter(sale => sale.vendedorId === v.id || sale.vendedorNombre === v.nombre || sale.vendedorCodigo === v.codigo);
+                
+                const ventasMes = ventasVendedor.filter(sale => {
+                    const f = new Date(sale.fecha);
+                    return f.getMonth() === mesActual && f.getFullYear() === anioActual;
+                });
+                const totalVendidoMes = ventasMes.reduce((acc, curr) => acc + parseFloat(curr.precio || 0), 0);
+                const deudas = ventasVendedor.filter(sale => sale.tipo === 'CREDITO');
+                const totalDeuda = deudas.reduce((acc, curr) => acc + parseFloat(curr.precio || 0), 0);
+
+                return `
+                <div class="vendor-card" onclick="toggleDetalle('${v.id}')">
+                    <div class="flex items-center gap-4">
+                        <div class="avatar">${v.nombre.charAt(0)}</div>
+                        <div class="flex-1">
                             <div class="flex items-center gap-2 mb-1">
-                                <span class="text-[9px] font-black bg-gold text-black px-1.5 rounded">${v.codigo}</span>
-                                <h3 class="text-xs font-black text-white uppercase">${v.nombre}</h3>
+                                <span class="badge-code">${v.codigo}</span>
+                                <h3 class="text-sm font-black uppercase text-white">${v.nombre}</h3>
                             </div>
-                            <div class="text-[9px] text-gray-500 font-bold uppercase tracking-wide">
-                                <i class="fas fa-map-marker-alt mr-1 text-gold/50"></i> ${v.zona || 'SIN ZONA'}
-                            </div>
+                            <p class="text-[7px] text-gray-500 font-bold uppercase tracking-widest">
+                                <i class="fas fa-map-marker-alt text-gold mr-1"></i> ${v.ubicacion || 'SIN UBICACIÓN'}
+                            </p>
                         </div>
-                        <div class="flex gap-2">
-                            ${v.tel ? `<a href="https://wa.me/${v.tel.replace(/\s+/g, '')}" target="_blank" class="btn-action"><i class="fab fa-whatsapp"></i></a>` : ''}
-                            <button onclick="eliminarVendedor('${v.id}')" class="btn-action border-red-900/30 text-red-500"><i class="fas fa-trash-alt"></i></button>
+                        <div class="text-right">
+                            <div class="text-xs font-black text-green-400">$${totalVendidoMes.toFixed(0)}</div>
+                            <div class="text-[7px] text-gray-500 uppercase font-black italic">Venta Mes</div>
                         </div>
                     </div>
-                </div>`).join('');
+
+                    <div id="det-${v.id}" class="detalle-vendedor mt-6 pt-6 border-t border-white/5" onclick="event.stopPropagation()">
+                        <!-- Info Adicional -->
+                        <div class="mb-4 bg-white/5 p-4 rounded-2xl flex justify-between items-center">
+                            <div>
+                                <p class="text-[7px] text-gray-500 font-black uppercase">Contacto</p>
+                                <p class="text-[10px] font-bold text-white">${v.telefono || 'NO REGISTRADO'}</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-[7px] text-gray-500 font-black uppercase">Zona</p>
+                                <p class="text-[10px] font-bold text-white">${v.ubicacion || '---'}</p>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3 mb-6">
+                            <div class="stat-box">
+                                <p class="text-[7px] text-gray-500 font-black uppercase mb-1 italic">Cuentas Pendientes</p>
+                                <p class="text-lg font-black text-red-500">$${totalDeuda.toFixed(2)}</p>
+                            </div>
+                            <div class="stat-box">
+                                <p class="text-[7px] text-gray-500 font-black uppercase mb-1">Ventas Históricas</p>
+                                <p class="text-lg font-black text-blue-400">${ventasVendedor.length}</p>
+                            </div>
+                        </div>
+
+                        <h4 class="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-3 ml-1 italic">Detalle de Cobros</h4>
+                        <div class="space-y-2">
+                            ${deudas.length === 0 ? '<p class="text-[9px] text-gray-600 italic ml-1">Sin deudas activas.</p>' : 
+                                deudas.map(d => {
+                                    const fechaPago = new Date(d.fecha);
+                                    fechaPago.setDate(fechaPago.getDate() + 15);
+                                    return `
+                                    <div class="bg-white/5 p-3 rounded-xl flex justify-between items-center border-l-2 border-red-500">
+                                        <div>
+                                            <p class="text-[10px] font-black text-white uppercase">${d.cliente}</p>
+                                            <p class="text-[7px] text-gray-500 font-bold uppercase">${d.nombre}</p>
+                                        </div>
+                                        <div class="text-right">
+                                            <p class="text-[10px] font-black text-red-400">$${d.precio}</p>
+                                            <p class="text-[7px] text-gray-500 font-black">VENCE: ${fechaPago.toLocaleDateString()}</p>
+                                        </div>
+                                    </div>
+                                    `;
+                                }).join('')
+                            }
+                        </div>
+
+                        <button onclick="eliminarVendedor('${v.id}')" class="w-full mt-6 py-3 border border-red-900/30 rounded-xl text-[8px] font-black text-red-900 uppercase tracking-widest hover:bg-red-900/10 transition-colors">
+                            Eliminar Vendedor
+                        </button>
+                    </div>
+                </div>
+                `;
+            }).join('');
         }
+
+        window.eliminarVendedor = async (id) => {
+            if(confirm("¿Eliminar vendedor de la nómina?")) {
+                await deleteDoc(doc(db, "vendedores", id));
+            }
+        };
+
     </script>
 </body>
 </html>
-
 
 ```
