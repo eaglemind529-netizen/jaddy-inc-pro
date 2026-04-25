@@ -1,4 +1,4 @@
-
+```html
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -9,142 +9,113 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root { --gold: #D4AF37; --bg: #050505; }
-        body { background: var(--bg); color: white; font-family: 'Inter', sans-serif; overflow-x: hidden; }
+        body { background: var(--bg); color: white; font-family: 'Inter', sans-serif; }
         .gold-border { border: 1px solid rgba(212, 175, 55, 0.2); }
-        .input-field { background: #111; border: 1px solid #222; border-radius: 12px; padding: 14px; width: 100%; color: white; font-size: 14px; }
+        .input-field { background: #111; border: 1px solid #222; border-radius: 12px; padding: 14px; width: 100%; color: white; font-size: 14px; text-transform: uppercase; }
         .input-field:focus { border-color: var(--gold); outline: none; }
         .btn-save { background: var(--gold); color: black; font-weight: 800; border-radius: 12px; width: 100%; padding: 16px; text-transform: uppercase; }
-        .product-card { background: #0F0F0F; border: 1px solid #1A1A1A; border-radius: 20px; padding: 16px; margin-bottom: 12px; position: relative; }
+        .product-card { background: #0F0F0F; border: 1px solid #1A1A1A; border-radius: 20px; padding: 16px; margin-bottom: 12px; }
         .modal-full { position: fixed; inset: 0; background: var(--bg); z-index: 100; display: none; flex-direction: column; }
         .variant-tag { background: rgba(212, 175, 55, 0.1); color: var(--gold); border: 1px solid rgba(212, 175, 55, 0.3); padding: 4px 10px; border-radius: 8px; font-size: 10px; font-weight: bold; text-transform: uppercase; }
-        .action-btn { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 12px; transition: all 0.2s; }
-        .btn-delete { background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.2); }
-        .btn-edit { background: rgba(212, 175, 55, 0.1); color: var(--gold); border: 1px solid rgba(212, 175, 55, 0.2); }
     </style>
 </head>
 <body class="p-4 pb-24">
 
-    <!-- Modal de Variantes (Pantalla Completa) -->
+    <!-- Modal Variantes -->
     <div id="modalVariantes" class="modal-full p-6">
         <header class="flex justify-between items-center mb-8">
             <div>
                 <span id="modalCodigo" class="text-[10px] font-black text-gold tracking-widest uppercase"></span>
                 <h2 id="modalNombre" class="text-xl font-black uppercase"></h2>
             </div>
-            <button onclick="cerrarModal()" class="w-10 h-10 bg-[#111] rounded-full flex items-center justify-center text-white border border-[#222]">
-                <i class="fas fa-times"></i>
+            <button onclick="cerrarModal()" class="w-10 h-10 bg-[#111] rounded-full flex items-center justify-center border border-[#222]">
+                <i class="fas fa-times text-white"></i>
             </button>
         </header>
-
         <div class="flex-1 overflow-y-auto">
-            <label class="text-[10px] font-black text-gray-500 uppercase mb-4 block tracking-widest">Agregar Nueva Variante</label>
             <div class="flex gap-3 mb-8">
-                <input type="text" id="inputNuevaVar" placeholder="Ej: Invictus, One Million..." class="input-field flex-1 font-bold uppercase">
+                <input type="text" id="inputNuevaVar" placeholder="NUEVA VARIANTE" class="input-field flex-1 font-bold">
                 <button id="btnSumarVar" class="bg-white text-black px-6 rounded-xl font-black"><i class="fas fa-plus"></i></button>
             </div>
-
-            <label class="text-[10px] font-black text-gray-500 uppercase mb-4 block tracking-widest">Variantes Registradas</label>
-            <div id="listaVariantesModal" class="grid grid-cols-2 gap-3">
-                <!-- Variantes cargan aquí -->
-            </div>
+            <div id="listaVariantesModal" class="grid grid-cols-2 gap-3"></div>
         </div>
-
-        <button onclick="guardarVariantes()" class="btn-save mt-6 shadow-xl shadow-gold/10">Finalizar Edición</button>
+        <button onclick="guardarVariantes()" class="btn-save mt-6">Finalizar Edición</button>
     </div>
 
     <div class="max-w-md mx-auto">
         <header class="flex justify-between items-center py-4 mb-6">
             <h1 class="text-xl font-black italic uppercase">PRODUCTOS <span class="text-[#D4AF37]">JADDY</span></h1>
-            <div id="statusDot" class="w-3 h-3 rounded-full bg-red-600"></div>
+            <div id="statusDot" class="w-3 h-3 rounded-full bg-red-600 transition-colors duration-500"></div>
         </header>
 
-        <!-- Formulario Principal -->
         <section class="bg-[#0A0A0A] p-5 rounded-[24px] gold-border mb-8 shadow-2xl">
             <form id="formProd" class="space-y-4">
-                <input type="hidden" id="prodId"> <!-- Campo oculto para edición -->
+                <input type="hidden" id="prodId">
                 <div class="grid grid-cols-3 gap-3">
-                    <input type="text" id="codigo" placeholder="CÓDIGO" class="input-field uppercase font-bold" required>
-                    <input type="text" id="nombre" placeholder="NOMBRE PRODUCTO" class="col-span-2 input-field uppercase font-bold" required>
+                    <input type="text" id="codigo" placeholder="CÓDIGO" class="input-field font-bold" required>
+                    <input type="text" id="nombre" placeholder="NOMBRE" class="col-span-2 input-field font-bold" required>
                 </div>
-
                 <div class="grid grid-cols-2 gap-3">
                     <input type="number" step="0.01" id="costo" placeholder="COSTO $" class="input-field">
                     <input type="number" step="0.01" id="detal" placeholder="DETAL $" class="input-field text-green-400 font-bold">
                 </div>
-
                 <div class="grid grid-cols-2 gap-3">
                     <input type="number" step="0.01" id="credito" placeholder="CRÉDITO $" class="input-field text-blue-400 font-bold">
                     <input type="number" step="0.01" id="mayor" placeholder="MAYOR $" class="input-field text-gold font-bold">
                 </div>
-
                 <button type="submit" id="btnEnvio" class="btn-save">Registrar Producto</button>
-                <button type="button" id="btnCancelarEdicion" class="hidden w-full text-[10px] font-bold text-gray-500 uppercase py-2">Cancelar Edición</button>
+                <button type="button" id="btnCancelarEdicion" class="hidden w-full text-[10px] font-bold text-gray-500 py-2">CANCELAR EDICIÓN</button>
             </form>
         </section>
 
-        <h2 class="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-4 ml-2">Lista Maestra</h2>
         <div id="displayLista" class="space-y-3"></div>
     </div>
 
     <script type="module">
-        // USAMOS LA CONEXION COMPARTIDA Y LA MISMA VERSION (10.7.1)
         import { conectarCerebro, subirProducto, obtenerProductos, auth, onAuthStateChanged, db } from './conexion.js';
         import { doc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
+        const statusDot = document.getElementById('statusDot');
         const form = document.getElementById('formProd');
         const listaDiv = document.getElementById('displayLista');
         const modal = document.getElementById('modalVariantes');
-        const statusDot = document.getElementById('statusDot');
-        const btnEnvio = document.getElementById('btnEnvio');
-        const btnCancelar = document.getElementById('btnCancelarEdicion');
         const prodIdInput = document.getElementById('prodId');
 
         let productoSeleccionado = null;
         let variantesTemporales = [];
 
-        // Conectar una sola vez
+        // Forzar inicio de conexión
         conectarCerebro();
 
+        // Escuchar el estado de conexión
         onAuthStateChanged(auth, (user) => {
             if (user) {
-                // Cambia a verde cuando detecta el usuario anonimo
-                statusDot.classList.replace('bg-red-600', 'bg-green-500');
-                obtenerProductos((productos) => {
-                    dibujar(productos);
-                });
+                statusDot.classList.remove('bg-red-600');
+                statusDot.classList.add('bg-green-500');
+                obtenerProductos((productos) => { dibujar(productos); });
             } else {
-                statusDot.classList.replace('bg-green-500', 'bg-red-600');
+                statusDot.classList.add('bg-red-600');
+                statusDot.classList.remove('bg-green-500');
             }
         });
 
         function dibujar(productos) {
             listaDiv.innerHTML = productos.map(p => `
-                <div class="product-card active:scale-[0.98] transition-transform">
+                <div class="product-card">
                     <div class="flex justify-between items-start mb-2" onclick="abrirVariantes('${p.id}', ${JSON.stringify(p).replace(/"/g, '&quot;')})">
-                        <div class="flex-1">
-                            <span class="text-[8px] font-black text-gold uppercase tracking-[0.2em]">${p.codigo || 'S/C'}</span>
-                            <h3 class="text-sm font-black uppercase text-white">${p.nombre || 'Sin Nombre'}</h3>
+                        <div>
+                            <span class="text-[8px] font-black text-gold uppercase tracking-widest">${p.codigo || 'S/C'}</span>
+                            <h3 class="text-sm font-black uppercase">${p.nombre}</h3>
                         </div>
-                        <div class="text-right">
-                            <p class="text-xs font-black text-green-400">$${p.precio_detal || 0}</p>
-                            <p class="text-[7px] text-gray-500 font-bold uppercase">Detal</p>
-                        </div>
+                        <p class="text-xs font-black text-green-400">$${p.precio_detal || 0}</p>
                     </div>
-                    
                     <div class="flex justify-between items-center mt-3 pt-3 border-t border-white/5">
-                        <div class="flex flex-wrap gap-1 flex-1 pr-4" onclick="abrirVariantes('${p.id}', ${JSON.stringify(p).replace(/"/g, '&quot;')})">
-                            ${(p.variantes || []).length > 0 
-                                ? p.variantes.map(v => `<span class="variant-tag">${v}</span>`).join('')
-                                : '<span class="text-[8px] text-gray-600 font-bold uppercase tracking-tighter italic">Agregar variantes</span>'
-                            }
+                        <div class="flex flex-wrap gap-1">
+                            ${(p.variantes || []).map(v => `<span class="variant-tag">${v}</span>`).join('')}
                         </div>
                         <div class="flex gap-2">
-                            <button onclick="prepararEdicion(${JSON.stringify(p).replace(/"/g, '&quot;')})" class="action-btn btn-edit">
-                                <i class="fas fa-pen"></i>
-                            </button>
-                            <button onclick="confirmarEliminar('${p.id}', '${p.nombre}')" class="action-btn btn-delete">
-                                <i class="fas fa-trash"></i>
-                            </button>
+                            <button onclick="prepararEdicion(${JSON.stringify(p).replace(/"/g, '&quot;')})" class="w-8 h-8 rounded-lg bg-gold/10 text-gold flex items-center justify-center"><i class="fas fa-pen"></i></button>
+                            <button onclick="borrarProd('${p.id}', '${p.nombre}')" class="w-8 h-8 rounded-lg bg-red-500/10 text-red-500 flex items-center justify-center"><i class="fas fa-trash"></i></button>
                         </div>
                     </div>
                 </div>
@@ -155,88 +126,51 @@
             prodIdInput.value = p.id;
             document.getElementById('codigo').value = p.codigo;
             document.getElementById('nombre').value = p.nombre;
-            document.getElementById('costo').value = p.costo || 0;
-            document.getElementById('detal').value = p.precio_detal || 0;
-            document.getElementById('credito').value = p.precio_credito || 0;
-            document.getElementById('mayor').value = p.precio_mayor || 0;
-            
-            btnEnvio.innerText = "Actualizar Producto";
-            btnCancelar.classList.remove('hidden');
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+            document.getElementById('costo').value = p.costo;
+            document.getElementById('detal').value = p.precio_detal;
+            document.getElementById('credito').value = p.precio_credito;
+            document.getElementById('mayor').value = p.precio_mayor;
+            document.getElementById('btnEnvio').innerText = "Actualizar Producto";
+            document.getElementById('btnCancelarEdicion').classList.remove('hidden');
         };
 
-        btnCancelar.onclick = () => {
-            form.reset();
-            prodIdInput.value = "";
-            btnEnvio.innerText = "Registrar Producto";
-            btnCancelar.classList.add('hidden');
-        };
-
-        window.confirmarEliminar = async (id, nombre) => {
-            if (confirm(`¿Estás seguro de eliminar el producto "${nombre}"?`)) {
-                try {
-                    // Usamos la db compartida y la coleccion directa
-                    await deleteDoc(doc(db, 'productos', id));
-                } catch (error) {
-                    alert("Error al eliminar: " + error.message);
-                }
+        window.borrarProd = async (id, nombre) => {
+            if (confirm(`¿Eliminar ${nombre}?`)) {
+                await deleteDoc(doc(db, 'productos', id));
             }
         };
 
         window.abrirVariantes = (id, p) => {
             productoSeleccionado = { id, ...p };
             variantesTemporales = [...(p.variantes || [])];
-            document.getElementById('modalCodigo').innerText = p.codigo || 'S/C';
-            document.getElementById('modalNombre').innerText = p.nombre || 'Producto';
-            renderVariantesModal();
+            document.getElementById('modalCodigo').innerText = p.codigo;
+            document.getElementById('modalNombre').innerText = p.nombre;
+            renderVariantes();
             modal.style.display = 'flex';
-            document.body.style.overflow = 'hidden';
         };
 
-        window.cerrarModal = () => {
-            modal.style.display = 'none';
-            document.body.style.overflow = 'auto';
-            productoSeleccionado = null;
-        };
+        window.cerrarModal = () => { modal.style.display = 'none'; };
 
-        function renderVariantesModal() {
-            const cont = document.getElementById('listaVariantesModal');
-            cont.innerHTML = variantesTemporales.map((v, i) => `
-                <div class="bg-[#111] p-4 rounded-xl border border-[#222] flex justify-between items-center">
-                    <span class="text-xs font-bold uppercase text-gold">${v}</span>
-                    <button onclick="quitarVar(${i})" class="text-red-500 text-xs"><i class="fas fa-trash-alt"></i></button>
+        function renderVariantes() {
+            document.getElementById('listaVariantesModal').innerHTML = variantesTemporales.map((v, i) => `
+                <div class="bg-[#111] p-3 rounded-xl border border-[#222] flex justify-between">
+                    <span class="text-[10px] font-bold text-gold">${v}</span>
+                    <button onclick="quitarVar(${i})" class="text-red-500"><i class="fas fa-times"></i></button>
                 </div>
             `).join('');
         }
 
         document.getElementById('btnSumarVar').onclick = () => {
-            const input = document.getElementById('inputNuevaVar');
-            const val = input.value.trim().toUpperCase();
-            if (val) {
-                variantesTemporales.push(val);
-                input.value = "";
-                renderVariantesModal();
-            }
+            const val = document.getElementById('inputNuevaVar').value.trim().toUpperCase();
+            if (val) { variantesTemporales.push(val); document.getElementById('inputNuevaVar').value = ""; renderVariantes(); }
         };
 
-        window.quitarVar = (i) => {
-            variantesTemporales.splice(i, 1);
-            renderVariantesModal();
-        };
+        window.quitarVar = (i) => { variantesTemporales.splice(i, 1); renderVariantes(); };
 
         window.guardarVariantes = async () => {
-            if (!productoSeleccionado) return;
-            const btn = document.querySelector('#modalVariantes .btn-save');
-            btn.innerText = "Guardando...";
-            
-            const nuevosDatos = {
-                ...productoSeleccionado,
-                variantes: variantesTemporales
-            };
-            delete nuevosDatos.id; // Limpiamos el ID para que no se guarde dentro del doc
-
-            await subirProducto(nuevosDatos, productoSeleccionado.id);
-            btn.innerText = "Finalizar Edición";
+            const datos = { ...productoSeleccionado, variantes: variantesTemporales };
+            delete datos.id;
+            await subirProducto(datos, productoSeleccionado.id);
             cerrarModal();
         };
 
@@ -244,20 +178,18 @@
             e.preventDefault();
             const id = prodIdInput.value;
             const datos = {
-                codigo: document.getElementById('codigo').value.toUpperCase().trim(),
-                nombre: document.getElementById('nombre').value.toUpperCase().trim(),
+                codigo: document.getElementById('codigo').value.toUpperCase(),
+                nombre: document.getElementById('nombre').value.toUpperCase(),
                 costo: parseFloat(document.getElementById('costo').value) || 0,
                 precio_detal: parseFloat(document.getElementById('detal').value) || 0,
                 precio_credito: parseFloat(document.getElementById('credito').value) || 0,
                 precio_mayor: parseFloat(document.getElementById('mayor').value) || 0,
                 variantes: id ? (productoSeleccionado?.variantes || []) : []
             };
-
             await subirProducto(datos, id || null);
             form.reset();
             prodIdInput.value = "";
-            btnEnvio.innerText = "Registrar Producto";
-            btnCancelar.classList.add('hidden');
+            document.getElementById('btnEnvio').innerText = "Registrar Producto";
         };
     </script>
 </body>
