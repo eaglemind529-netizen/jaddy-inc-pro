@@ -1,74 +1,32 @@
-```html
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Productos | Jaddy INC</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jaddy INC - FIX</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        :root { --gold: #D4AF37; --bg: #050505; }
-        body { background: var(--bg); color: white; font-family: sans-serif; padding: 15px; padding-bottom: 50px; }
-        .gold-border { border: 1px solid rgba(212, 175, 55, 0.2); }
-        .input-field { background: #111; border: 1px solid #222; border-radius: 12px; padding: 14px; width: 100%; color: white; font-size: 14px; }
-        .input-field:focus { border-color: var(--gold); outline: none; }
-        .btn-save { background: var(--gold); color: black; font-weight: 800; border-radius: 12px; width: 100%; padding: 16px; text-transform: uppercase; margin-top: 10px; }
-        .product-card { background: #0F0F0F; border: 1px solid #1A1A1A; border-radius: 20px; padding: 16px; margin-bottom: 12px; }
-        .variant-tag { background: rgba(212, 175, 55, 0.1); color: var(--gold); border: 1px solid rgba(212, 175, 55, 0.3); padding: 2px 8px; border-radius: 6px; font-size: 9px; font-weight: bold; text-transform: uppercase; margin-right: 4px; }
-        .status-dot { width: 10px; height: 10px; border-radius: 50%; }
-    </style>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 </head>
-<body class="max-w-md mx-auto">
+<body class="bg-black text-white p-5">
 
-    <!-- Encabezado con Estado Real -->
-    <header class="flex justify-between items-center py-4 mb-6">
-        <a href="index.html" class="text-[10px] font-black text-yellow-500 tracking-tighter">← VOLVER</a>
-        <h1 class="text-lg font-black italic uppercase">PRODUCTOS</h1>
-        <div id="statusDot" class="status-dot bg-red-600 animate-pulse"></div>
-    </header>
-
-    <!-- Formulario de Registro -->
-    <section class="bg-[#0A0A0A] p-5 rounded-[24px] gold-border mb-8 shadow-2xl">
-        <form id="formProd" class="space-y-3">
-            <div class="grid grid-cols-3 gap-2">
-                <input type="text" id="codigo" placeholder="CÓD. REF" class="input-field uppercase font-bold" required>
-                <input type="text" id="nombre" placeholder="NOMBRE PERFUME" class="col-span-2 input-field uppercase font-bold" required>
-            </div>
-            
-            <div class="grid grid-cols-2 gap-2">
-                <div class="space-y-1">
-                    <label class="text-[8px] text-gray-500 font-bold ml-2">COSTO $</label>
-                    <input type="number" step="0.01" id="costo" placeholder="0.00" class="input-field">
-                </div>
-                <div class="space-y-1">
-                    <label class="text-[8px] text-green-500 font-bold ml-2">DETAL $</label>
-                    <input type="number" step="0.01" id="detal" placeholder="0.00" class="input-field text-green-400 font-bold" required>
-                </div>
-            </div>
-
-            <div class="space-y-1">
-                <label class="text-[8px] text-gray-500 font-bold ml-2">VARIANTES (Dama, Caballero, Unisex...)</label>
-                <input type="text" id="variantes" placeholder="Ej: DAMA, CABALLERO" class="input-field uppercase text-xs">
-            </div>
-
-            <button type="submit" id="btnEnvio" class="btn-save">Registrar Producto</button>
-        </form>
-    </section>
-
-    <!-- Lista de Productos en Tiempo Real -->
-    <div id="displayLista" class="space-y-3">
-        <p class="text-center text-gray-600 text-[10px] uppercase tracking-widest pt-10">Conectando con la base de datos...</p>
+    <div class="flex justify-between items-center mb-5">
+        <h1 class="text-yellow-500 font-black">JADDY INC</h1>
+        <div id="punto" class="w-3 h-3 bg-red-600 rounded-full"></div>
     </div>
 
-    <!-- CEREBRO DIRECTO (FIREBASE INYECTADO) -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+    <div class="bg-gray-900 p-4 rounded-xl border border-yellow-900/30">
+        <input type="text" id="n" placeholder="NOMBRE" class="w-full p-3 bg-black mb-2 rounded border border-gray-800">
+        <input type="number" id="p" placeholder="PRECIO" class="w-full p-3 bg-black mb-4 rounded border border-gray-800">
+        <button id="btn" class="w-full bg-yellow-600 p-4 rounded font-bold text-black">GUARDAR AHORA</button>
+    </div>
 
-        // CONFIGURACIÓN BASADA EN TUS CAPTURAS
-        const firebaseConfig = {
+    <div id="lista" class="mt-5 space-y-2"></div>
+
+    <script>
+        // TUS DATOS DIRECTOS
+        const config = {
             apiKey: "AIzaSyCcAnybOnm9LOKgIAoykhFygp23jLyX9ZY",
             authDomain: "apps-d45d6.firebaseapp.com",
             projectId: "apps-d45d6",
@@ -77,105 +35,40 @@
             appId: "1:502648373937:web:8c3beaa2a6c9289a4d9890"
         };
 
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
-        const appId = "jaddy-inc-inventario";
-        const rutaData = ['artifacts', appId, 'public', 'data', 'productos_jaddy'];
+        // INICIO FORZADO
+        firebase.initializeApp(config);
+        const db = firebase.firestore();
 
-        const dot = document.getElementById('statusDot');
-        const listaDiv = document.getElementById('displayLista');
-        const form = document.getElementById('formProd');
-
-        // Autenticación Anónima (Para que el celular no pida login)
-        signInAnonymously(auth).catch(e => console.error("Error Auth:", e));
-
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-                dot.classList.remove('bg-red-600', 'animate-pulse');
-                dot.classList.add('bg-green-500');
-                cargarDatos();
-            }
+        firebase.auth().signInAnonymously().then(() => {
+            document.getElementById('punto').className = "w-3 h-3 bg-green-500";
+            
+            // CARGAR
+            db.collection('artifacts/jaddy-inc-inventario/public/data/productos_jaddy')
+              .onSnapshot(snap => {
+                  const lista = document.getElementById('lista');
+                  lista.innerHTML = "";
+                  snap.forEach(doc => {
+                      const d = doc.data();
+                      lista.innerHTML += `<div class="p-3 bg-gray-800 rounded uppercase text-xs font-bold">${d.nombre} - $${d.precio}</div>`;
+                  });
+              });
         });
 
-        // FUNCIÓN: GUARDAR
-        form.onsubmit = async (e) => {
-            e.preventDefault();
-            const btn = document.getElementById('btnEnvio');
-            btn.innerText = "GUARDANDO...";
-            btn.disabled = true;
+        // GUARDAR
+        document.getElementById('btn').onclick = () => {
+            const n = document.getElementById('n').value;
+            const p = document.getElementById('p').value;
+            if(!n || !p) return alert("LLENA TODO");
 
-            const datos = {
-                codigo: document.getElementById('codigo').value.toUpperCase(),
-                nombre: document.getElementById('nombre').value.toUpperCase(),
-                costo: parseFloat(document.getElementById('costo').value) || 0,
-                detal: parseFloat(document.getElementById('detal').value) || 0,
-                variantes: document.getElementById('variantes').value.toUpperCase(),
-                creado: Date.now()
-            };
-
-            try {
-                await addDoc(collection(db, ...rutaData), datos);
-                form.reset();
-            } catch (err) {
-                alert("Error de Firebase: " + err.code);
-            } finally {
-                btn.innerText = "Registrar Producto";
-                btn.disabled = false;
-            }
-        };
-
-        // FUNCIÓN: LEER EN TIEMPO REAL
-        function cargarDatos() {
-            const q = query(collection(db, ...rutaData), orderBy("creado", "desc"));
-            onSnapshot(q, (snapshot) => {
-                listaDiv.innerHTML = "";
-                if (snapshot.empty) {
-                    listaDiv.innerHTML = '<p class="text-center text-gray-700 text-[10px] pt-10 uppercase">No hay perfumes registrados</p>';
-                    return;
-                }
-
-                snapshot.forEach(docSnap => {
-                    const p = docSnap.data();
-                    const id = docSnap.id;
-                    const vars = p.variantes ? p.variantes.split(',') : [];
-                    
-                    const card = document.createElement('div');
-                    card.className = "product-card flex justify-between items-center animate-fadeIn";
-                    card.innerHTML = `
-                        <div class="flex-1">
-                            <div class="flex items-center gap-2 mb-1">
-                                <span class="text-[9px] font-black text-yellow-600 bg-yellow-600/10 px-2 rounded">REF: ${p.codigo}</span>
-                            </div>
-                            <h3 class="text-sm font-black uppercase text-white mb-1">${p.nombre}</h3>
-                            <div class="flex flex-wrap gap-1">
-                                ${vars.map(v => v.trim() ? `<span class="variant-tag">${v.trim()}</span>` : '').join('')}
-                            </div>
-                        </div>
-                        <div class="text-right flex flex-col items-end gap-2">
-                            <p class="text-sm font-black text-green-400">$${p.detal}</p>
-                            <button onclick="window.eliminar('${id}')" class="text-[10px] text-red-900 bg-red-900/10 w-6 h-6 rounded-lg flex items-center justify-center">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </div>
-                    `;
-                    listaDiv.appendChild(card);
-                });
+            db.collection('artifacts/jaddy-inc-inventario/public/data/productos_jaddy').add({
+                nombre: n.toUpperCase(),
+                precio: p,
+                fecha: Date.now()
+            }).then(() => {
+                document.getElementById('n').value = "";
+                document.getElementById('p').value = "";
             });
-        }
-
-        // FUNCIÓN GLOBAL: ELIMINAR
-        window.eliminar = async (id) => {
-            if(confirm("¿Seguro que quieres eliminar este perfume?")) {
-                try {
-                    await deleteDoc(doc(db, ...rutaData, id));
-                } catch(e) {
-                    alert("Error al borrar: " + e.message);
-                }
-            }
         };
     </script>
 </body>
 </html>
-
-```
