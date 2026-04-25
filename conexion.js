@@ -1,10 +1,10 @@
 ```javascript
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-import { getFirestore, collection, doc, addDoc, updateDoc, onSnapshot, getDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+import { getFirestore, collection, doc, addDoc, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-// 1. Configuración de Firebase (Dinámica + Respaldo)
-const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
+// Configuración Maestra
+const firebaseConfig = {
     apiKey: "AIzaSyCrjjeOoXPOtJDXDfrHLOA4Ny0QW2zfVWk",
     authDomain: "apps-d45d6.firebaseapp.com",
     projectId: "apps-d45d6",
@@ -13,108 +13,69 @@ const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__f
     appId: "1:502648373937:web:8c3beaa2a6c9289a4d9890"
 };
 
-const appId = typeof __app_id !== 'undefined' ? __app_id : 'jaddy-inc-inventario';
-
-// 2. Inicialización
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// 3. Gestión de Autenticación (Regla Crítica)
-let usuarioActual = null;
+// IMPORTANTE: Este ID debe ser idéntico al que declaraste en el HTML
+const appId = "jaddy-inc-inventario"; 
 
-const iniciarSesion = async () => {
+/**
+ * Conecta el sistema y activa el punto verde
+ */
+export const conectarCerebro = async () => {
     try {
-        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-            await signInWithCustomToken(auth, __initial_auth_token);
-        } else {
-            await signInAnonymously(auth);
-        }
-    } catch (error) {
-        console.error("❌ Error de autenticación:", error);
+        await signInAnonymously(auth);
+        console.log("✅ Conexión Jaddy INC Establecida");
+    } catch (e) {
+        console.error("❌ Error de enlace:", e.message);
     }
 };
 
-// Escuchar cambios de estado
-onAuthStateChanged(auth, (user) => {
-    usuarioActual = user;
-    if (user) {
-        console.log("✅ Conectado a Jaddy INC con UID:", user.uid);
-    }
-});
-
-// Arrancar conexión
-iniciarSesion();
-
-// 4. Funciones de Datos (Rutas estrictas según Regla 1)
-
 /**
- * Guarda un producto nuevo o actualiza uno existente.
+ * SUBIR PRODUCTO
+ * Adaptada exactamente para los campos de tu productos.html:
+ * (codigo, nombre, costo, precio_detal, precio_credito, precio_mayor, variantes)
  */
-export async function guardarProductoJaddy(datos, id = null) {
-    if (!usuarioActual) {
-        console.warn("Esperando conexión...");
-        return;
-    }
-
-    // Ruta obligatoria: artifacts/{appId}/public/data/{collection}
-    const path = ['artifacts', appId, 'public', 'data', 'productos_jaddy'];
-
+export async function subirProducto(datos, id = null) {
+    // Usamos la ruta oficial para evitar errores de permisos
+    const rutaBase = ['artifacts', appId, 'public', 'data', 'productos_jaddy'];
+    
     try {
         if (id) {
-            const docRef = doc(db, ...path, id);
-            await updateDoc(docRef, { ...datos, ultimaEdicion: Date.now() });
-            return id;
+            const docRef = doc(db, ...rutaBase, id);
+            await updateDoc(docRef, { ...datos, actualizado: Date.now() });
+            console.log("✅ Producto actualizado");
         } else {
-            const colRef = collection(db, ...path);
-            const docRef = await addDoc(colRef, { ...datos, fechaCreacion: Date.now() });
-            return docRef.id;
+            const colRef = collection(db, ...rutaBase);
+            await addDoc(colRef, { ...datos, creado: Date.now() });
+            console.log("✅ Producto registrado");
         }
     } catch (error) {
-        console.error("🔥 Error al guardar en base de datos:", error);
+        console.error("🔥 Error crítico al guardar:", error);
+        // Si sale "Permissions Denied", revisa las REGLAS en la consola de Firebase
         throw error;
     }
 }
 
 /**
- * Escucha cambios en el catálogo en tiempo real.
+ * OBTENER PRODUCTOS
+ * Mantiene la lista de productos.html actualizada en tiempo real
  */
-export function obtenerCatalogoJaddy(callback) {
-    // Solo ejecutamos si hay usuario (aunque sea anónimo)
-    onAuthStateChanged(auth, (user) => {
-        if (!user) return;
-
-        const colRef = collection(db, 'artifacts', appId, 'public', 'data', 'productos_jaddy');
-        
-        // Regla 2: Sin consultas complejas (orderBy manual)
-        return onSnapshot(colRef, 
-            (snapshot) => {
-                const productos = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-                // Ordenar en memoria (JS) para evitar necesidad de índices en Firestore
-                productos.sort((a, b) => (b.fechaCreacion || 0) - (a.fechaCreacion || 0));
-                callback(productos);
-            }, 
-            (error) => {
-                console.error("❌ Error de lectura en tiempo real:", error);
-            }
-        );
+export function obtenerProductos(callback) {
+    const colRef = collection(db, 'artifacts', appId, 'public', 'data', 'productos_jaddy');
+    
+    return onSnapshot(colRef, (snap) => {
+        const lista = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        // Ordenamos por nombre para que no salgan desordenados en la lista maestra
+        lista.sort((a, b) => (a.nombre || "").localeCompare(b.nombre || ""));
+        callback(lista);
+    }, (error) => {
+        console.error("❌ Fallo al leer catálogo:", error);
     });
 }
 
-/**
- * Elimina un producto.
- */
-export async function eliminarProductoJaddy(id) {
-    if (!usuarioActual) return;
-    try {
-        const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'productos_jaddy', id);
-        await deleteDoc(docRef);
-    } catch (error) {
-        console.error("Error al eliminar:", error);
-    }
-}
-
-// Exportación de utilidades
-export { db, auth, appId, usuarioActual };
+// Exportamos todo para que el HTML no de error de "undefined"
+export { auth, onAuthStateChanged, db, appId };
 
 ```
