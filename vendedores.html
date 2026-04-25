@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -12,7 +13,7 @@
         .gold-border { border: 1px solid rgba(212, 175, 55, 0.2); }
         .input-field { background: #111; border: 1px solid #222; border-radius: 12px; padding: 14px; width: 100%; color: white; font-size: 14px; text-transform: uppercase; }
         .vendedor-card { background: #0F0F0F; border: 1px solid #1A1A1A; border-radius: 20px; padding: 15px; margin-bottom: 12px; }
-        .btn-action { width: 35px; height: 35px; display: flex; align-items: center; justify-content: center; border-radius: 10px; border: 1px solid rgba(212, 175, 55, 0.2); color: var(--gold); }
+        .btn-action { width: 35px; height: 35px; display: flex; items-center: center; justify-content: center; border-radius: 10px; border: 1px solid rgba(212, 175, 55, 0.2); color: var(--gold); }
     </style>
 </head>
 <body class="p-4 pb-24 max-w-md mx-auto">
@@ -32,7 +33,7 @@
             <input type="tel" id="v-tel" placeholder="TELÉFONO" class="input-field">
             <input type="text" id="v-zona" placeholder="ZONA DE TRABAJO" class="input-field">
             
-            <button onclick="guardarVendedor()" class="w-full bg-white text-black font-black py-4 rounded-xl uppercase text-sm active:scale-95 transition-all">
+            <button id="btn-guardar" onclick="guardarVendedor()" class="w-full bg-white text-black font-black py-4 rounded-xl uppercase text-sm active:scale-95 transition-all">
                 Guardar en Equipo
             </button>
         </div>
@@ -41,12 +42,16 @@
     <div id="listaVendedores" class="space-y-3"></div>
 
     <script type="module">
+        // Importamos las herramientas necesarias
         import { conectarCerebro, auth, onAuthStateChanged } from './conexion.js';
-        import { getFirestore, doc, setDoc, onSnapshot, collection, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         const db = getFirestore();
         const appId = "jaddy-inc-inventario"; 
         const statusDot = document.getElementById('statusDot');
+
+        // Ruta maestra que usa tu sistema
+        const RUTA_VENDEDORES = ['artifacts', appId, 'public', 'data', 'vendedores_jaddy'];
 
         conectarCerebro();
 
@@ -54,9 +59,8 @@
             if (user) {
                 statusDot.classList.replace('bg-red-600', 'bg-green-500');
                 
-                // USAMOS LA RUTA QUE YA SABEMOS QUE FUNCIONA
-                const colRef = collection(db, 'artifacts', appId, 'public', 'data', 'vendedores_maestros');
-                
+                // Escuchar la lista de vendedores
+                const colRef = collection(db, ...RUTA_VENDEDORES);
                 onSnapshot(colRef, (snap) => {
                     const data = snap.docs.map(d => ({id: d.id, ...d.data()}));
                     renderizarVendedores(data);
@@ -65,41 +69,51 @@
         });
 
         window.guardarVendedor = async () => {
+            const btn = document.getElementById('btn-guardar');
             const codigo = document.getElementById('v-codigo').value.trim().toUpperCase();
             const nombre = document.getElementById('v-nombre').value.trim().toUpperCase();
             const tel = document.getElementById('v-tel').value.trim();
             const zona = document.getElementById('v-zona').value.trim().toUpperCase();
 
-            if (!codigo || !nombre) return;
+            if (!codigo || !nombre) return alert("Faltan datos");
 
-            // Guardamos en la misma colección que estamos escuchando
-            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'vendedores_maestros', codigo);
-            
+            btn.disabled = true;
+            btn.innerText = "GUARDANDO...";
+
             try {
-                await setDoc(docRef, {
+                // Usamos addDoc (igual que tu función subirProducto) para que Firebase asigne el permiso correctamente
+                const colRef = collection(db, ...RUTA_VENDEDORES);
+                await addDoc(colRef, {
                     codigo, nombre, tel, zona, creado: new Date().getTime()
                 });
                 
-                // Limpiar campos después de guardar
+                // Limpiar
                 document.getElementById('v-codigo').value = "";
                 document.getElementById('v-nombre').value = "";
                 document.getElementById('v-tel').value = "";
                 document.getElementById('v-zona').value = "";
             } catch (e) {
-                console.error("Error al guardar:", e);
+                console.error("Error:", e);
+                alert("Error al guardar. Revisa la consola.");
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "GUARDAR EN EQUIPO";
             }
         };
 
         window.eliminarVendedor = async (id) => {
             if(confirm("¿Eliminar vendedor?")) {
-                await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'vendedores_maestros', id));
+                await deleteDoc(doc(db, ...RUTA_VENDEDORES, id));
             }
         };
 
         function renderizarVendedores(vendedores) {
             const container = document.getElementById('listaVendedores');
+            // Ordenar por código
+            vendedores.sort((a, b) => (a.codigo || "").localeCompare(b.codigo || ""));
+            
             container.innerHTML = vendedores.map(v => `
-                <div class="vendedor-card">
+                <div class="vendedor-card shadow-lg">
                     <div class="flex justify-between items-start">
                         <div>
                             <div class="flex items-center gap-2 mb-1">
@@ -120,3 +134,6 @@
     </script>
 </body>
 </html>
+
+
+```
