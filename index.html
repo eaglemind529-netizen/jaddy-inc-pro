@@ -29,7 +29,6 @@
             <h1 class="texto-dorado uppercase tracking-widest text-sm font-black">Jaddy INC</h1>
         </div>
         <div class="flex items-center gap-2">
-            <!-- PUNTO DE ESTADO REAL -->
             <div id="punto-estado" class="w-2 h-2 bg-red-600 rounded-full animate-pulse"></div>
             <span id="texto-estado" class="text-[8px] text-gray-500 font-bold uppercase tracking-widest">CONECTANDO...</span>
         </div>
@@ -72,30 +71,24 @@
         <div class="text-[8px] text-gold tracking-[0.3em] uppercase opacity-50" style="color:#D4AF37">Luxury System Master v1.0</div>
     </nav>
 
-    <!-- INYECCIÓN DEL CEREBRO -->
     <script type="module">
+        // Asegúrate de que el archivo en GitHub se llame exactamente 'conexion.js'
         import { conectarCerebro, auth, onAuthStateChanged } from './conexion.js';
 
         const punto = document.getElementById('punto-estado');
         const texto = document.getElementById('texto-estado');
 
-        // Intentar conectar al cargar
         conectarCerebro();
 
-        // Escuchar si la conexión tiene éxito
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 punto.classList.remove('bg-red-600', 'animate-pulse');
                 punto.classList.add('bg-green-500');
                 texto.innerText = "SISTEMA ACTIVO";
                 texto.classList.replace('text-gray-500', 'text-green-500');
-            } else {
-                punto.classList.add('bg-red-600', 'animate-pulse');
-                texto.innerText = "SIN CONEXIÓN";
             }
         });
     </script>
-
 </body>
 </html>
 
