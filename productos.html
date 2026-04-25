@@ -1,4 +1,4 @@
-```html
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -17,7 +17,7 @@
         .product-card { background: #0F0F0F; border: 1px solid #1A1A1A; border-radius: 20px; padding: 16px; margin-bottom: 12px; position: relative; }
         .modal-full { position: fixed; inset: 0; background: var(--bg); z-index: 100; display: none; flex-direction: column; }
         .variant-tag { background: rgba(212, 175, 55, 0.1); color: var(--gold); border: 1px solid rgba(212, 175, 55, 0.3); padding: 4px 10px; border-radius: 8px; font-size: 10px; font-weight: bold; text-transform: uppercase; }
-        .action-btn { width: 32px; height: 32px; border-radius: 8px; display: flex; items-center: center; justify-content: center; font-size: 12px; transition: all 0.2s; }
+        .action-btn { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 12px; transition: all 0.2s; }
         .btn-delete { background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.2); }
         .btn-edit { background: rgba(212, 175, 55, 0.1); color: var(--gold); border: 1px solid rgba(212, 175, 55, 0.2); }
     </style>
@@ -87,13 +87,9 @@
     </div>
 
     <script type="module">
-        // Importamos exactamente lo que ya funciona en tu conexion.js
-        import { conectarCerebro, subirProducto, obtenerProductos, auth, onAuthStateChanged } from './conexion.js';
-        // Importamos deleteDoc y doc adicionalmente para la función de eliminar
-        import { getFirestore, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
-        const db = getFirestore();
-        const appId = "jaddy-inc-inventario"; 
+        // USAMOS LA CONEXION COMPARTIDA Y LA MISMA VERSION (10.7.1)
+        import { conectarCerebro, subirProducto, obtenerProductos, auth, onAuthStateChanged, db } from './conexion.js';
+        import { doc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         const form = document.getElementById('formProd');
         const listaDiv = document.getElementById('displayLista');
@@ -106,14 +102,18 @@
         let productoSeleccionado = null;
         let variantesTemporales = [];
 
+        // Conectar una sola vez
         conectarCerebro();
 
         onAuthStateChanged(auth, (user) => {
             if (user) {
+                // Cambia a verde cuando detecta el usuario anonimo
                 statusDot.classList.replace('bg-red-600', 'bg-green-500');
                 obtenerProductos((productos) => {
                     dibujar(productos);
                 });
+            } else {
+                statusDot.classList.replace('bg-green-500', 'bg-red-600');
             }
         });
 
@@ -151,7 +151,6 @@
             `).join('');
         }
 
-        // --- FUNCIONES DE EDICIÓN ---
         window.prepararEdicion = (p) => {
             prodIdInput.value = p.id;
             document.getElementById('codigo').value = p.codigo;
@@ -173,19 +172,17 @@
             btnCancelar.classList.add('hidden');
         };
 
-        // --- FUNCIÓN DE ELIMINAR ---
         window.confirmarEliminar = async (id, nombre) => {
-            if (confirm(`¿Estás seguro de eliminar el producto "${nombre}"? Esta acción no se puede deshacer.`)) {
+            if (confirm(`¿Estás seguro de eliminar el producto "${nombre}"?`)) {
                 try {
-                    const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'productos_jaddy', id);
-                    await deleteDoc(docRef);
+                    // Usamos la db compartida y la coleccion directa
+                    await deleteDoc(doc(db, 'productos', id));
                 } catch (error) {
-                    console.error("Error al eliminar:", error);
+                    alert("Error al eliminar: " + error.message);
                 }
             }
         };
 
-        // Lógica del Modal
         window.abrirVariantes = (id, p) => {
             productoSeleccionado = { id, ...p };
             variantesTemporales = [...(p.variantes || [])];
@@ -212,7 +209,7 @@
             `).join('');
         }
 
-        document.getElementById('btnSumarVar').onclick = (e) => {
+        document.getElementById('btnSumarVar').onclick = () => {
             const input = document.getElementById('inputNuevaVar');
             const val = input.value.trim().toUpperCase();
             if (val) {
@@ -230,22 +227,16 @@
         window.guardarVariantes = async () => {
             if (!productoSeleccionado) return;
             const btn = document.querySelector('#modalVariantes .btn-save');
-            btn.innerText = "Sincronizando...";
-            btn.disabled = true;
-
+            btn.innerText = "Guardando...";
+            
             const nuevosDatos = {
-                codigo: productoSeleccionado.codigo,
-                nombre: productoSeleccionado.nombre,
-                costo: productoSeleccionado.costo,
-                precio_detal: productoSeleccionado.precio_detal,
-                precio_credito: productoSeleccionado.precio_credito,
-                precio_mayor: productoSeleccionado.precio_mayor,
+                ...productoSeleccionado,
                 variantes: variantesTemporales
             };
+            delete nuevosDatos.id; // Limpiamos el ID para que no se guarde dentro del doc
 
             await subirProducto(nuevosDatos, productoSeleccionado.id);
             btn.innerText = "Finalizar Edición";
-            btn.disabled = false;
             cerrarModal();
         };
 
@@ -259,8 +250,7 @@
                 precio_detal: parseFloat(document.getElementById('detal').value) || 0,
                 precio_credito: parseFloat(document.getElementById('credito').value) || 0,
                 precio_mayor: parseFloat(document.getElementById('mayor').value) || 0,
-                // Si es nuevo, variantes vacías. Si es edición, mantenemos las que tiene (se gestionan en el modal)
-                variantes: id ? productoSeleccionado?.variantes || [] : []
+                variantes: id ? (productoSeleccionado?.variantes || []) : []
             };
 
             await subirProducto(datos, id || null);
