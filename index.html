@@ -60,9 +60,12 @@
                     </div>
                     <span class="text-white font-black text-[11px] tracking-tighter uppercase">Ventas</span>
                 </a>
-                <div class="box-item opacity-10 border-dashed">
-                    <i class="fas fa-plus text-gray-500"></i>
-                </div>
+                <a href="vendedores.html" class="box-item">
+                    <div class="icon-circle bg-white/5 border border-white/10 text-white">
+                        <i class="fas fa-users opacity-70"></i>
+                    </div>
+                    <span class="text-white font-black text-[11px] tracking-tighter uppercase">Vendedores</span>
+                </a>
             </div>
         </div>
     </main>
@@ -72,7 +75,6 @@
     </nav>
 
     <script type="module">
-        // Asegúrate de que el archivo en GitHub se llame exactamente 'conexion.js'
         import { conectarCerebro, auth, onAuthStateChanged } from './conexion.js';
 
         const punto = document.getElementById('punto-estado');
