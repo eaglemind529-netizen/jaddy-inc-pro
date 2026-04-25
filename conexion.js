@@ -1,9 +1,9 @@
-```javascript
+javascript
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
 import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 import { getFirestore, collection, doc, addDoc, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-// Configuración de tu base de datos (Verificada)
+// Configuración de la base de datos
 const firebaseConfig = {
     apiKey: "AIzaSyCrjjeOoXPOtJDXDfrHLOA4Ny0QW2zfVWk",
     authDomain: "apps-d45d6.firebaseapp.com",
@@ -18,7 +18,7 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 const appId = "jaddy-inc-inventario"; 
 
-// Conectar con reintentos para asegurar el Punto Verde
+// Función para conectar
 export const conectarCerebro = async () => {
     const intentar = async (reintentos = 5) => {
         try {
@@ -39,16 +39,16 @@ export const conectarCerebro = async () => {
 // Guardar o Actualizar un Producto
 export async function subirProducto(datos, id = null) {
     const ruta = ['artifacts', appId, 'public', 'data', 'productos_jaddy'];
-    const colRef = collection(db, ...ruta);
     if (id) {
         const docRef = doc(db, ...ruta, id);
         return await updateDoc(docRef, { ...datos, editado: new Date().getTime() });
     } else {
+        const colRef = collection(db, ...ruta);
         return await addDoc(colRef, { ...datos, creado: new Date().getTime() });
     }
 }
 
-// Escuchar cambios en la lista de productos
+// Obtener productos en tiempo real
 export function obtenerProductos(callback) {
     const colRef = collection(db, 'artifacts', appId, 'public', 'data', 'productos_jaddy');
     return onSnapshot(colRef, (snap) => {
@@ -60,7 +60,6 @@ export function obtenerProductos(callback) {
     });
 }
 
-// Exportamos todo lo necesario para los otros archivos
 export { auth, onAuthStateChanged, db, appId };
 
 ```
