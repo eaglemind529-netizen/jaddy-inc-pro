@@ -2,139 +2,134 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Luxury System - Jaddy INC</title>
-<script src="https://cdn.tailwindcss.com"></script>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;700;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-<style>
-:root {
---oro: #D4AF37;
---negro-puro: #050505;
-}
-body {
-background-color: var(--negro-puro);
-color: #E0E0E0;
-font-family: 'Inter', sans-serif;
-margin: 0;
-overflow: hidden;
-height: 100vh;
-}
-.texto-dorado {
-background: linear-gradient(to bottom, #CF9E1D 22%, #F1D37E 45%, #CF9E1D 100%);
--webkit-background-clip: text;
--webkit-text-fill-color: transparent;
-}
-.grid-menu {
-display: grid;
-grid-template-columns: repeat(2, 1fr);
-gap: 20px;
-width: 100%;
-max-width: 320px;
-}
-.box-item {
-background: #0F0F0F;
-border: 1px solid #1a1a1a;
-aspect-ratio: 1 / 1;
-display: flex;
-flex-direction: column;
-align-items: center;
-justify-content: center;
-border-radius: 32px;
-transition: all 0.2s ease;
-box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-text-decoration: none;
-}
-.box-item:active { transform: scale(0.92); border-color: var(--oro); }
-.icon-circle {
-width: 54px; height: 54px; border-radius: 20px;
-display: flex; align-items: center; justify-content: center;
-margin-bottom: 12px; font-size: 22px;
-}
-.gold-box {
-background: linear-gradient(135deg, #D4AF37 0%, #f9e29c 50%, #996515 100%);
-}
-.fade-in { animation: fadeIn 0.5s ease-out; }
-@keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Luxury System - Jaddy INC</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --oro: #D4AF37;
+            --negro-puro: #050505;
+        }
+
+        body {
+            background-color: var(--negro-puro);
+            color: #E0E0E0;
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        .texto-dorado {
+            background: linear-gradient(to bottom, #CF9E1D 22%, #F1D37E 45%, #CF9E1D 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .grid-menu {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            width: 100%;
+            max-width: 320px; 
+        }
+
+        .box-item {
+            background: #0F0F0F;
+            border: 1px solid #1a1a1a;
+            aspect-ratio: 1 / 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border-radius: 32px;
+            transition: all 0.2s ease;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            text-decoration: none;
+        }
+
+        .box-item:active { transform: scale(0.92); border-color: var(--oro); }
+
+        .icon-circle {
+            width: 54px; height: 54px; border-radius: 20px;
+            display: flex; align-items: center; justify-content: center;
+            margin-bottom: 12px; font-size: 22px;
+        }
+
+        .gold-box {
+            background: linear-gradient(135deg, #D4AF37 0%, #f9e29c 50%, #996515 100%);
+        }
+
+        .fade-in { animation: fadeIn 0.5s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
 </head>
 <body class="flex flex-col">
-<header class="h-16 border-b border-gray-900 bg-black flex items-center justify-between px-6 z-50">
-<div class="flex items-center gap-3">
-<div class="w-7 h-7 gold-box rounded flex items-center justify-center text-black text-[10px] font-bold">JI</div>
-<h1 class="texto-dorado uppercase tracking-widest text-sm font-black">Jaddy INC</h1>
-</div>
-<div class="flex items-center gap-2">
-<div id="status-dot" class="w-2 h-2 bg-red-500 rounded-full animate-pulse transition-colors duration-500"></div>
-<span id="status-text" class="text-[8px] text-gray-500 font-bold uppercase tracking-widest">SISTEMA INACTIVO</span>
-</div>
-</header>
-<main id="main-content" class="flex-1 flex flex-col items-center justify-center px-6 pb-28">
-<div class="fade-in w-full flex flex-col items-center">
-<div class="text-center mb-10">
-<h2 class="text-white text-[10px] font-black tracking-[0.4em] uppercase opacity-40 mb-4 italic">Módulos de Élite</h2>
-<div class="w-12 h-[2px] gold-box mx-auto rounded-full"></div>
-</div>
-<div class="grid-menu">
-<!-- PRODUCTOS -->
-<a href="productos.html" class="box-item">
-<div class="icon-circle gold-box text-black shadow-lg shadow-yellow-900/30">
-<i class="fas fa-box"></i>
-</div>
-<span class="texto-dorado font-black text-[11px] tracking-tighter uppercase">Productos</span>
-</a>
-<!-- INVENTARIO -->
-<a href="inventario.html" class="box-item">
-<div class="icon-circle bg-white/5 border border-white/10 text-white">
-<i class="fas fa-list-ul opacity-70"></i>
-</div>
-<span class="text-white font-black text-[11px] tracking-tighter uppercase">Inventario</span>
-</a>
-<!-- VENTAS -->
-<a href="ventas.html" class="box-item">
-<div class="icon-circle bg-white/5 border border-white/10 text-white">
-<i class="fas fa-shopping-cart opacity-70"></i>
-</div>
-<span class="text-white font-black text-[11px] tracking-tighter uppercase">Ventas</span>
-</a>
-<!-- EQUIPO / VENDEDORES -->
-<a href="vendedores.html" class="box-item">
-<div class="icon-circle bg-white/5 border border-white/10 text-white">
-<i class="fas fa-users-cog opacity-70"></i>
-</div>
-<span class="text-white font-black text-[11px] tracking-tighter uppercase">Mi Equipo</span>
-</a>
-</div>
-</div>
-</main>
-<nav class="fixed bottom-0 left-0 right-0 h-20 bg-black border-t border-gray-900 flex items-center justify-around z-50">
-<div class="text-[8px] text-gold tracking-[0.3em] uppercase opacity-50" style="color:#D4AF37">Luxury System Master v1.0</div>
-</nav>
 
-<!-- LÓGICA DE CONEXIÓN REAL -->
-<script type="module">
-    import { conectarCerebro, onAuthStateChanged, auth } from './conexion.js';
-    
-    // Elementos visuales
-    const dot = document.getElementById('status-dot');
-    const txt = document.getElementById('status-text');
+    <header class="h-16 border-b border-gray-900 bg-black flex items-center justify-between px-6 z-50">
+        <div class="flex items-center gap-3">
+            <div class="w-7 h-7 gold-box rounded flex items-center justify-center text-black text-[10px] font-bold">JI</div>
+            <h1 class="texto-dorado uppercase tracking-widest text-sm font-black">Jaddy INC</h1>
+        </div>
+        <div class="flex items-center gap-2">
+            <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+            <span class="text-[8px] text-gray-500 font-bold uppercase tracking-widest">SISTEMA ACTIVO</span>
+        </div>
+    </header>
 
-    // Intentar conectar apenas carga el menú
-    conectarCerebro();
+    <main id="main-content" class="flex-1 flex flex-col items-center justify-center px-6 pb-28">
+        
+        <div class="fade-in w-full flex flex-col items-center">
+            
+            <div class="text-center mb-10">
+                <h2 class="text-white text-[10px] font-black tracking-[0.4em] uppercase opacity-40 mb-4 italic">Módulos de Élite</h2>
+                <div class="w-12 h-[2px] gold-box mx-auto rounded-full"></div>
+            </div>
 
-    // Escuchar si la conexión se activa de verdad
-    onAuthStateChanged(auth, (user) => {
-        if (user) {
-            dot.classList.replace('bg-red-500', 'bg-green-500');
-            txt.innerText = "SISTEMA ACTIVO";
-            txt.classList.replace('text-gray-500', 'text-green-500');
-        } else {
-            dot.classList.replace('bg-green-500', 'bg-red-500');
-            txt.innerText = "SISTEMA INACTIVO";
-        }
-    });
-</script>
+            <div class="grid-menu">
+                
+                <!-- PRODUCTOS -->
+                <a href="productos.html" class="box-item">
+                    <div class="icon-circle gold-box text-black shadow-lg shadow-yellow-900/30">
+                        <i class="fas fa-box"></i>
+                    </div>
+                    <span class="texto-dorado font-black text-[11px] tracking-tighter uppercase">Productos</span>
+                </a>
+
+                <!-- INVENTARIO -->
+                <a href="inventario.html" class="box-item">
+                    <div class="icon-circle bg-white/5 border border-white/10 text-white">
+                        <i class="fas fa-list-ul opacity-70"></i>
+                    </div>
+                    <span class="text-white font-black text-[11px] tracking-tighter uppercase">Inventario</span>
+                </a>
+
+                <!-- VENTAS (NUEVO) -->
+                <a href="ventas.html" class="box-item">
+                    <div class="icon-circle bg-white/5 border border-white/10 text-white">
+                        <i class="fas fa-shopping-cart opacity-70"></i>
+                    </div>
+                    <span class="text-white font-black text-[11px] tracking-tighter uppercase">Ventas</span>
+                </a>
+
+                <!-- PROXIMO MODULO -->
+                <div class="box-item opacity-10 border-dashed">
+                    <i class="fas fa-plus text-gray-500"></i>
+                </div>
+
+            </div>
+
+        </div>
+
+    </main>
+
+    <nav class="fixed bottom-0 left-0 right-0 h-20 bg-black border-t border-gray-900 flex items-center justify-around z-50">
+        <div class="text-[8px] text-gold tracking-[0.3em] uppercase opacity-50" style="color:#D4AF37">Luxury System Master v1.0</div>
+    </nav>
+
 </body>
 </html>
 
