@@ -16,10 +16,42 @@
         .btn-gold { background: var(--gold); color: black; font-weight: 900; border-radius: 12px; width: 100%; padding: 16px; text-transform: uppercase; transition: all 0.3s; box-shadow: 0 4px 15px rgba(212, 175, 55, 0.2); }
         .btn-gold:active { transform: scale(0.98); opacity: 0.9; }
         .product-card { background: #0F0F0F; border: 1px solid #1A1A1A; border-radius: 20px; padding: 16px; margin-bottom: 12px; animation: fadeIn 0.5s ease; }
+        .variant-tag { background: rgba(212, 175, 55, 0.1); color: var(--gold); border: 1px solid rgba(212, 175, 55, 0.3); padding: 2px 8px; border-radius: 6px; font-size: 9px; font-weight: bold; text-transform: uppercase; }
+        
+        /* Estilos del Modal de Variantes */
+        #modalVariantes { position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 100; display: none; align-items: center; justify-content: center; padding: 20px; }
+        .modal-content { background: #0A0A0A; border: 1px solid #222; border-radius: 28px; width: 100%; max-width: 400px; padding: 24px; position: relative; }
+        
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body class="p-4 pb-10">
+
+    <!-- MODAL DE VARIANTES -->
+    <div id="modalVariantes">
+        <div class="modal-content shadow-2xl">
+            <header class="flex justify-between items-center mb-6">
+                <div>
+                    <h2 class="text-lg font-black uppercase tracking-tighter">Gestionar <span class="text-gold">Variantes</span></h2>
+                    <p id="targetNombre" class="text-[10px] text-gray-500 font-bold uppercase"></p>
+                </div>
+                <button onclick="cerrarModal()" class="text-gray-500 hover:text-white"><i class="fas fa-times"></i></button>
+            </header>
+
+            <div class="space-y-4">
+                <div class="flex gap-2">
+                    <input type="text" id="nuevaVariante" placeholder="MARCA, FRAGANCIA O SABOR" class="input-field flex-1 text-xs">
+                    <button id="addVariantBtn" class="bg-white text-black px-4 rounded-xl font-black"><i class="fas fa-plus"></i></button>
+                </div>
+                
+                <div id="listaVariantesModal" class="max-h-40 overflow-y-auto grid grid-cols-2 gap-2 pt-2">
+                    <!-- Variantes aparecen aquí -->
+                </div>
+
+                <button id="saveVariantsBtn" class="btn-gold py-4 text-xs mt-4">Guardar Cambios</button>
+            </div>
+        </div>
+    </div>
 
     <header class="flex justify-between items-center py-4 mb-6">
         <div>
@@ -61,13 +93,12 @@
         </div>
     </div>
 
-    <!-- TODO EL CEREBRO DE FIREBASE AQUÍ ADENTRO -->
+    <!-- CEREBRO FIREBASE -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, onSnapshot, query, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, onSnapshot, query, doc, deleteDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-        // CONFIGURACIÓN DIRECTA
         const firebaseConfig = {
             apiKey: "AIzaSyCrjjeOoXPOtJDXDfrHLOA4Ny0QW2zfVWk",
             authDomain: "apps-d45d6.firebaseapp.com",
@@ -77,7 +108,6 @@
             appId: "1:502648373937:web:8c3beaa2a6c9289a4d9890"
         };
 
-        // INICIALIZACIÓN
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
@@ -87,41 +117,30 @@
         const listaDiv = document.getElementById('displayLista');
         const contador = document.getElementById('contador');
 
-        // FUNCIÓN: CONECTAR
-        const iniciarConexion = async () => {
-            try {
-                await signInAnonymously(auth);
-                console.log("Conectado a Jaddy INC Cloud");
-            } catch (e) {
-                console.error("Error de conexión", e);
-            }
-        };
+        let currentId = null;
+        let tempVariants = [];
 
-        // ESCUCHAR ESTADO DE CONEXIÓN
+        signInAnonymously(auth);
+
         onAuthStateChanged(auth, (user) => {
             if (user) {
-                statusDot.style.backgroundColor = "#22c55e"; // VERDE
+                statusDot.style.backgroundColor = "#22c55e";
                 statusDot.style.boxShadow = "0 0 15px rgba(34, 197, 94, 0.6)";
                 cargarProductos();
-            } else {
-                statusDot.style.backgroundColor = "#dc2626"; // ROJO
             }
         });
 
-        // FUNCIÓN: CARGAR PRODUCTOS EN TIEMPO REAL
         function cargarProductos() {
-            const q = query(collection(db, "productos"));
-            onSnapshot(q, (snapshot) => {
+            onSnapshot(query(collection(db, "productos")), (snapshot) => {
                 const productos = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
                 contador.innerText = `${productos.length} ITEMS`;
                 dibujar(productos);
             });
         }
 
-        // FUNCIÓN: DIBUJAR EN PANTALLA
         function dibujar(productos) {
             if (productos.length === 0) {
-                listaDiv.innerHTML = '<p class="text-center text-gray-700 py-10 font-bold text-xs">NO HAY PRODUCTOS REGISTRADOS</p>';
+                listaDiv.innerHTML = '<p class="text-center text-gray-700 py-10 font-bold text-xs">NO HAY PRODUCTOS</p>';
                 return;
             }
 
@@ -137,18 +156,23 @@
                             <p class="text-sm font-black text-green-400">$${p.precio_detal || 0}</p>
                         </div>
                     </div>
-                    <div class="flex justify-between items-center mt-4 pt-3 border-t border-white/5">
+                    
+                    <!-- Mostrar variantes en tarjeta -->
+                    <div class="flex flex-wrap gap-1 mt-2 mb-3">
+                        ${(p.variantes || []).map(v => `<span class="variant-tag">${v}</span>`).join('')}
+                    </div>
+
+                    <div class="flex justify-between items-center pt-3 border-t border-white/5">
                         <div class="flex gap-4">
                             <div>
                                 <p class="text-[7px] text-gray-500 font-bold uppercase">Mayor</p>
                                 <p class="text-[10px] font-bold text-gold">$${p.precio_mayor || 0}</p>
                             </div>
-                            <div>
-                                <p class="text-[7px] text-gray-500 font-bold uppercase">Crédito</p>
-                                <p class="text-[10px] font-bold text-blue-400">$${p.precio_credito || 0}</p>
-                            </div>
+                            <button onclick="abrirVariantes('${p.id}', '${p.nombre}', ${JSON.stringify(p.variantes || []).replace(/"/g, '&quot;')})" class="flex items-center gap-1 text-[10px] font-bold text-gray-400 bg-white/5 px-3 py-1 rounded-full">
+                                <i class="fas fa-tags text-gold"></i> VARIANTES
+                            </button>
                         </div>
-                        <button onclick="eliminarProd('${p.id}', '${p.nombre}')" class="text-red-500/50 hover:text-red-500 transition-colors">
+                        <button onclick="eliminarProd('${p.id}', '${p.nombre}')" class="text-red-500/30 hover:text-red-500 transition-colors px-2">
                             <i class="fas fa-trash-alt text-xs"></i>
                         </button>
                     </div>
@@ -156,14 +180,62 @@
             `).reverse().join('');
         }
 
-        // FUNCIÓN: ELIMINAR
+        // --- LÓGICA DE MODAL DE VARIANTES ---
+        window.abrirVariantes = (id, nombre, variantes) => {
+            currentId = id;
+            tempVariants = [...variantes];
+            document.getElementById('targetNombre').innerText = nombre;
+            document.getElementById('modalVariantes').style.display = 'flex';
+            renderVariantesModal();
+        };
+
+        window.cerrarModal = () => {
+            document.getElementById('modalVariantes').style.display = 'none';
+        };
+
+        function renderVariantesModal() {
+            const container = document.getElementById('listaVariantesModal');
+            container.innerHTML = tempVariants.map((v, i) => `
+                <div class="bg-[#111] p-2 rounded-lg border border-[#222] flex justify-between items-center">
+                    <span class="text-[9px] font-bold uppercase text-gold">${v}</span>
+                    <button onclick="quitarVariante(${i})" class="text-red-500 text-[10px] ml-2"><i class="fas fa-times"></i></button>
+                </div>
+            `).join('');
+        }
+
+        document.getElementById('addVariantBtn').onclick = () => {
+            const input = document.getElementById('nuevaVariante');
+            const val = input.value.trim().toUpperCase();
+            if(val) {
+                tempVariants.push(val);
+                input.value = "";
+                renderVariantesModal();
+            }
+        };
+
+        window.quitarVariante = (i) => {
+            tempVariants.splice(i, 1);
+            renderVariantesModal();
+        };
+
+        document.getElementById('saveVariantsBtn').onclick = async () => {
+            if(!currentId) return;
+            const btn = document.getElementById('saveVariantsBtn');
+            btn.innerText = "GUARDANDO...";
+            try {
+                await updateDoc(doc(db, "productos", currentId), { variantes: tempVariants });
+                cerrarModal();
+            } catch (e) { alert("Error: " + e.message); }
+            btn.innerText = "GUARDAR CAMBIOS";
+        };
+
+        // --- LÓGICA GENERAL ---
         window.eliminarProd = async (id, nombre) => {
             if (confirm(`¿ELIMINAR ${nombre}?`)) {
                 await deleteDoc(doc(db, "productos", id));
             }
         };
 
-        // EVENTO: GUARDAR
         form.onsubmit = async (e) => {
             e.preventDefault();
             const btn = document.getElementById('btnEnvio');
@@ -177,13 +249,13 @@
                 precio_detal: parseFloat(document.getElementById('detal').value) || 0,
                 precio_credito: parseFloat(document.getElementById('credito').value) || 0,
                 precio_mayor: parseFloat(document.getElementById('mayor').value) || 0,
+                variantes: [], // Inicializa vacío
                 fecha: new Date().toISOString()
             };
 
             try {
                 await addDoc(collection(db, "productos"), datos);
                 form.reset();
-                console.log("Producto guardado con éxito");
             } catch (error) {
                 alert("Error al guardar: " + error.message);
             } finally {
@@ -191,9 +263,6 @@
                 btn.disabled = false;
             }
         };
-
-        // ARRANCAR
-        iniciarConexion();
     </script>
 </body>
 </html>
