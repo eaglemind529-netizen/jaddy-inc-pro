@@ -1,0 +1,354 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Clientes Premium | Jaddy INC</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root { --gold: #D4AF37; --bg: #050505; }
+        body { background: var(--bg); color: white; font-family: 'Inter', sans-serif; margin: 0; }
+        .gold-border { border: 1px solid rgba(212, 175, 55, 0.2); }
+        .input-field { background: #111; border: 1px solid #222; border-radius: 12px; padding: 14px; width: 100%; color: white; font-size: 14px; font-weight: bold; text-transform: uppercase; }
+        
+        .client-card { background: #0F0F0F; border: 1px solid #1A1A1A; border-radius: 20px; padding: 15px; margin-bottom: 12px; cursor: pointer; transition: 0.3s; }
+        
+        /* Modales Premium */
+        #modalDetalle, #subModalAnalisis { 
+            position: fixed; inset: 0; background: rgba(0,0,0,0.98); z-index: 100; 
+            display: none; flex-direction: column; padding: 20px; 
+            backdrop-filter: blur(15px); animation: slideUp 0.3s ease; 
+        }
+        #subModalAnalisis { z-index: 110; background: #000; }
+
+        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+
+        .status-pill { padding: 4px 12px; border-radius: 50px; font-size: 10px; font-weight: 900; text-transform: uppercase; }
+        .badge-vip { background: var(--gold); color: black; }
+        .badge-moroso { background: #ef4444; color: white; }
+        .badge-bueno { background: rgba(212, 175, 55, 0.1); color: var(--gold); border: 1px solid var(--gold); }
+        
+        .premium-card {
+            background: linear-gradient(135deg, #111 0%, #000 100%);
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            border-radius: 30px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .history-item {
+            background: rgba(255,255,255,0.03);
+            border-radius: 15px;
+            padding: 12px;
+            border-left: 3px solid transparent;
+        }
+        .history-item.credito { border-left-color: #ef4444; }
+        .history-item.contado { border-left-color: var(--gold); }
+
+        .text-gold { color: var(--gold); }
+        ::-webkit-scrollbar { width: 0px; }
+
+        /* Banner Notificaciones */
+        #notifBanner { background: #D4AF37; color: black; padding: 10px; text-align: center; font-size: 10px; font-weight: 900; text-transform: uppercase; display: none; cursor: pointer; }
+    </style>
+</head>
+<body class="pb-24 max-w-md mx-auto">
+
+    <!-- Banner Notificaciones -->
+    <div id="notifBanner" onclick="activarNotificaciones()">
+        <i class="fas fa-bell animate-bounce mr-2"></i> Activar Alertas de Cobro en mi Celular
+    </div>
+
+    <div class="p-4">
+        <!-- SUB-MODAL ANALISIS DE PRODUCTOS Y MARCAS -->
+        <div id="subModalAnalisis">
+            <header class="flex justify-between items-center mb-8">
+                <button onclick="cerrarAnalisis()" class="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-white text-xl">←</button>
+                <h2 class="text-[9px] font-black text-gold uppercase tracking-[4px]">Análisis de Compras</h2>
+                <div class="w-10"></div>
+            </header>
+            <div id="listaAnalisisProds" class="space-y-4 overflow-y-auto pb-10"></div>
+        </div>
+
+        <!-- MODAL DETALLE DE CLIENTE -->
+        <div id="modalDetalle">
+            <header class="flex justify-between items-center mb-6">
+                <button onclick="cerrarDetalle()" class="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-white text-xl">×</button>
+                <h2 class="text-[9px] font-black text-gold uppercase tracking-[4px]">Perfil del Cliente</h2>
+                <div class="w-10"></div>
+            </header>
+            <div id="detalleContenido" class="flex-1 overflow-y-auto space-y-6 pb-10"></div>
+        </div>
+
+        <header class="flex justify-between items-center mb-6">
+            <button onclick="window.location.href='index.html'" class="text-[10px] font-black border border-gold/30 px-4 py-2 rounded-full text-gold uppercase">← Inicio</button>
+            <div id="statusDot" class="w-3 h-3 rounded-full bg-red-600 shadow-[0_0_10px_rgba(220,38,38,0.5)]"></div>
+        </header>
+
+        <!-- Formulario de Registro -->
+        <section class="bg-[#0A0A0A] p-5 rounded-[28px] gold-border mb-8 shadow-2xl">
+            <h2 id="titulo-form" class="text-center text-gold font-black uppercase text-[10px] tracking-[4px] mb-6 italic">Registro de Clientes</h2>
+            <input type="hidden" id="edit-id">
+            <div class="space-y-3">
+                <div class="grid grid-cols-3 gap-2">
+                    <input type="text" id="cli-codigo" placeholder="CÓD" class="input-field col-span-1">
+                    <input type="text" id="cli-nombre" placeholder="Nombre Completo" class="input-field col-span-2">
+                </div>
+                <input type="text" id="cli-ubicacion" placeholder="Ubicación" class="input-field">
+                <input type="tel" id="cli-telefono" placeholder="WhatsApp" class="input-field">
+                
+                <div class="flex gap-2">
+                    <button id="btn-cancelar" onclick="limpiarFormulario()" class="hidden flex-1 bg-red-900/20 text-red-500 font-black py-4 rounded-xl uppercase text-[10px]">×</button>
+                    <button id="btn-guardar" onclick="procesarCliente()" class="flex-[3] bg-white text-black font-black py-4 rounded-xl uppercase text-xs">Guardar Cliente</button>
+                </div>
+            </div>
+        </section>
+
+        <h2 class="text-[10px] font-black text-gray-500 uppercase tracking-[2px] mb-4 ml-2 italic">Cartera de Negocios</h2>
+        <div id="listaClientes" class="space-y-3"></div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, onSnapshot, collection, query, orderBy, deleteDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCrjjeOoXPOtJDXDfrHLOA4Ny0QW2zfVWk",
+            authDomain: "apps-d45d6.firebaseapp.com",
+            projectId: "apps-d45d6",
+            storageBucket: "apps-d45d6.firebasestorage.app",
+            messagingSenderId: "502648373937",
+            appId: "1:502648373937:web:8c3beaa2a6c9289a4d9890"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        let todasLasVentas = [];
+        let todosLosClientes = [];
+
+        signInAnonymously(auth);
+        onAuthStateChanged(auth, (u) => { 
+            if(u){ 
+                escucharVentas(); 
+                escucharClientes(); 
+                document.getElementById('statusDot').style.backgroundColor="#22c55e";
+                verificarPermisosNotif();
+            } 
+        });
+
+        // --- SISTEMA DE NOTIFICACIONES ---
+        window.verificarPermisosNotif = () => {
+            if ("Notification" in window) {
+                if (Notification.permission === "default") {
+                    document.getElementById('notifBanner').style.display = "block";
+                }
+            }
+        };
+
+        window.activarNotificaciones = () => {
+            Notification.requestPermission().then(perm => {
+                if (perm === "granted") {
+                    document.getElementById('notifBanner').style.display = "none";
+                    enviarNotificacion("¡Jaddy INC Conectado!", "Recibirás alertas de cobro aquí.");
+                }
+            });
+        };
+
+        function enviarNotificacion(titulo, mensaje) {
+            if (Notification.permission === "granted") {
+                new Notification(titulo, {
+                    body: mensaje,
+                    icon: "https://cdn-icons-png.flaticon.com/512/5968/5968204.png"
+                });
+            }
+        }
+
+        function procesarInteligenciaDeCobros(ventas) {
+            const hoy = new Date();
+            ventas.forEach(v => {
+                if(v.tipo === 'CREDITO' && v.fechaPago) {
+                    const fechaCobro = new Date(v.fechaPago);
+                    const diffTime = fechaCobro - hoy;
+                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                    if(diffDays === 3) enviarNotificacion("Recordatorio Próximo", `En 3 días vence el pago de ${v.cliente} por $${v.precio}.`);
+                    if(diffDays === 0) enviarNotificacion("¡FECHA DE COBRO!", `Hoy vence el pago de ${v.cliente}. Monto: $${v.precio}.`);
+                }
+            });
+        }
+
+        // --- ESCUCHA DE DATOS ---
+        function escucharVentas() { 
+            onSnapshot(collection(db, "ventas_realizadas"), (s) => { 
+                todasLasVentas = s.docs.map(d => ({id_venta: d.id, ...d.data()})); 
+                procesarInteligenciaDeCobros(todasLasVentas);
+            }); 
+        }
+
+        function escucharClientes() { onSnapshot(query(collection(db, "clientes"), orderBy("nombre", "asc")), (s) => { todosLosClientes = s.docs.map(d => ({id_doc: d.id, ...d.data()})); renderizarClientes(); }); }
+
+        // --- GESTIÓN DE FORMULARIO ---
+        window.procesarCliente = async () => {
+            const editId = document.getElementById('edit-id').value;
+            const c = { 
+                codigo: document.getElementById('cli-codigo').value.toUpperCase(),
+                nombre: document.getElementById('cli-nombre').value.toUpperCase(),
+                ubicacion: document.getElementById('cli-ubicacion').value.toUpperCase(),
+                telefono: document.getElementById('cli-telefono').value
+            };
+            if(!c.nombre || !c.codigo) return;
+            editId ? await updateDoc(doc(db, "clientes", editId), c) : await setDoc(doc(db, "clientes", "CLI-"+Date.now()), {...c, fechaAlta: new Date().toISOString()});
+            limpiarFormulario();
+        };
+
+        window.limpiarFormulario = () => {
+            document.getElementById('edit-id').value = "";
+            document.getElementById('cli-codigo').value = "";
+            document.getElementById('cli-nombre').value = "";
+            document.getElementById('cli-ubicacion').value = "";
+            document.getElementById('cli-telefono').value = "";
+            document.getElementById('btn-cancelar').classList.add('hidden');
+            document.getElementById('btn-guardar').innerText = "Guardar Cliente";
+        };
+
+        // --- PANTALLAS DE DETALLE ---
+        window.abrirDetalle = (id) => {
+            const c = todosLosClientes.find(x => x.id_doc === id);
+            const ventas = todasLasVentas.filter(v => v.cliente === c.nombre || v.clienteId === c.id_doc).sort((a,b) => new Date(b.fecha) - new Date(a.fecha));
+            
+            const totalGasto = ventas.reduce((acc, v) => acc + parseFloat(v.precio || 0), 0);
+            const ventasCredito = ventas.filter(v => v.tipo === 'CREDITO');
+            const totalDeuda = ventasCredito.reduce((acc, v) => acc + parseFloat(v.precio || 0), 0);
+            
+            let badge = "badge-bueno"; let txtStatus = "CLIENTE FIEL";
+            if(totalDeuda > 0) { badge = "badge-moroso"; txtStatus = "CON DEUDAS"; }
+            else if(totalGasto > 2000) { badge = "badge-vip"; txtStatus = "VIP JADDY"; }
+
+            const telLimpio = (c.telefono || "").replace(/\D/g, "");
+            const msjWp = encodeURIComponent(`Hola ${c.nombre}, te saludamos de Jaddy INC.`);
+
+            document.getElementById('detalleContenido').innerHTML = `
+                <div class="premium-card p-6 text-center shadow-2xl">
+                    <div class="flex justify-center mb-3">
+                        <div class="w-16 h-16 rounded-full bg-gold/10 border border-gold/40 flex items-center justify-center text-2xl text-gold font-black">
+                            ${c.nombre.charAt(0)}
+                        </div>
+                    </div>
+                    <h3 class="text-xl font-black text-white uppercase">${c.nombre}</h3>
+                    <p class="text-[7px] text-gray-500 tracking-[3px] mb-3">${c.codigo} • ${c.ubicacion || 'SIN UBICACIÓN'}</p>
+                    <div class="flex justify-center gap-2">
+                        <span class="status-pill ${badge}">${txtStatus}</span>
+                        ${c.telefono ? `<a href="https://wa.me/${telLimpio}?text=${msjWp}" target="_blank" class="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center text-white"><i class="fab fa-whatsapp text-xs"></i></a>` : ''}
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="bg-white/5 p-4 rounded-2xl border border-white/5">
+                        <p class="text-[7px] font-black text-gray-500 uppercase mb-1 italic">Gasto Total</p>
+                        <p class="text-lg font-black text-gold">$${totalGasto.toFixed(2)}</p>
+                    </div>
+                    <div class="bg-white/5 p-4 rounded-2xl border border-white/5">
+                        <p class="text-[7px] font-black text-gray-500 uppercase mb-1 italic">Deuda Actual</p>
+                        <p class="text-lg font-black ${totalDeuda > 0 ? 'text-red-500' : 'text-gray-600'}">$${totalDeuda.toFixed(2)}</p>
+                    </div>
+                </div>
+
+                <button onclick="abrirAnalisisProductos('${c.id_doc}')" class="w-full bg-gold/10 border border-gold/30 p-5 rounded-[24px] flex items-center justify-between group active:scale-95 transition-all">
+                    <div class="flex items-center gap-4">
+                        <div class="w-10 h-10 rounded-full bg-gold/20 flex items-center justify-center text-gold">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <div class="text-left">
+                            <p class="text-[10px] font-black text-white uppercase">Inteligencia de Compra</p>
+                            <p class="text-[8px] text-gold/60 font-bold uppercase">Ver marcas y productos</p>
+                        </div>
+                    </div>
+                    <i class="fas fa-chevron-right text-gold/40 text-xs"></i>
+                </button>
+
+                <div>
+                    <h4 class="text-[9px] font-black text-gray-500 uppercase tracking-widest mb-4 ml-2 italic">Historial Cronológico</h4>
+                    <div class="space-y-2">
+                        ${ventas.length > 0 ? ventas.map(v => {
+                            const d = new Date(v.fecha);
+                            const fp = v.fechaPago ? new Date(v.fechaPago).toLocaleDateString() : '';
+                            return `
+                            <div class="history-item ${v.tipo === 'CREDITO' ? 'credito' : 'contado'} flex justify-between items-center">
+                                <div>
+                                    <p class="text-[10px] font-black text-white uppercase">${v.producto}</p>
+                                    <p class="text-[8px] text-gray-500 font-bold uppercase">${d.toLocaleDateString()} • ${v.tipo}</p>
+                                    ${v.tipo === 'CREDITO' ? `<p class="text-[7px] text-red-400 font-black italic">VENCE: ${fp}</p>` : ''}
+                                </div>
+                                <div class="text-right">
+                                    <p class="text-[11px] font-black text-gold">$${parseFloat(v.precio || 0).toFixed(2)}</p>
+                                </div>
+                            </div>
+                            `;
+                        }).join('') : '<p class="text-center text-gray-700 py-4 text-[10px] font-bold italic">NUEVO CLIENTE</p>'}
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3 mt-4">
+                    <button onclick="prepararEdicion('${c.id_doc}')" class="bg-white text-black font-black py-4 rounded-2xl uppercase text-[10px]">Editar Perfil</button>
+                    <button onclick="eliminarCliente('${c.id_doc}')" class="bg-red-600/10 text-red-500 border border-red-600/20 font-black py-4 rounded-2xl uppercase text-[10px]">Eliminar</button>
+                </div>
+            `;
+            document.getElementById('modalDetalle').style.display = 'flex';
+        };
+
+        window.abrirAnalisisProductos = (id) => {
+            const c = todosLosClientes.find(x => x.id_doc === id);
+            const ventas = todasLasVentas.filter(v => v.cliente === c.nombre || v.clienteId === c.id_doc);
+            
+            const resumenProd = {};
+            const resumenMarca = {};
+
+            ventas.forEach(v => {
+                if(!resumenProd[v.producto]) resumenProd[v.producto] = { cant: 0, total: 0, marca: v.marca || 'S/M' };
+                resumenProd[v.producto].cant++;
+                resumenProd[v.producto].total += parseFloat(v.precio || 0);
+
+                const m = v.marca || 'SIN MARCA';
+                resumenMarca[m] = (resumenMarca[m] || 0) + 1;
+            });
+
+            const marcasSorted = Object.entries(resumenMarca).sort((a,b) => b[1] - a[1]);
+            const prodsSorted = Object.entries(resumenProd).sort((a,b) => b[1].cant - a[1].cant);
+
+            document.getElementById('listaAnalisisProds').innerHTML = `
+                <div class="mb-6 text-center">
+                    <p class="text-[8px] font-black text-gray-500 uppercase tracking-widest italic mb-2">Preferencia de Consumo</p>
+                    <h3 class="text-xl font-black text-white uppercase">${c.nombre}</h3>
+                </div>
+
+                <div class="mb-8">
+                    <h4 class="text-[9px] font-black text-gold uppercase tracking-[3px] mb-4 ml-2 italic">Marcas Preferidas</h4>
+                    <div class="flex flex-wrap gap-2 px-2">
+                        ${marcasSorted.map(([marca, cant]) => `
+                            <div class="bg-gold/10 border border-gold/30 px-4 py-2 rounded-full">
+                                <p class="text-[10px] font-black text-white uppercase">${marca} <span class="text-gold ml-1">x${cant}</span></p>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+
+                <h4 class="text-[9px] font-black text-gray-500 uppercase tracking-[3px] mb-4 ml-2 italic">Productos Adquiridos</h4>
+                ${prodsSorted.map(([prod, data]) => `
+                    <div class="bg-white/5 p-5 rounded-[24px] border border-white/5 flex justify-between items-center mb-3">
+                        <div class="flex items-center gap-4">
+                            <div class="w-12 h-12 rounded-xl bg-gold/5 border border-gold/20 flex items-center justify-center text-gold text-lg font-black italic">${data.cant}</div>
+                            <div>
+                                <h4 class="text-xs font-black text-white uppercase">${prod}</h4>
+                                <p class="text-[9px] text-gold/60 font-black uppercase italic">${data.marca}</p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-[12px] font-black text-gold">$${data.total.toFixed(2)}</p>
+                            <p class="text-[7px] text-gray-600 font-bold uppercase italic">Total</p>
+                        </div>
+                    </div>
+                `).join
