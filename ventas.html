@@ -48,7 +48,7 @@
             <div class="relative">
                 <p class="text-[7px] text-gold font-black absolute -top-2 left-3 bg-[#0A0A0A] px-2 uppercase z-10">Despachado por:</p>
                 <select id="sel-vendedor" class="input-field border-gold/30 text-gold">
-                    <option value="">-- CONECTANDO CON JADDY... --</option>
+                    <option value="">-- ESPERANDO CONEXIÓN --</option>
                 </select>
             </div>
 
@@ -60,7 +60,7 @@
 
             <div id="area-cliente-reg">
                 <select id="sel-cliente" class="input-field">
-                    <option value="">-- SELECCIONAR CLIENTE --</option>
+                    <option value="">-- CARGANDO CLIENTES --</option>
                 </select>
             </div>
             <div id="area-cliente-ocu" class="hidden">
@@ -71,7 +71,7 @@
             <div class="grid grid-cols-1 gap-3">
                 <div class="relative">
                     <select id="sel-producto" class="input-field">
-                        <option value="">-- SELECCIONAR PRODUCTO --</option>
+                        <option value="">-- CARGANDO PRODUCTOS --</option>
                     </select>
                 </div>
                 <div class="relative">
@@ -128,9 +128,9 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, onSnapshot, query } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // CONFIGURACIÓN PROPORCIONADA
+        // CONFIGURACIÓN PROPORCIONADA POR EL USUARIO
         const firebaseConfig = {
             apiKey: "AIzaSyCrjjeOoXPOtJDXDfrHLOA4Ny0QW2zfVWk",
             authDomain: "apps-d45d6.firebaseapp.com",
@@ -154,64 +154,75 @@
             if (dot) dot.className = online ? 'status-online' : 'status-offline';
         };
 
-        // Inicio de Sesión y Conexión de Datos
+        // Inicio de Sesión
         async function initApp() {
             try {
-                // Autenticación primero
                 if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
                     await signInWithCustomToken(auth, __initial_auth_token);
                 } else {
                     await signInAnonymously(auth);
                 }
-
-                onAuthStateChanged(auth, (user) => {
-                    if (user) {
-                        setStatus(true);
-                        activarListeners();
-                    } else {
-                        setStatus(false);
-                    }
-                });
             } catch (err) {
-                console.error("Error de conexión:", err);
+                console.error("Auth error:", err);
                 setStatus(false);
             }
         }
 
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                setStatus(true);
+                activarListeners();
+            } else {
+                setStatus(false);
+            }
+        });
+
         function activarListeners() {
-            // Regla 1: Rutas de colecciones exactas
-            const publicData = (name) => collection(db, 'artifacts', appId, 'public', 'data', name);
+            // Regla 1 de Firestore: Ruta obligatoria /artifacts/{appId}/public/data/{collection}
+            const getRef = (name) => collection(db, 'artifacts', appId, 'public', 'data', name);
 
-            // Escuchar Vendedores
-            onSnapshot(publicData('vendedores'), (snap) => {
-                dataStore.vendedores = snap.docs.map(d => ({id: d.id, ...d.data()}));
+            // 1. Escuchar Vendedores
+            onSnapshot(getRef('vendedores'), (snap) => {
+                dataStore.vendedores = snap.docs.map(d => ({ id: d.id, ...d.data() }));
                 const sel = document.getElementById('sel-vendedor');
-                sel.innerHTML = '<option value="">-- SELECCIONAR VENDEDOR --</option>' + 
-                    dataStore.vendedores.map(v => `<option value="${v.nombre}">${v.nombre}</option>`).join('');
-            }, (err) => console.log("Error vendedores:", err));
+                if (dataStore.vendedores.length > 0) {
+                    sel.innerHTML = '<option value="">-- SELECCIONAR VENDEDOR --</option>' + 
+                        dataStore.vendedores.map(v => `<option value="${v.nombre}">${v.nombre}</option>`).join('');
+                } else {
+                    sel.innerHTML = '<option value="">-- NO HAY VENDEDORES --</option>';
+                }
+            }, (e) => console.error("Error vendedores:", e));
 
-            // Escuchar Clientes
-            onSnapshot(publicData('clientes'), (snap) => {
-                dataStore.clientes = snap.docs.map(d => ({id: d.id, ...d.data()}));
+            // 2. Escuchar Clientes
+            onSnapshot(getRef('clientes'), (snap) => {
+                dataStore.clientes = snap.docs.map(d => ({ id: d.id, ...d.data() }));
                 const sel = document.getElementById('sel-cliente');
-                sel.innerHTML = '<option value="">-- SELECCIONAR CLIENTE --</option>' + 
-                    dataStore.clientes.map(c => `<option value="${c.nombre}">${c.nombre}</option>`).join('');
-            }, (err) => console.log("Error clientes:", err));
+                if (dataStore.clientes.length > 0) {
+                    sel.innerHTML = '<option value="">-- SELECCIONAR CLIENTE --</option>' + 
+                        dataStore.clientes.map(c => `<option value="${c.nombre}">${c.nombre}</option>`).join('');
+                } else {
+                    sel.innerHTML = '<option value="">-- NO HAY CLIENTES --</option>';
+                }
+            }, (e) => console.error("Error clientes:", e));
 
-            // Escuchar Productos
-            onSnapshot(publicData('productos'), (snap) => {
-                dataStore.productos = snap.docs.map(d => ({id: d.id, ...d.data()}));
+            // 3. Escuchar Productos
+            onSnapshot(getRef('productos'), (snap) => {
+                dataStore.productos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
                 const sel = document.getElementById('sel-producto');
-                sel.innerHTML = '<option value="">-- SELECCIONAR PRODUCTO --</option>' + 
-                    dataStore.productos.map(p => `<option value="${p.id}">${p.nombre}</option>`).join('');
-            }, (err) => console.log("Error productos:", err));
+                if (dataStore.productos.length > 0) {
+                    sel.innerHTML = '<option value="">-- SELECCIONAR PRODUCTO --</option>' + 
+                        dataStore.productos.map(p => `<option value="${p.id}">${p.nombre}</option>`).join('');
+                } else {
+                    sel.innerHTML = '<option value="">-- NO HAY PRODUCTOS --</option>';
+                }
+            }, (e) => console.error("Error productos:", e));
 
-            // Escuchar Historial de Ventas
-            onSnapshot(publicData('ventas'), (snap) => {
-                const ventas = snap.docs.map(d => ({id: d.id, ...d.data()}))
+            // 4. Escuchar Historial de Ventas
+            onSnapshot(getRef('ventas'), (snap) => {
+                const ventas = snap.docs.map(d => ({ id: d.id, ...d.data() }))
                     .sort((a,b) => (b.timestamp || 0) - (a.timestamp || 0));
                 renderVentas(ventas.slice(0, 10));
-            }, (err) => console.log("Error ventas:", err));
+            }, (e) => console.error("Error ventas:", e));
         }
 
         // --- MANEJO DE INTERFAZ ---
@@ -242,10 +253,14 @@
         document.getElementById('sel-producto').onchange = (e) => {
             const p = dataStore.productos.find(prod => prod.id === e.target.value);
             dataStore.seleccionado = p;
-            if (p && p.variantes) {
-                 document.getElementById('sel-variante').innerHTML = p.variantes.map(v => `<option value="${v}">${v}</option>`).join('');
+            
+            const selVar = document.getElementById('sel-variante');
+            if (p && p.variantes && Array.isArray(p.variantes)) {
+                 selVar.innerHTML = p.variantes.map(v => `<option value="${v}">${v}</option>`).join('');
+            } else if (p && p.variante) { // Soporte para campo singular si existe
+                 selVar.innerHTML = `<option value="${p.variante}">${p.variante}</option>`;
             } else {
-                 document.getElementById('sel-variante').innerHTML = '<option value="GENERAL">GENERAL</option>';
+                 selVar.innerHTML = '<option value="GENERAL">GENERAL</option>';
             }
             actualizarCalculos();
         };
@@ -254,8 +269,13 @@
             const p = dataStore.seleccionado;
             const cant = parseInt(document.getElementById('inp-cantidad').value) || 0;
             if (!p) return;
-            let precio = dataStore.tipoVenta === 'CONTADO' ? (p.precio_detal || 0) : 
-                         dataStore.tipoVenta === 'CREDITO' ? (p.precio_credito || 0) : (p.precio_mayor || 0);
+            
+            // Lógica de precios según tipo de venta
+            let precio = 0;
+            if (dataStore.tipoVenta === 'CONTADO') precio = p.precio_detal || p.precio || 0;
+            else if (dataStore.tipoVenta === 'CREDITO') precio = p.precio_credito || p.precio || 0;
+            else if (dataStore.tipoVenta === 'MAYOR') precio = p.precio_mayor || p.precio || 0;
+
             document.getElementById('inp-precio').value = (precio * cant).toFixed(2);
         }
 
@@ -264,13 +284,13 @@
         // ACCIÓN: REGISTRAR VENTA
         document.getElementById('btn-venta').onclick = async () => {
             const btn = document.getElementById('btn-venta');
-            const vendedor = document.getElementById('sel-vendedor').value;
-            const prodId = document.getElementById('sel-producto').value;
+            const v = document.getElementById('sel-vendedor').value;
+            const pId = document.getElementById('sel-producto').value;
             const cliReg = document.getElementById('btn-cli-reg').classList.contains('active');
             const cliente = cliReg ? document.getElementById('sel-cliente').value : document.getElementById('inp-cliente-nom').value;
 
-            if (!vendedor || !prodId || !cliente) {
-                alert("Por favor completa los campos obligatorios.");
+            if (!v || !pId || !cliente) {
+                alert("Faltan datos obligatorios.");
                 return;
             }
 
@@ -279,7 +299,7 @@
 
             try {
                 const ventaData = {
-                    vendedor: vendedor,
+                    vendedor: v,
                     cliente: cliente.toUpperCase(),
                     productoNombre: dataStore.seleccionado.nombre,
                     variante: document.getElementById('sel-variante').value,
@@ -292,14 +312,14 @@
                     creadoPor: auth.currentUser.uid
                 };
 
-                await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'ventas'), ventaData);
+                const ref = collection(db, 'artifacts', appId, 'public', 'data', 'ventas');
+                await addDoc(ref, ventaData);
                 
-                // Limpiar campos
                 document.getElementById('inp-cliente-nom').value = "";
-                alert("Venta procesada con éxito.");
+                alert("Venta registrada con éxito.");
             } catch (err) {
                 console.error(err);
-                alert("Error al guardar la venta.");
+                alert("Error al guardar: " + err.message);
             } finally {
                 btn.disabled = false;
                 btn.innerHTML = "Procesar Despacho";
@@ -309,7 +329,7 @@
         function renderVentas(ventas) {
             const list = document.getElementById('listaVentas');
             if (ventas.length === 0) {
-                list.innerHTML = '<div class="text-center py-10 opacity-20 text-xs italic">Sin ventas registradas</div>';
+                list.innerHTML = '<div class="text-center py-10 opacity-20 text-xs italic">Sin historial reciente</div>';
                 return;
             }
             list.innerHTML = ventas.map(v => `
@@ -330,7 +350,6 @@
             `).join('');
         }
 
-        // Iniciar
         initApp();
     </script>
 </body>
