@@ -15,7 +15,6 @@
         
         .client-card { background: #0F0F0F; border: 1px solid #1A1A1A; border-radius: 20px; padding: 15px; margin-bottom: 12px; cursor: pointer; transition: 0.3s; }
         
-        /* Modales Premium */
         #modalDetalle, #subModalAnalisis { 
             position: fixed; inset: 0; background: rgba(0,0,0,0.98); z-index: 100; 
             display: none; flex-direction: column; padding: 20px; 
@@ -50,46 +49,44 @@
         .text-gold { color: var(--gold); }
         ::-webkit-scrollbar { width: 0px; }
 
-        /* Banner Notificaciones */
         #notifBanner { background: #D4AF37; color: black; padding: 10px; text-align: center; font-size: 10px; font-weight: 900; text-transform: uppercase; display: none; cursor: pointer; }
     </style>
 </head>
 <body class="pb-24 max-w-md mx-auto">
 
-    <!-- Banner Notificaciones -->
     <div id="notifBanner" onclick="activarNotificaciones()">
         <i class="fas fa-bell animate-bounce mr-2"></i> Activar Alertas de Cobro en mi Celular
     </div>
 
     <div class="p-4">
-        <!-- SUB-MODAL ANALISIS DE PRODUCTOS Y MARCAS -->
+        <!-- MODALES -->
         <div id="subModalAnalisis">
             <header class="flex justify-between items-center mb-8">
                 <button onclick="cerrarAnalisis()" class="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-white text-xl">←</button>
-                <h2 class="text-[9px] font-black text-gold uppercase tracking-[4px]">Análisis de Compras</h2>
+                <h2 class="text-[9px] font-black text-gold uppercase tracking-[4px]">Análisis Inteligente</h2>
                 <div class="w-10"></div>
             </header>
             <div id="listaAnalisisProds" class="space-y-4 overflow-y-auto pb-10"></div>
         </div>
 
-        <!-- MODAL DETALLE DE CLIENTE -->
         <div id="modalDetalle">
             <header class="flex justify-between items-center mb-6">
                 <button onclick="cerrarDetalle()" class="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-white text-xl">×</button>
-                <h2 class="text-[9px] font-black text-gold uppercase tracking-[4px]">Perfil del Cliente</h2>
+                <h2 class="text-[9px] font-black text-gold uppercase tracking-[4px]">Perfil Cliente</h2>
                 <div class="w-10"></div>
             </header>
             <div id="detalleContenido" class="flex-1 overflow-y-auto space-y-6 pb-10"></div>
         </div>
 
+        <!-- HEADER -->
         <header class="flex justify-between items-center mb-6">
             <button onclick="window.location.href='index.html'" class="text-[10px] font-black border border-gold/30 px-4 py-2 rounded-full text-gold uppercase">← Inicio</button>
             <div id="statusDot" class="w-3 h-3 rounded-full bg-red-600 shadow-[0_0_10px_rgba(220,38,38,0.5)]"></div>
         </header>
 
-        <!-- Formulario de Registro -->
+        <!-- REGISTRO -->
         <section class="bg-[#0A0A0A] p-5 rounded-[28px] gold-border mb-8 shadow-2xl">
-            <h2 id="titulo-form" class="text-center text-gold font-black uppercase text-[10px] tracking-[4px] mb-6 italic">Registro de Clientes</h2>
+            <h2 id="titulo-form" class="text-center text-gold font-black uppercase text-[10px] tracking-[4px] mb-6 italic">Registro Jaddy INC</h2>
             <input type="hidden" id="edit-id">
             <div class="space-y-3">
                 <div class="grid grid-cols-3 gap-2">
@@ -106,7 +103,7 @@
             </div>
         </section>
 
-        <h2 class="text-[10px] font-black text-gray-500 uppercase tracking-[2px] mb-4 ml-2 italic">Cartera de Negocios</h2>
+        <h2 class="text-[10px] font-black text-gray-500 uppercase tracking-[2px] mb-4 ml-2 italic">Cartera de Clientes</h2>
         <div id="listaClientes" class="space-y-3"></div>
     </div>
 
@@ -115,6 +112,7 @@
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, onSnapshot, collection, query, orderBy, deleteDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
+        // CONFIGURACIÓN DE TU CEREBRO (DATABASE)
         const firebaseConfig = {
             apiKey: "AIzaSyCrjjeOoXPOtJDXDfrHLOA4Ny0QW2zfVWk",
             authDomain: "apps-d45d6.firebaseapp.com",
@@ -131,6 +129,7 @@
         let todasLasVentas = [];
         let todosLosClientes = [];
 
+        // CONEXIÓN AL CEREBRO
         signInAnonymously(auth);
         onAuthStateChanged(auth, (u) => { 
             if(u){ 
@@ -144,9 +143,7 @@
         // --- SISTEMA DE NOTIFICACIONES ---
         window.verificarPermisosNotif = () => {
             if ("Notification" in window) {
-                if (Notification.permission === "default") {
-                    document.getElementById('notifBanner').style.display = "block";
-                }
+                if (Notification.permission === "default") document.getElementById('notifBanner').style.display = "block";
             }
         };
 
@@ -154,44 +151,31 @@
             Notification.requestPermission().then(perm => {
                 if (perm === "granted") {
                     document.getElementById('notifBanner').style.display = "none";
-                    enviarNotificacion("¡Jaddy INC Conectado!", "Recibirás alertas de cobro aquí.");
                 }
             });
         };
 
         function enviarNotificacion(titulo, mensaje) {
             if (Notification.permission === "granted") {
-                new Notification(titulo, {
-                    body: mensaje,
-                    icon: "https://cdn-icons-png.flaticon.com/512/5968/5968204.png"
-                });
+                new Notification(titulo, { body: mensaje });
             }
         }
 
-        function procesarInteligenciaDeCobros(ventas) {
-            const hoy = new Date();
-            ventas.forEach(v => {
-                if(v.tipo === 'CREDITO' && v.fechaPago) {
-                    const fechaCobro = new Date(v.fechaPago);
-                    const diffTime = fechaCobro - hoy;
-                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                    if(diffDays === 3) enviarNotificacion("Recordatorio Próximo", `En 3 días vence el pago de ${v.cliente} por $${v.precio}.`);
-                    if(diffDays === 0) enviarNotificacion("¡FECHA DE COBRO!", `Hoy vence el pago de ${v.cliente}. Monto: $${v.precio}.`);
-                }
-            });
-        }
-
-        // --- ESCUCHA DE DATOS ---
+        // --- CEREBRO: GUARDADO Y LECTURA ---
         function escucharVentas() { 
             onSnapshot(collection(db, "ventas_realizadas"), (s) => { 
                 todasLasVentas = s.docs.map(d => ({id_venta: d.id, ...d.data()})); 
-                procesarInteligenciaDeCobros(todasLasVentas);
+                verificarCobrosProximos(todasLasVentas);
             }); 
         }
 
-        function escucharClientes() { onSnapshot(query(collection(db, "clientes"), orderBy("nombre", "asc")), (s) => { todosLosClientes = s.docs.map(d => ({id_doc: d.id, ...d.data()})); renderizarClientes(); }); }
+        function escucharClientes() { 
+            onSnapshot(query(collection(db, "clientes"), orderBy("nombre", "asc")), (s) => { 
+                todosLosClientes = s.docs.map(d => ({id_doc: d.id, ...d.data()})); 
+                renderizarClientes(); 
+            }); 
+        }
 
-        // --- GESTIÓN DE FORMULARIO ---
         window.procesarCliente = async () => {
             const editId = document.getElementById('edit-id').value;
             const c = { 
@@ -201,9 +185,30 @@
                 telefono: document.getElementById('cli-telefono').value
             };
             if(!c.nombre || !c.codigo) return;
-            editId ? await updateDoc(doc(db, "clientes", editId), c) : await setDoc(doc(db, "clientes", "CLI-"+Date.now()), {...c, fechaAlta: new Date().toISOString()});
-            limpiarFormulario();
+            
+            try {
+                if(editId) {
+                    await updateDoc(doc(db, "clientes", editId), c);
+                } else {
+                    await setDoc(doc(db, "clientes", "CLI-"+Date.now()), {...c, fechaAlta: new Date().toISOString()});
+                }
+                limpiarFormulario();
+            } catch (e) {
+                console.error("Error al guardar:", e);
+            }
         };
+
+        function verificarCobrosProximos(ventas) {
+            const hoy = new Date();
+            ventas.forEach(v => {
+                if(v.tipo === 'CREDITO' && v.fechaPago) {
+                    const f = new Date(v.fechaPago);
+                    const diff = Math.ceil((f - hoy) / (1000 * 60 * 60 * 24));
+                    if(diff === 3) enviarNotificacion("Cobro en 3 días", `${v.cliente} debe pagar $${v.precio}`);
+                    if(diff === 0) enviarNotificacion("Cobro HOY", `Fecha límite para ${v.cliente}: $${v.precio}`);
+                }
+            });
+        }
 
         window.limpiarFormulario = () => {
             document.getElementById('edit-id').value = "";
@@ -215,86 +220,54 @@
             document.getElementById('btn-guardar').innerText = "Guardar Cliente";
         };
 
-        // --- PANTALLAS DE DETALLE ---
         window.abrirDetalle = (id) => {
             const c = todosLosClientes.find(x => x.id_doc === id);
-            const ventas = todasLasVentas.filter(v => v.cliente === c.nombre || v.clienteId === c.id_doc).sort((a,b) => new Date(b.fecha) - new Date(a.fecha));
-            
+            const ventas = todasLasVentas.filter(v => v.cliente === c.nombre || v.clienteId === c.id_doc);
             const totalGasto = ventas.reduce((acc, v) => acc + parseFloat(v.precio || 0), 0);
-            const ventasCredito = ventas.filter(v => v.tipo === 'CREDITO');
-            const totalDeuda = ventasCredito.reduce((acc, v) => acc + parseFloat(v.precio || 0), 0);
-            
-            let badge = "badge-bueno"; let txtStatus = "CLIENTE FIEL";
-            if(totalDeuda > 0) { badge = "badge-moroso"; txtStatus = "CON DEUDAS"; }
-            else if(totalGasto > 2000) { badge = "badge-vip"; txtStatus = "VIP JADDY"; }
-
-            const telLimpio = (c.telefono || "").replace(/\D/g, "");
-            const msjWp = encodeURIComponent(`Hola ${c.nombre}, te saludamos de Jaddy INC.`);
+            const totalDeuda = ventas.filter(v => v.tipo === 'CREDITO').reduce((acc, v) => acc + parseFloat(v.precio || 0), 0);
 
             document.getElementById('detalleContenido').innerHTML = `
                 <div class="premium-card p-6 text-center shadow-2xl">
-                    <div class="flex justify-center mb-3">
-                        <div class="w-16 h-16 rounded-full bg-gold/10 border border-gold/40 flex items-center justify-center text-2xl text-gold font-black">
-                            ${c.nombre.charAt(0)}
-                        </div>
-                    </div>
                     <h3 class="text-xl font-black text-white uppercase">${c.nombre}</h3>
-                    <p class="text-[7px] text-gray-500 tracking-[3px] mb-3">${c.codigo} • ${c.ubicacion || 'SIN UBICACIÓN'}</p>
+                    <p class="text-[7px] text-gray-500 tracking-[3px] mb-3">${c.codigo}</p>
                     <div class="flex justify-center gap-2">
-                        <span class="status-pill ${badge}">${txtStatus}</span>
-                        ${c.telefono ? `<a href="https://wa.me/${telLimpio}?text=${msjWp}" target="_blank" class="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center text-white"><i class="fab fa-whatsapp text-xs"></i></a>` : ''}
+                        <span class="status-pill ${totalDeuda > 0 ? 'badge-moroso' : 'badge-bueno'}">${totalDeuda > 0 ? 'Con Deuda' : 'Al día'}</span>
+                        <a href="https://wa.me/${c.telefono}" target="_blank" class="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center text-white"><i class="fab fa-whatsapp text-xs"></i></a>
                     </div>
                 </div>
 
                 <div class="grid grid-cols-2 gap-3">
-                    <div class="bg-white/5 p-4 rounded-2xl border border-white/5">
-                        <p class="text-[7px] font-black text-gray-500 uppercase mb-1 italic">Gasto Total</p>
+                    <div class="bg-white/5 p-4 rounded-2xl border border-white/5 text-center">
+                        <p class="text-[7px] font-black text-gray-500 uppercase mb-1">Total Compras</p>
                         <p class="text-lg font-black text-gold">$${totalGasto.toFixed(2)}</p>
                     </div>
-                    <div class="bg-white/5 p-4 rounded-2xl border border-white/5">
-                        <p class="text-[7px] font-black text-gray-500 uppercase mb-1 italic">Deuda Actual</p>
-                        <p class="text-lg font-black ${totalDeuda > 0 ? 'text-red-500' : 'text-gray-600'}">$${totalDeuda.toFixed(2)}</p>
+                    <div class="bg-white/5 p-4 rounded-2xl border border-white/5 text-center">
+                        <p class="text-[7px] font-black text-gray-500 uppercase mb-1">Deuda Pendiente</p>
+                        <p class="text-lg font-black text-red-500">$${totalDeuda.toFixed(2)}</p>
                     </div>
                 </div>
 
-                <button onclick="abrirAnalisisProductos('${c.id_doc}')" class="w-full bg-gold/10 border border-gold/30 p-5 rounded-[24px] flex items-center justify-between group active:scale-95 transition-all">
-                    <div class="flex items-center gap-4">
-                        <div class="w-10 h-10 rounded-full bg-gold/20 flex items-center justify-center text-gold">
-                            <i class="fas fa-chart-line"></i>
-                        </div>
-                        <div class="text-left">
-                            <p class="text-[10px] font-black text-white uppercase">Inteligencia de Compra</p>
-                            <p class="text-[8px] text-gold/60 font-bold uppercase">Ver marcas y productos</p>
-                        </div>
-                    </div>
+                <button onclick="abrirAnalisisProductos('${c.id_doc}')" class="w-full bg-gold/10 border border-gold/30 p-5 rounded-[24px] flex items-center justify-between">
+                    <span class="text-[10px] font-black text-white uppercase italic">Ver Marcas y Productos Favoritos</span>
                     <i class="fas fa-chevron-right text-gold/40 text-xs"></i>
                 </button>
 
-                <div>
-                    <h4 class="text-[9px] font-black text-gray-500 uppercase tracking-widest mb-4 ml-2 italic">Historial Cronológico</h4>
-                    <div class="space-y-2">
-                        ${ventas.length > 0 ? ventas.map(v => {
-                            const d = new Date(v.fecha);
-                            const fp = v.fechaPago ? new Date(v.fechaPago).toLocaleDateString() : '';
-                            return `
-                            <div class="history-item ${v.tipo === 'CREDITO' ? 'credito' : 'contado'} flex justify-between items-center">
-                                <div>
-                                    <p class="text-[10px] font-black text-white uppercase">${v.producto}</p>
-                                    <p class="text-[8px] text-gray-500 font-bold uppercase">${d.toLocaleDateString()} • ${v.tipo}</p>
-                                    ${v.tipo === 'CREDITO' ? `<p class="text-[7px] text-red-400 font-black italic">VENCE: ${fp}</p>` : ''}
-                                </div>
-                                <div class="text-right">
-                                    <p class="text-[11px] font-black text-gold">$${parseFloat(v.precio || 0).toFixed(2)}</p>
-                                </div>
+                <div class="space-y-2">
+                    <h4 class="text-[8px] font-black text-gray-600 uppercase ml-2">Historial</h4>
+                    ${ventas.map(v => `
+                        <div class="history-item ${v.tipo === 'CREDITO' ? 'credito' : 'contado'} flex justify-between items-center">
+                            <div>
+                                <p class="text-[10px] font-black text-white uppercase">${v.producto}</p>
+                                <p class="text-[7px] text-gray-500 font-bold uppercase">${v.marca || 'S/M'} • ${new Date(v.fecha).toLocaleDateString()}</p>
                             </div>
-                            `;
-                        }).join('') : '<p class="text-center text-gray-700 py-4 text-[10px] font-bold italic">NUEVO CLIENTE</p>'}
-                    </div>
+                            <p class="text-[11px] font-black text-gold">$${v.precio}</p>
+                        </div>
+                    `).join('')}
                 </div>
 
                 <div class="grid grid-cols-2 gap-3 mt-4">
-                    <button onclick="prepararEdicion('${c.id_doc}')" class="bg-white text-black font-black py-4 rounded-2xl uppercase text-[10px]">Editar Perfil</button>
-                    <button onclick="eliminarCliente('${c.id_doc}')" class="bg-red-600/10 text-red-500 border border-red-600/20 font-black py-4 rounded-2xl uppercase text-[10px]">Eliminar</button>
+                    <button onclick="prepararEdicion('${c.id_doc}')" class="bg-white text-black font-black py-4 rounded-2xl uppercase text-[10px]">Editar</button>
+                    <button onclick="eliminarCliente('${c.id_doc}')" class="bg-red-900/20 text-red-500 font-black py-4 rounded-2xl uppercase text-[10px]">Eliminar</button>
                 </div>
             `;
             document.getElementById('modalDetalle').style.display = 'flex';
@@ -317,38 +290,62 @@
             });
 
             const marcasSorted = Object.entries(resumenMarca).sort((a,b) => b[1] - a[1]);
-            const prodsSorted = Object.entries(resumenProd).sort((a,b) => b[1].cant - a[1].cant);
 
             document.getElementById('listaAnalisisProds').innerHTML = `
-                <div class="mb-6 text-center">
-                    <p class="text-[8px] font-black text-gray-500 uppercase tracking-widest italic mb-2">Preferencia de Consumo</p>
-                    <h3 class="text-xl font-black text-white uppercase">${c.nombre}</h3>
-                </div>
-
-                <div class="mb-8">
-                    <h4 class="text-[9px] font-black text-gold uppercase tracking-[3px] mb-4 ml-2 italic">Marcas Preferidas</h4>
-                    <div class="flex flex-wrap gap-2 px-2">
-                        ${marcasSorted.map(([marca, cant]) => `
-                            <div class="bg-gold/10 border border-gold/30 px-4 py-2 rounded-full">
-                                <p class="text-[10px] font-black text-white uppercase">${marca} <span class="text-gold ml-1">x${cant}</span></p>
-                            </div>
-                        `).join('')}
+                <div class="mb-6">
+                    <h4 class="text-[9px] font-black text-gold uppercase tracking-[3px] mb-4 italic">Marcas Favoritas</h4>
+                    <div class="flex flex-wrap gap-2">
+                        ${marcasSorted.map(([m, c]) => `<div class="bg-gold/10 px-4 py-2 rounded-full text-[10px] font-black uppercase text-white">${m} <span class="text-gold">x${c}</span></div>`).join('')}
                     </div>
                 </div>
-
-                <h4 class="text-[9px] font-black text-gray-500 uppercase tracking-[3px] mb-4 ml-2 italic">Productos Adquiridos</h4>
-                ${prodsSorted.map(([prod, data]) => `
-                    <div class="bg-white/5 p-5 rounded-[24px] border border-white/5 flex justify-between items-center mb-3">
-                        <div class="flex items-center gap-4">
-                            <div class="w-12 h-12 rounded-xl bg-gold/5 border border-gold/20 flex items-center justify-center text-gold text-lg font-black italic">${data.cant}</div>
-                            <div>
-                                <h4 class="text-xs font-black text-white uppercase">${prod}</h4>
-                                <p class="text-[9px] text-gold/60 font-black uppercase italic">${data.marca}</p>
-                            </div>
+                <h4 class="text-[9px] font-black text-gray-500 uppercase tracking-[3px] mb-4 italic">Productos</h4>
+                ${Object.entries(resumenProd).map(([p, d]) => `
+                    <div class="bg-white/5 p-4 rounded-2xl flex justify-between items-center mb-2">
+                        <div>
+                            <p class="text-xs font-black text-white uppercase">${p}</p>
+                            <p class="text-[8px] text-gold/60 font-black uppercase italic">${d.marca}</p>
                         </div>
-                        <div class="text-right">
-                            <p class="text-[12px] font-black text-gold">$${data.total.toFixed(2)}</p>
-                            <p class="text-[7px] text-gray-600 font-bold uppercase italic">Total</p>
-                        </div>
+                        <p class="text-xs font-black text-gold">${d.cant} unid.</p>
                     </div>
-                `).join
+                `).join('')}
+            `;
+            document.getElementById('subModalAnalisis').style.display = 'flex';
+        };
+
+        window.cerrarAnalisis = () => { document.getElementById('subModalAnalisis').style.display = 'none'; };
+        window.cerrarDetalle = () => { document.getElementById('modalDetalle').style.display = 'none'; };
+
+        window.prepararEdicion = (id) => {
+            const c = todosLosClientes.find(x => x.id_doc === id);
+            document.getElementById('edit-id').value = id;
+            document.getElementById('cli-codigo').value = c.codigo;
+            document.getElementById('cli-nombre').value = c.nombre;
+            document.getElementById('cli-ubicacion').value = c.ubicacion;
+            document.getElementById('cli-telefono').value = c.telefono;
+            document.getElementById('btn-cancelar').classList.remove('hidden');
+            document.getElementById('btn-guardar').innerText = "Actualizar";
+            cerrarDetalle();
+        };
+
+        window.eliminarCliente = async (id) => {
+            if(confirm("¿Eliminar?")) await deleteDoc(doc(db, "clientes", id));
+            cerrarDetalle();
+        };
+
+        function renderizarClientes() {
+            const list = document.getElementById('listaClientes');
+            list.innerHTML = todosLosClientes.map(c => `
+                <div class="client-card flex justify-between items-center" onclick="abrirDetalle('${c.id_doc}')">
+                    <div>
+                        <p class="text-[7px] text-gold font-black mb-1">${c.codigo}</p>
+                        <h4 class="text-xs font-black uppercase text-white">${c.nombre}</h4>
+                    </div>
+                    <i class="fas fa-chevron-right text-[10px] text-gold/40"></i>
+                </div>
+            `).join('');
+        }
+    </script>
+</body>
+</html>
+
+```
