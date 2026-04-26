@@ -10,22 +10,107 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         :root { --oro: #D4AF37; --negro-puro: #050505; }
-        body { background-color: var(--negro-puro); color: #E0E0E0; font-family: 'Inter', sans-serif; margin: 0; overflow: hidden; height: 100vh; }
+        body { 
+            background-color: var(--negro-puro); 
+            color: #E0E0E0; 
+            font-family: 'Inter', sans-serif; 
+            margin: 0; 
+            min-height: 100vh; 
+            overflow-x: hidden;
+            -webkit-overflow-scrolling: touch; 
+        }
         .texto-dorado { background: linear-gradient(to bottom, #CF9E1D 22%, #F1D37E 45%, #CF9E1D 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .grid-menu { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; width: 100%; max-width: 340px; }
+        .grid-menu { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; width: 100%; max-width: 340px; margin: 0 auto; }
         .box-item { background: #0F0F0F; border: 1px solid #1a1a1a; aspect-ratio: 1 / 1; display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 32px; transition: all 0.2s ease; box-shadow: 0 10px 30px rgba(0,0,0,0.5); text-decoration: none; }
         .box-item:active { transform: scale(0.92); border-color: var(--oro); }
         .icon-circle { width: 50px; height: 50px; border-radius: 18px; display: flex; align-items: center; justify-content: center; margin-bottom: 10px; font-size: 20px; }
         .gold-box { background: linear-gradient(135deg, #D4AF37 0%, #f9e29c 50%, #996515 100%); }
-        .fade-in { animation: fadeIn 0.5s ease-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .tab-btn { 
+            flex: 1;
+            padding: 15px 5px;
+            font-size: 10px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #444;
+            transition: all 0.3s;
+            border-bottom: 2px solid transparent;
+            cursor: pointer;
+            background: transparent;
+            border-top: none;
+            border-left: none;
+            border-right: none;
+        }
+        .tab-btn.active { 
+            color: var(--oro); 
+            border-bottom: 2px solid var(--oro);
+            background: linear-gradient(to top, rgba(212, 175, 55, 0.05), transparent);
+        }
+        
+        .tab-content { display: none; width: 100%; }
+        .tab-content.active { display: block; animation: fadeIn 0.3s ease-out forwards; }
+
+        @keyframes fadeIn { 
+            from { opacity: 0; transform: translateY(5px); } 
+            to { opacity: 1; transform: translateY(0); } 
+        }
+        .content-spacer { padding-bottom: 100px; }
+
+        /* Estilos Chat IA */
+        #chat-soporte {
+            position: fixed;
+            bottom: 60px;
+            right: 20px;
+            width: 320px;
+            height: 450px;
+            background: #0a0a0a;
+            border: 1px solid #333;
+            border-radius: 20px;
+            display: none;
+            flex-direction: column;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+            z-index: 1000;
+            overflow: hidden;
+        }
+        #chat-soporte.visible { display: flex; animation: slideUp 0.3s ease; }
+        @keyframes slideUp { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        
+        .chat-header { background: #111; padding: 15px; border-bottom: 1px solid #222; display: flex; align-items: center; justify-content: space-between; }
+        .chat-messages { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 10px; }
+        .msg { padding: 10px 14px; border-radius: 15px; max-width: 80%; font-size: 13px; line-height: 1.4; }
+        .msg-ia { background: #1a1a1a; color: #ddd; align-self: flex-start; border-bottom-left-radius: 2px; }
+        .msg-user { background: var(--oro); color: black; align-self: flex-end; border-bottom-right-radius: 2px; font-weight: 500; }
+        
+        .chat-input-area { padding: 10px; background: #111; display: flex; gap: 8px; border-top: 1px solid #222; }
+        .chat-input { flex: 1; background: #000; border: 1px solid #333; border-radius: 20px; padding: 8px 15px; color: white; font-size: 13px; outline: none; }
+        .chat-send { width: 35px; height: 35px; border-radius: 50%; background: var(--oro); color: black; display: flex; align-items: center; justify-content: center; border: none; cursor: pointer; }
+        
+        .floating-btn {
+            position: fixed;
+            bottom: 80px;
+            right: 20px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #D4AF37 0%, #996515 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.4);
+            z-index: 999;
+            border: none;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .floating-btn:active { transform: scale(0.9); }
     </style>
 </head>
 <body class="flex flex-col">
 
-    <header class="h-16 border-b border-gray-900 bg-black flex items-center justify-between px-6 z-50">
+    <header class="sticky top-0 h-16 border-b border-gray-900 bg-black flex items-center justify-between px-6 z-50">
         <div class="flex items-center gap-3">
-            <div class="w-7 h-7 gold-box rounded flex items-center justify-center text-black text-[10px] font-bold">JI</div>
+            <div class="w-7 h-7 gold-box rounded flex items-center justify-center text-black text-[10px] font-bold shadow-lg shadow-yellow-900/20">JI</div>
             <h1 class="texto-dorado uppercase tracking-widest text-sm font-black">Jaddy INC</h1>
         </div>
         <div class="flex items-center gap-2">
@@ -34,82 +119,187 @@
         </div>
     </header>
 
-    <main class="flex-1 flex flex-col items-center justify-center px-6 pb-20">
-        <div class="fade-in w-full flex flex-col items-center">
+    <nav class="sticky top-16 bg-black border-b border-gray-900 z-40 flex w-full">
+        <button onclick="switchTab('comercial')" id="btn-comercial" class="tab-btn active">Comercial</button>
+        <button onclick="switchTab('stock')" id="btn-stock" class="tab-btn">Almacén</button>
+        <button onclick="switchTab('analisis')" id="btn-analisis" class="tab-btn">Equipo</button>
+    </nav>
+
+    <main class="flex-1 px-6 pt-8 content-spacer">
+        
+        <div id="tab-comercial" class="tab-content active">
             <div class="text-center mb-8">
-                <h2 class="text-white text-[10px] font-black tracking-[0.4em] uppercase opacity-40 mb-4 italic">Panel de Control</h2>
-                <div class="w-12 h-[2px] gold-box mx-auto rounded-full"></div>
+                <h2 class="text-white text-[9px] font-black tracking-[0.4em] uppercase opacity-40 mb-2 italic">Gestión Comercial</h2>
+                <div class="w-8 h-[1px] bg-oro/30 mx-auto"></div>
             </div>
-
             <div class="grid-menu">
-                <a href="clientes.html" class="box-item border-gold/30">
-                    <div class="icon-circle gold-box text-black shadow-lg shadow-yellow-900/40">
-                        <i class="fas fa-address-card"></i>
+                <a href="ventas.html" class="box-item">
+                    <div class="icon-circle gold-box text-black shadow-lg shadow-yellow-600/20">
+                        <i class="fas fa-shopping-cart"></i>
                     </div>
-                    <span class="texto-dorado font-black text-[11px] tracking-tighter uppercase">Clientes</span>
+                    <span class="text-white font-black text-[11px] tracking-tighter uppercase">Ventas</span>
                 </a>
-
-                <a href="productos.html" class="box-item">
+                <a href="clientes.html" class="box-item">
                     <div class="icon-circle bg-white/5 border border-white/10 text-white">
-                        <i class="fas fa-box opacity-70"></i>
+                        <i class="fas fa-address-card opacity-70"></i>
                     </div>
-                    <span class="text-white font-black text-[11px] tracking-tighter uppercase">Productos</span>
+                    <span class="text-white font-black text-[11px] tracking-tighter uppercase">Clientes</span>
                 </a>
+            </div>
+        </div>
 
+        <div id="tab-stock" class="tab-content">
+            <div class="text-center mb-8">
+                <h2 class="text-white text-[9px] font-black tracking-[0.4em] uppercase opacity-40 mb-2 italic">Control de Almacén</h2>
+                <div class="w-8 h-[1px] bg-oro/30 mx-auto"></div>
+            </div>
+            <div class="grid-menu">
                 <a href="inventario.html" class="box-item">
                     <div class="icon-circle bg-white/5 border border-white/10 text-white">
                         <i class="fas fa-list-ul opacity-70"></i>
                     </div>
                     <span class="text-white font-black text-[11px] tracking-tighter uppercase">Inventario</span>
                 </a>
-
-                <a href="ventas.html" class="box-item">
+                <a href="productos.html" class="box-item">
                     <div class="icon-circle bg-white/5 border border-white/10 text-white">
-                        <i class="fas fa-shopping-cart opacity-70"></i>
+                        <i class="fas fa-box opacity-70"></i>
                     </div>
-                    <span class="text-white font-black text-[11px] tracking-tighter uppercase">Ventas</span>
+                    <span class="text-white font-black text-[11px] tracking-tighter uppercase">Productos</span>
                 </a>
+            </div>
+        </div>
 
+        <div id="tab-analisis" class="tab-content">
+            <div class="text-center mb-8">
+                <h2 class="text-white text-[9px] font-black tracking-[0.4em] uppercase opacity-40 mb-2 italic">Rendimiento y Equipo</h2>
+                <div class="w-8 h-[1px] bg-oro/30 mx-auto"></div>
+            </div>
+            <div class="grid-menu">
                 <a href="vendedores.html" class="box-item">
                     <div class="icon-circle bg-white/5 border border-white/10 text-white">
                         <i class="fas fa-users opacity-70"></i>
                     </div>
                     <span class="text-white font-black text-[11px] tracking-tighter uppercase">Vendedores</span>
                 </a>
-
-                <div class="box-item opacity-20">
-                    <div class="icon-circle bg-white/5 border border-white/10 text-white">
-                        <i class="fas fa-chart-line opacity-70"></i>
+                <a href="reportes.html" class="box-item border-oro/30">
+                    <div class="icon-circle border border-oro/20 text-oro">
+                        <i class="fas fa-chart-line"></i>
                     </div>
-                    <span class="text-white font-black text-[11px] tracking-tighter uppercase italic">Reportes</span>
-                </div>
+                    <span class="texto-dorado font-black text-[11px] tracking-tighter uppercase">Reportes</span>
+                </a>
             </div>
         </div>
+
     </main>
 
-    <nav class="fixed bottom-0 left-0 right-0 h-20 bg-black border-t border-gray-900 flex items-center justify-around z-50">
-        <div class="text-[8px] text-gold tracking-[0.3em] uppercase opacity-50" style="color:#D4AF37">Luxury System Master v1.0</div>
+    <!-- Botón Flotante Soporte -->
+    <button onclick="toggleChat()" class="floating-btn">
+        <i class="fas fa-headset text-black text-2xl"></i>
+    </button>
+
+    <!-- Ventana de Chat Soporte IA -->
+    <div id="chat-soporte">
+        <div class="chat-header">
+            <div class="flex items-center gap-2">
+                <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                <span class="text-[10px] font-black uppercase tracking-widest text-white">Soporte IA</span>
+            </div>
+            <button onclick="toggleChat()" class="text-gray-500 hover:text-white"><i class="fas fa-times"></i></button>
+        </div>
+        <div id="chat-box" class="chat-messages">
+            <div class="msg msg-ia">Hola, soy el asistente inteligente de Jaddy INC. ¿En qué puedo ayudarte con tus licencias o ventas hoy?</div>
+        </div>
+        <div class="chat-input-area">
+            <input type="text" id="user-input" class="chat-input" placeholder="Escribe tu consulta...">
+            <button onclick="enviarMensaje()" class="chat-send">
+                <i class="fas fa-paper-plane"></i>
+            </button>
+        </div>
+    </div>
+
+    <nav class="fixed bottom-0 left-0 right-0 h-12 bg-black/90 backdrop-blur-xl border-t border-gray-900 flex items-center justify-center z-50">
+        <div class="text-[7px] text-oro tracking-[0.4em] uppercase opacity-30 font-black">Luxury System Master v1.2</div>
     </nav>
 
-    <script type="module">
-        import { conectarCerebro, auth, onAuthStateChanged } from './conexion.js';
-
-        const punto = document.getElementById('punto-estado');
-        const texto = document.getElementById('texto-estado');
-
-        conectarCerebro();
-
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-                punto.classList.remove('bg-red-600', 'animate-pulse');
-                punto.classList.add('bg-green-500');
-                texto.innerText = "SISTEMA ACTIVO";
-                texto.classList.replace('text-gray-500', 'text-green-500');
+    <script>
+        const apiKey = ""; // La clave se inyecta en tiempo de ejecución
+        
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            const targetContent = document.getElementById('tab-' + tabId);
+            const targetBtn = document.getElementById('btn-' + tabId);
+            if (targetContent && targetBtn) {
+                targetContent.classList.add('active');
+                targetBtn.classList.add('active');
             }
+        }
+
+        function toggleChat() {
+            const chat = document.getElementById('chat-soporte');
+            chat.classList.toggle('visible');
+        }
+
+        async function enviarMensaje() {
+            const input = document.getElementById('user-input');
+            const chatBox = document.getElementById('chat-box');
+            const mensaje = input.value.trim();
+            
+            if (!mensaje) return;
+
+            // Añadir mensaje de usuario
+            const userDiv = document.createElement('div');
+            userDiv.className = 'msg msg-user';
+            userDiv.textContent = mensaje;
+            chatBox.appendChild(userDiv);
+            input.value = '';
+            chatBox.scrollTop = chatBox.scrollHeight;
+
+            // Indicador de carga
+            const loadingDiv = document.createElement('div');
+            loadingDiv.className = 'msg msg-ia italic opacity-50';
+            loadingDiv.textContent = 'Pensando...';
+            chatBox.appendChild(loadingDiv);
+            chatBox.scrollTop = chatBox.scrollHeight;
+
+            try {
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: mensaje }] }],
+                        systemInstruction: { 
+                            parts: [{ text: "Eres el asistente de soporte experto de Jaddy INC, una empresa de software de lujo. Responde de manera profesional, breve y ejecutiva sobre licencias, problemas de stock, gestión de clientes y errores de sistema. Siempre mantén un tono de marca de lujo." }] 
+                        }
+                    })
+                });
+
+                const data = await response.json();
+                chatBox.removeChild(loadingDiv);
+
+                const iaRespuesta = data.candidates?.[0]?.content?.parts?.[0]?.text || "Lo siento, tengo problemas para conectar. Inténtalo de nuevo.";
+                
+                const iaDiv = document.createElement('div');
+                iaDiv.className = 'msg msg-ia';
+                iaDiv.textContent = iaRespuesta;
+                chatBox.appendChild(iaDiv);
+                chatBox.scrollTop = chatBox.scrollHeight;
+
+            } catch (error) {
+                chatBox.removeChild(loadingDiv);
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'msg msg-ia text-red-500';
+                errorDiv.textContent = 'Error de conexión. Revisa tu internet.';
+                chatBox.appendChild(errorDiv);
+            }
+        }
+
+        // Enviar con Enter
+        document.getElementById('user-input').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') enviarMensaje();
         });
     </script>
 </body>
 </html>
-
 
 ```
