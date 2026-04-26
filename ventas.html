@@ -18,8 +18,6 @@
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         #statusDot { width: 10px; height: 10px; border-radius: 50%; }
         input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); }
-        
-        /* Modal Styles */
         .modal-overlay { background: rgba(0,0,0,0.8); backdrop-filter: blur(4px); display: none; position: fixed; inset: 0; z-index: 50; align-items: center; justify-content: center; padding: 20px; }
         .modal-content { background: #0A0A0A; border: 1px solid #333; border-radius: 24px; padding: 24px; width: 100%; max-width: 320px; text-align: center; }
     </style>
@@ -32,67 +30,49 @@
     </header>
 
     <section id="form-container" class="bg-[#0A0A0A] p-5 rounded-[28px] gold-border mb-8 shadow-2xl">
-        <h2 id="form-title" class="text-center text-gold font-black uppercase text-[10px] tracking-[4px] mb-6 italic">Panel de Despacho</h2>
+        <h2 id="form-title" class="text-center text-gold font-black uppercase text-[10px] tracking-[4px] mb-6 italic italic">Panel de Despacho</h2>
         
         <div class="space-y-4">
             <input type="hidden" id="edit-id" value="">
             
-            <!-- Vendedor -->
             <div class="relative">
                 <p class="text-[7px] text-gold font-black absolute -top-2 left-3 bg-[#0A0A0A] px-2 uppercase z-10">Despachado por:</p>
                 <select id="sel-vendedor" class="input-field border-gold/30 text-gold">
-                    <option value="">-- SELECCIONAR VENDEDOR --</option>
+                    <option value="">-- CARGANDO... --</option>
                 </select>
             </div>
 
-            <!-- Cliente Selección -->
             <div class="flex gap-2">
                 <button id="btn-cli-reg" onclick="toggleCliente(true)" class="tab-btn active">Registrado</button>
                 <button id="btn-cli-ocu" onclick="toggleCliente(false)" class="tab-btn">Ocasional</button>
             </div>
             
             <div id="area-cliente-reg">
-                <div class="relative">
-                    <p class="text-[7px] text-gray-500 font-black absolute -top-2 left-3 bg-[#0A0A0A] px-2 uppercase">Cliente de Lista</p>
-                    <select id="sel-cliente" class="input-field">
-                        <option value="">-- CARGANDO CLIENTES --</option>
-                    </select>
-                </div>
+                <select id="sel-cliente" class="input-field">
+                    <option value="">-- CARGANDO CLIENTES --</option>
+                </select>
             </div>
             
             <div id="area-cliente-ocu" class="hidden">
-                <div class="relative">
-                    <p class="text-[7px] text-gray-500 font-black absolute -top-2 left-3 bg-[#0A0A0A] px-2 uppercase">Nombre Completo</p>
-                    <input type="text" id="inp-cliente-nom" placeholder="ESCRIBE EL NOMBRE" class="input-field">
-                </div>
+                <input type="text" id="inp-cliente-nom" placeholder="ESCRIBE EL NOMBRE" class="input-field">
             </div>
 
-            <!-- Productos y Variantes -->
             <div class="grid grid-cols-1 gap-3">
-                <div class="relative">
-                    <p class="text-[7px] text-gray-500 font-black absolute -top-2 left-3 bg-[#0A0A0A] px-2 uppercase">Producto</p>
-                    <select id="sel-producto" class="input-field">
-                        <option value="">-- SELECCIONAR PRODUCTO --</option>
-                    </select>
-                </div>
-                <div class="relative">
-                    <p class="text-[7px] text-gold font-black absolute -top-2 left-3 bg-[#0A0A0A] px-2 uppercase">Variante / Fragancia</p>
-                    <select id="sel-variante" class="input-field border-gold/20 text-gold">
-                        <option value="">-- SELECCIONA PRODUCTO --</option>
-                    </select>
-                </div>
+                <select id="sel-producto" class="input-field">
+                    <option value="">-- SELECCIONAR PRODUCTO --</option>
+                </select>
+                <select id="sel-variante" class="input-field border-gold/20 text-gold">
+                    <option value="">-- ELIGE FRAGANCIA --</option>
+                </select>
             </div>
 
-            <!-- Tipos de Venta -->
             <div class="grid grid-cols-3 gap-2">
                 <button onclick="setTipo('CONTADO')" id="t-contado" class="tab-btn active">Contado</button>
                 <button onclick="setTipo('CREDITO')" id="t-credito" class="tab-btn">Crédito</button>
                 <button onclick="setTipo('MAYOR')" id="t-mayor" class="tab-btn">Mayor</button>
             </div>
 
-            <!-- Panel de Crédito -->
             <div id="panel-credito" class="hidden space-y-3 p-4 bg-[#111] rounded-xl border border-gold/10">
-                <p class="text-[8px] text-gold font-black uppercase text-center tracking-widest">Ajustes de Crédito</p>
                 <div class="grid grid-cols-2 gap-2">
                     <div>
                         <p class="text-[7px] mb-1 text-gray-500 uppercase">F. Entrega</p>
@@ -105,40 +85,25 @@
                 </div>
             </div>
 
-            <!-- Cantidad y Precio -->
             <div class="grid grid-cols-2 gap-3">
-                <div class="relative">
-                    <p class="text-[7px] text-gray-500 font-black absolute top-2 left-3 uppercase">Cant.</p>
-                    <input type="number" id="inp-cantidad" value="1" min="1" oninput="calcularTotal()" class="input-field text-center text-xl pt-6">
-                </div>
-                <div class="relative">
-                    <p class="text-[7px] text-gray-500 font-black absolute top-2 left-3 uppercase">Total</p>
-                    <input type="text" id="inp-precio" value="0.00" readonly class="input-field text-center text-xl text-green-400 pt-6">
-                </div>
+                <input type="number" id="inp-cantidad" value="1" min="1" oninput="calcularTotal()" class="input-field text-center text-xl">
+                <input type="text" id="inp-precio" value="0.00" readonly class="input-field text-center text-xl text-green-400">
             </div>
 
             <div class="flex gap-2">
-                <button id="btn-cancel-edit" onclick="cancelarEdicion()" class="hidden flex-1 bg-red-900/30 text-red-500 border border-red-500/30 font-black py-4 rounded-xl uppercase text-xs">
-                    Cancelar
-                </button>
-                <button id="btn-venta" onclick="registrarVenta()" class="flex-[2] bg-white text-black font-black py-5 rounded-xl uppercase text-sm shadow-xl active:scale-95 transition-all">
-                    Procesar Despacho
-                </button>
+                <button id="btn-cancel-edit" onclick="cancelarEdicion()" class="hidden flex-1 bg-red-900/30 text-red-500 border border-red-500/30 font-black py-4 rounded-xl uppercase text-xs">Cancelar</button>
+                <button id="btn-venta" onclick="registrarVenta()" class="flex-[2] bg-white text-black font-black py-5 rounded-xl uppercase text-sm">Procesar Venta</button>
             </div>
         </div>
     </section>
 
-    <h3 class="text-[10px] font-black uppercase tracking-widest mb-4 ml-2 text-gray-500">Historial Reciente</h3>
     <div id="listaVentas" class="space-y-3 pb-10"></div>
 
-    <!-- Modal de Confirmación -->
     <div id="confirmModal" class="modal-overlay">
         <div class="modal-content">
-            <i class="fa-solid fa-triangle-exclamation text-orange-500 text-3xl mb-4"></i>
-            <h3 class="text-white font-black uppercase text-sm mb-2">¿Eliminar Registro?</h3>
-            <p class="text-gray-500 text-[10px] mb-6 uppercase">Esta acción no se puede deshacer y afectará los balances.</p>
+            <h3 class="text-white font-black uppercase text-sm mb-4">¿Eliminar Venta?</h3>
             <div class="flex gap-2">
-                <button onclick="closeConfirm()" class="flex-1 py-3 rounded-xl border border-gray-700 text-gray-400 text-[10px] font-black uppercase">No, volver</button>
+                <button onclick="closeConfirm()" class="flex-1 py-3 rounded-xl border border-gray-700 text-gray-400 text-[10px] font-black uppercase">No</button>
                 <button id="confirmDeleteBtn" class="flex-1 py-3 rounded-xl bg-red-600 text-white text-[10px] font-black uppercase">Sí, eliminar</button>
             </div>
         </div>
@@ -165,7 +130,6 @@
         let productosGlobal = [];
         let pSeleccionado = null;
         let tipoVenta = 'CONTADO';
-        let clientesLista = [];
         let ventasActuales = [];
 
         onAuthStateChanged(auth, (user) => {
@@ -178,29 +142,29 @@
         function cargarDatos() {
             // Vendedores
             onSnapshot(collection(db, "vendedores"), (snap) => {
-                const vens = snap.docs.map(d => d.data());
+                const data = snap.docs.map(d => d.data());
                 document.getElementById('sel-vendedor').innerHTML = '<option value="">-- VENDEDOR --</option>' + 
-                    vens.map(v => `<option value="${v.nombre}">${v.nombre}</option>`).join('');
+                    data.map(v => `<option value="${v.nombre}">${v.nombre}</option>`).join('');
             });
 
             // Clientes
             onSnapshot(collection(db, "clientes"), (snap) => {
-                clientesLista = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-                document.getElementById('sel-cliente').innerHTML = '<option value="">-- ELEGIR CLIENTE --</option>' + 
-                    clientesLista.map(c => `<option value="${c.nombre}">${c.nombre.toUpperCase()}</option>`).join('');
+                const data = snap.docs.map(d => d.data());
+                document.getElementById('sel-cliente').innerHTML = '<option value="">-- CLIENTE --</option>' + 
+                    data.map(c => `<option value="${c.nombre}">${c.nombre.toUpperCase()}</option>`).join('');
             });
 
-            // Productos
+            // Productos (Restaurado)
             onSnapshot(collection(db, "productos"), (snap) => {
                 productosGlobal = snap.docs.map(d => ({id: d.id, ...d.data()}));
-                document.getElementById('sel-producto').innerHTML = '<option value="">-- ELEGIR PRODUCTO --</option>' + 
+                document.getElementById('sel-producto').innerHTML = '<option value="">-- PRODUCTO --</option>' + 
                     productosGlobal.map(p => `<option value="${p.id}">${p.nombre}</option>`).join('');
             });
 
             // Historial
             onSnapshot(query(collection(db, "ventas_realizadas"), orderBy("timestamp", "desc")), (snap) => {
                 ventasActuales = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-                renderVentas(ventasActuales.slice(0, 20));
+                renderVentas(ventasActuales);
             });
         }
 
@@ -210,16 +174,15 @@
             calcularTotal();
         };
 
-        function actualizarVariantes(valorPreestablecido = null) {
+        function actualizarVariantes(val = null) {
             const selVar = document.getElementById('sel-variante');
             if (pSeleccionado) {
-                const vars = pSeleccionado.variantes || (pSeleccionado.fragancias ? (Array.isArray(pSeleccionado.fragancias) ? pSeleccionado.fragancias : pSeleccionado.fragancias.split(',')) : []);
-                if (vars.length > 0) {
-                    selVar.innerHTML = vars.map(v => `<option value="${v.trim()}">${v.trim().toUpperCase()}</option>`).join('');
-                } else {
-                    selVar.innerHTML = '<option value="GENERAL">GENERAL</option>';
-                }
-                if(valorPreestablecido) selVar.value = valorPreestablecido;
+                const vars = pSeleccionado.variantes || pSeleccionado.fragancias || [];
+                const lista = Array.isArray(vars) ? vars : vars.split(',');
+                selVar.innerHTML = lista.map(v => `<option value="${v.trim()}">${v.trim().toUpperCase()}</option>`).join('');
+                if(val) selVar.value = val;
+            } else {
+                selVar.innerHTML = '<option value="">-- ELIGE FRAGANCIA --</option>';
             }
         }
 
@@ -232,9 +195,7 @@
 
         window.setTipo = (t) => {
             tipoVenta = t;
-            ['contado', 'credito', 'mayor'].forEach(id => {
-                document.getElementById('t-'+id).classList.toggle('active', id === t.toLowerCase());
-            });
+            ['contado', 'credito', 'mayor'].forEach(id => document.getElementById('t-'+id).classList.toggle('active', id === t.toLowerCase()));
             document.getElementById('panel-credito').classList.toggle('hidden', t !== 'CREDITO');
             calcularTotal();
         };
@@ -245,135 +206,84 @@
             let precio = pSeleccionado.precio_detal || pSeleccionado.precio || 0;
             if(tipoVenta === 'CREDITO') precio = pSeleccionado.precio_credito || precio;
             if(tipoVenta === 'MAYOR') precio = pSeleccionado.precio_mayor || precio;
-            document.getElementById('inp-precio').value = (precio * cant).toLocaleString('en-US', {minimumFractionDigits: 2});
+            document.getElementById('inp-precio').value = (precio * cant).toLocaleString();
         };
 
         window.registrarVenta = async () => {
-            const btn = document.getElementById('btn-venta');
             const editId = document.getElementById('edit-id').value;
-            
             const v = document.getElementById('sel-vendedor').value;
-            const pId = document.getElementById('sel-producto').value;
+            const c = document.getElementById('btn-cli-reg').classList.contains('active') ? document.getElementById('sel-cliente').value : document.getElementById('inp-cliente-nom').value;
             const varElegida = document.getElementById('sel-variante').value;
-            const esReg = document.getElementById('btn-cli-reg').classList.contains('active');
-            const cNombre = esReg ? document.getElementById('sel-cliente').value : document.getElementById('inp-cliente-nom').value;
 
-            if(!v || !pId || !cNombre || !varElegida) {
-                alert("🔴 Datos incompletos.");
-                return;
-            }
+            if(!v || !pSeleccionado || !c || !varElegida) return alert("Faltan datos");
 
-            const ahora = new Date();
-            const ventaData = {
+            const data = {
                 vendedor: v,
-                cliente: cNombre.toUpperCase(),
-                productoId: pId, // Guardamos ID para referencia en edición
+                cliente: c.toUpperCase(),
                 producto: pSeleccionado.nombre,
+                productoId: pSeleccionado.id,
                 variante: varElegida,
                 cantidad: parseInt(document.getElementById('inp-cantidad').value),
                 total: parseFloat(document.getElementById('inp-precio').value.replace(/,/g, '')),
                 tipo: tipoVenta,
-                es_cliente_registrado: esReg
+                timestamp: Date.now(),
+                fecha_legible: new Date().toLocaleDateString(),
+                hora: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
             };
 
             if(tipoVenta === 'CREDITO') {
-                ventaData.fecha_entrega = document.getElementById('fecha-entrega').value;
-                ventaData.fecha_pago = document.getElementById('fecha-pago').value;
-                ventaData.estado_pago = "PENDIENTE";
+                data.fecha_entrega = document.getElementById('fecha-entrega').value;
+                data.fecha_pago = document.getElementById('fecha-pago').value;
             }
-
-            btn.disabled = true;
-            btn.innerText = "PROCESANDO...";
 
             try {
                 if(editId) {
-                    await updateDoc(doc(db, "ventas_realizadas", editId), ventaData);
+                    await updateDoc(doc(db, "ventas_realizadas", editId), data);
                     cancelarEdicion();
                 } else {
-                    ventaData.timestamp = ahora.getTime();
-                    ventaData.fecha_legible = ahora.toLocaleDateString();
-                    ventaData.hora = ahora.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                    await addDoc(collection(db, "ventas_realizadas"), ventaData);
+                    await addDoc(collection(db, "ventas_realizadas"), data);
                 }
-                limpiarForm();
-            } catch (e) {
-                console.error(e);
-                alert("❌ Error.");
-            } finally {
-                btn.disabled = false;
-                btn.innerText = editId ? "ACTUALIZAR VENTA" : "PROCESAR DESPACHO";
-            }
+                limpiar();
+                alert("Éxito");
+            } catch (e) { alert("Error"); }
         };
 
         window.iniciarEdicion = (id) => {
             const v = ventasActuales.find(x => x.id === id);
-            if(!v) return;
-
             document.getElementById('edit-id').value = id;
-            document.getElementById('form-title').innerText = "EDITANDO REGISTRO";
-            document.getElementById('form-container').classList.add('border-blue-500');
-            document.getElementById('btn-venta').innerText = "ACTUALIZAR VENTA";
+            document.getElementById('btn-venta').innerText = "ACTUALIZAR";
             document.getElementById('btn-cancel-edit').classList.remove('hidden');
-
-            // Cargar datos
-            document.getElementById('sel-vendedor').value = v.vendedor;
-            toggleCliente(v.es_cliente_registrado);
-            if(v.es_cliente_registrado) {
-                document.getElementById('sel-cliente').value = v.cliente;
-            } else {
-                document.getElementById('inp-cliente-nom').value = v.cliente;
-            }
-
-            document.getElementById('sel-producto').value = v.productoId || "";
-            pSeleccionado = productosGlobal.find(p => p.id === v.productoId) || productosGlobal.find(p => p.nombre === v.producto);
             
+            document.getElementById('sel-vendedor').value = v.vendedor;
+            document.getElementById('sel-producto').value = v.productoId;
+            pSeleccionado = productosGlobal.find(p => p.id === v.productoId);
             actualizarVariantes(v.variante);
             setTipo(v.tipo);
             document.getElementById('inp-cantidad').value = v.cantidad;
-            
-            if(v.tipo === 'CREDITO') {
-                document.getElementById('fecha-entrega').value = v.fecha_entrega || "";
-                document.getElementById('fecha-pago').value = v.fecha_pago || "";
-            }
-            
-            calcularTotal();
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+            window.scrollTo(0,0);
         };
 
         window.cancelarEdicion = () => {
             document.getElementById('edit-id').value = "";
-            document.getElementById('form-title').innerText = "PANEL DE DESPACHO";
-            document.getElementById('form-container').classList.remove('border-blue-500');
-            document.getElementById('btn-venta').innerText = "PROCESAR DESPACHO";
+            document.getElementById('btn-venta').innerText = "PROCESAR VENTA";
             document.getElementById('btn-cancel-edit').classList.add('hidden');
-            limpiarForm();
+            limpiar();
         };
 
         window.pedirEliminar = (id) => {
             const modal = document.getElementById('confirmModal');
-            const btn = document.getElementById('confirmDeleteBtn');
             modal.style.display = 'flex';
-            btn.onclick = () => ejecutarEliminar(id);
-        };
-
-        window.closeConfirm = () => {
-            document.getElementById('confirmModal').style.display = 'none';
-        };
-
-        async function ejecutarEliminar(id) {
-            try {
+            document.getElementById('confirmDeleteBtn').onclick = async () => {
                 await deleteDoc(doc(db, "ventas_realizadas", id));
                 closeConfirm();
-            } catch (e) {
-                alert("Error al eliminar");
-            }
-        }
+            };
+        };
 
-        function limpiarForm() {
+        window.closeConfirm = () => document.getElementById('confirmModal').style.display = 'none';
+
+        function limpiar() {
             document.getElementById('inp-cliente-nom').value = "";
             document.getElementById('inp-cantidad').value = 1;
-            document.getElementById('fecha-entrega').value = "";
-            document.getElementById('fecha-pago').value = "";
             document.getElementById('inp-precio').value = "0.00";
         }
 
@@ -381,6 +291,28 @@
             document.getElementById('listaVentas').innerHTML = ventas.map(v => `
                 <div class="sale-card">
                     <div class="flex justify-between items-start">
-                        <div class="flex-1">
-                            <div class="flex gap-2 items-center mb-1">
-                 
+                        <div>
+                            <span class="text-[7px] text-gold uppercase font-black">${v.tipo}</span>
+                            <div class="text-[11px] font-black uppercase">${v.cliente}</div>
+                            <div class="text-[8px] text-gray-500">${v.fecha_legible}</div>
+                        </div>
+                        <div class="flex flex-col items-end">
+                            <div class="flex gap-2 mb-1">
+                                <button onclick="iniciarEdicion('${v.id}')" class="text-blue-500 text-xs"><i class="fa-solid fa-pen"></i></button>
+                                <button onclick="pedirEliminar('${v.id}')" class="text-red-500 text-xs"><i class="fa-solid fa-trash"></i></button>
+                            </div>
+                            <div class="text-green-400 font-black">$${v.total.toLocaleString()}</div>
+                        </div>
+                    </div>
+                    <div class="text-[9px] text-gray-400 mt-1 italic">${v.producto} / ${v.variante} (x${v.cantidad})</div>
+                </div>
+            `).join('');
+        }
+
+        signInAnonymously(auth);
+    </script>
+</body>
+</html>
+
+
+```
