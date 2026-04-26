@@ -9,46 +9,36 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root { --gold: #D4AF37; --bg: #050505; }
-        body { background: var(--bg); color: white; font-family: 'Inter', sans-serif; margin: 0; overflow-x: hidden; -webkit-tap-highlight-color: transparent; }
+        body { background: var(--bg); color: white; font-family: 'Inter', sans-serif; margin: 0; overflow-x: hidden; }
         .gold-border { border: 1px solid rgba(212, 175, 55, 0.2); }
         .input-field { background: #111; border: 1px solid #222; border-radius: 12px; padding: 14px; width: 100%; color: white; font-size: 14px; font-weight: bold; text-transform: uppercase; appearance: none; }
         .input-field:focus { border-color: var(--gold); outline: none; }
-        
-        .tab-btn { flex: 1; padding: 12px; font-size: 10px; font-weight: 900; text-transform: uppercase; border-radius: 10px; border: 1px solid #222; color: #555; transition: all 0.2s; background: transparent; cursor: pointer; }
-        .tab-btn.active { background: white !important; color: black !important; border-color: white !important; transform: scale(1.02); }
-        
+        .tab-btn { flex: 1; padding: 12px; font-size: 10px; font-weight: 900; text-transform: uppercase; border-radius: 10px; border: 1px solid #222; color: #555; transition: 0.3s; background: transparent; cursor: pointer; }
+        .tab-btn.active { background: white; color: black; border-color: white; }
         .sale-card { background: #0F0F0F; border: 1px solid #1A1A1A; border-radius: 20px; padding: 15px; margin-bottom: 12px; animation: fadeIn 0.4s ease; }
-        
-        .date-panel { background: #151515; border: 1px dashed rgba(212, 175, 55, 0.3); border-radius: 16px; padding: 12px; margin-top: 10px; display: none; }
-        .date-panel.visible { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; animation: slideDown 0.3s ease; }
-        
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes slideDown { from { opacity: 0; max-height: 0; } to { opacity: 1; max-height: 200px; } }
         
         #statusDot { width: 12px; height: 12px; border-radius: 50%; transition: all 0.5s ease; }
         .status-offline { background: #ff0000; box-shadow: 0 0 10px #ff0000; }
         .status-online { background: #00ff00; box-shadow: 0 0 10px #00ff00; }
-
-        .loader { width: 20px; height: 20px; border: 2px solid #FFF; border-bottom-color: transparent; border-radius: 50%; display: inline-block; animation: rotation 1s linear infinite; }
-        @keyframes rotation { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body class="p-4 pb-24 max-w-md mx-auto">
 
     <header class="flex justify-between items-center mb-6">
         <button onclick="window.history.back()" class="text-[10px] font-black border border-gold/30 px-4 py-2 rounded-full text-gold uppercase">← Volver</button>
-        <div id="statusDot" class="status-offline" title="Desconectado"></div>
+        <div id="statusDot" class="status-offline"></div>
     </header>
 
     <section class="bg-[#0A0A0A] p-5 rounded-[28px] gold-border mb-8 shadow-2xl">
-        <h2 class="text-center text-gold font-black uppercase text-[10px] tracking-[4px] mb-6 italic">Panel de Ventas y Despacho</h2>
+        <h2 class="text-center text-gold font-black uppercase text-[10px] tracking-[4px] mb-6 italic">Panel de Despacho</h2>
         
         <div class="space-y-4">
-            <!-- Vendedor -->
+            <!-- Selección de Vendedor -->
             <div class="relative">
                 <p class="text-[7px] text-gold font-black absolute -top-2 left-3 bg-[#0A0A0A] px-2 uppercase z-10">Despachado por:</p>
                 <select id="sel-vendedor" class="input-field border-gold/30 text-gold">
-                    <option value="">-- ESPERANDO CONEXIÓN --</option>
+                    <option value="">-- CARGANDO VENDEDORES --</option>
                 </select>
             </div>
 
@@ -64,20 +54,21 @@
                 </select>
             </div>
             <div id="area-cliente-ocu" class="hidden">
-                <input type="text" id="inp-cliente-nom" placeholder="NOMBRE DEL CLIENTE OCASIONAL" class="input-field">
+                <input type="text" id="inp-cliente-nom" placeholder="NOMBRE DE CLIENTE NUEVO" class="input-field">
             </div>
 
             <!-- Producto y Variante -->
             <div class="grid grid-cols-1 gap-3">
                 <div class="relative">
+                    <p class="text-[7px] text-gray-500 font-black absolute -top-2 left-3 bg-[#0A0A0A] px-2 uppercase">Producto</p>
                     <select id="sel-producto" class="input-field">
                         <option value="">-- CARGANDO PRODUCTOS --</option>
                     </select>
                 </div>
                 <div class="relative">
-                    <p class="text-[7px] text-gray-500 font-black absolute -top-2 left-3 bg-[#0A0A0A] px-2 uppercase">Variante / Tamaño</p>
-                    <select id="sel-variante" class="input-field">
-                        <option value="GENERAL">GENERAL</option>
+                    <p class="text-[7px] text-gold font-black absolute -top-2 left-3 bg-[#0A0A0A] px-2 uppercase">Elegir Fragancia / Variante</p>
+                    <select id="sel-variante" class="input-field border-gold/20">
+                        <option value="">-- SELECCIONA UN PRODUCTO PRIMERO --</option>
                     </select>
                 </div>
             </div>
@@ -86,59 +77,44 @@
             <div class="grid grid-cols-3 gap-2">
                 <button id="t-contado" class="tab-btn active">Contado</button>
                 <button id="t-credito" class="tab-btn">Crédito</button>
-                <button id="t-mayor" class="tab-btn">Al Mayor</button>
-            </div>
-
-            <!-- PANEL DE FECHAS (CRÉDITO) -->
-            <div id="panel-fechas" class="date-panel">
-                <div class="relative">
-                    <p class="text-[7px] text-gold font-black uppercase mb-1 ml-1">Fecha Entrega</p>
-                    <input type="date" id="fecha-entrega" class="input-field !p-2 !text-[11px]">
-                </div>
-                <div class="relative">
-                    <p class="text-[7px] text-red-500 font-black uppercase mb-1 ml-1">Fecha de Cobro</p>
-                    <input type="date" id="fecha-pago" class="input-field !p-2 !text-[11px]">
-                </div>
+                <button id="t-mayor" class="tab-btn">Mayor</button>
             </div>
 
             <!-- Cantidad y Precio -->
             <div class="grid grid-cols-2 gap-3">
                 <div class="relative">
-                    <p class="text-[7px] text-gray-500 font-black absolute top-2 left-3 uppercase">Cant.</p>
+                    <p class="text-[7px] text-gray-500 font-black absolute top-2 left-3 uppercase">Cantidad</p>
                     <input type="number" id="inp-cantidad" value="1" min="1" class="input-field text-center text-xl pt-6">
                 </div>
                 <div class="relative">
-                    <p class="text-[7px] text-gray-500 font-black absolute top-2 left-3 uppercase">Total USD</p>
+                    <p class="text-[7px] text-gray-500 font-black absolute top-2 left-3 uppercase">Total a Cobrar</p>
                     <input type="text" id="inp-precio" value="0.00" readonly class="input-field text-center text-xl text-green-400 pt-6">
                 </div>
             </div>
 
             <button id="btn-venta" class="w-full bg-white text-black font-black py-5 rounded-xl uppercase text-sm active:scale-95 transition-transform shadow-lg">
-                Procesar Despacho
+                Procesar Venta
             </button>
         </div>
     </section>
 
-    <h2 class="text-[10px] font-black text-gray-500 uppercase tracking-[2px] mb-4 ml-2 italic">Historial de Hoy</h2>
+    <h2 class="text-[10px] font-black text-gray-500 uppercase tracking-[2px] mb-4 ml-2">Últimos Despachos</h2>
     <div id="listaVentas" class="space-y-3 pb-10">
-        <div class="text-center py-10 opacity-20 text-xs font-bold italic">Esperando conexión...</div>
+        <div class="text-center py-10 opacity-20 text-xs font-bold italic">Sincronizando con la nube...</div>
     </div>
 
-    <!-- Firebase SDKs -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, onSnapshot, query, doc, setDoc, increment } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // CONFIGURACIÓN PROPORCIONADA POR EL USUARIO
         const firebaseConfig = {
             apiKey: "AIzaSyCrjjeOoXPOtJDXDfrHLOA4Ny0QW2zfVWk",
             authDomain: "apps-d45d6.firebaseapp.com",
             projectId: "apps-d45d6",
             storageBucket: "apps-d45d6.firebasestorage.app",
             messagingSenderId: "502648373937",
-            appId: "1:502648373937:web:8c3beaa2a6c9289a4d9890",
-            measurementId: "G-7VCRCRSCRQ"
+            appId: "1:502648373937:web:8c3beaa2a6c9289a4d9890"
         };
 
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
@@ -148,84 +124,91 @@
 
         let dataStore = { productos: [], vendedores: [], clientes: [], seleccionado: null, tipoVenta: 'CONTADO' };
 
-        // UI Status Helper
-        const setStatus = (online) => {
-            const dot = document.getElementById('statusDot');
-            if (dot) dot.className = online ? 'status-online' : 'status-offline';
-        };
-
-        // Inicio de Sesión
-        async function initApp() {
-            try {
-                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                    await signInWithCustomToken(auth, __initial_auth_token);
-                } else {
-                    await signInAnonymously(auth);
-                }
-            } catch (err) {
-                console.error("Auth error:", err);
-                setStatus(false);
-            }
-        }
+        signInAnonymously(auth);
 
         onAuthStateChanged(auth, (user) => {
             if (user) {
-                setStatus(true);
-                activarListeners();
-            } else {
-                setStatus(false);
+                document.getElementById('statusDot').className = 'status-online';
+                iniciarSincronizacion();
             }
         });
 
-        function activarListeners() {
-            // Regla 1 de Firestore: Ruta obligatoria /artifacts/{appId}/public/data/{collection}
-            const getRef = (name) => collection(db, 'artifacts', appId, 'public', 'data', name);
+        function iniciarSincronizacion() {
+            const getRef = (col) => collection(db, 'artifacts', appId, 'public', 'data', col);
 
-            // 1. Escuchar Vendedores
+            // Vendedores
             onSnapshot(getRef('vendedores'), (snap) => {
-                dataStore.vendedores = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-                const sel = document.getElementById('sel-vendedor');
-                if (dataStore.vendedores.length > 0) {
-                    sel.innerHTML = '<option value="">-- SELECCIONAR VENDEDOR --</option>' + 
-                        dataStore.vendedores.map(v => `<option value="${v.nombre}">${v.nombre}</option>`).join('');
-                } else {
-                    sel.innerHTML = '<option value="">-- NO HAY VENDEDORES --</option>';
-                }
-            }, (e) => console.error("Error vendedores:", e));
+                dataStore.vendedores = snap.docs.map(d => ({id: d.id, ...d.data()}));
+                document.getElementById('sel-vendedor').innerHTML = '<option value="">-- SELECCIONAR VENDEDOR --</option>' + 
+                    dataStore.vendedores.map(v => `<option value="${v.nombre}">${v.nombre}</option>`).join('');
+            });
 
-            // 2. Escuchar Clientes
+            // Clientes
             onSnapshot(getRef('clientes'), (snap) => {
-                dataStore.clientes = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-                const sel = document.getElementById('sel-cliente');
-                if (dataStore.clientes.length > 0) {
-                    sel.innerHTML = '<option value="">-- SELECCIONAR CLIENTE --</option>' + 
-                        dataStore.clientes.map(c => `<option value="${c.nombre}">${c.nombre}</option>`).join('');
-                } else {
-                    sel.innerHTML = '<option value="">-- NO HAY CLIENTES --</option>';
-                }
-            }, (e) => console.error("Error clientes:", e));
+                dataStore.clientes = snap.docs.map(d => ({id: d.id, ...d.data()}));
+                document.getElementById('sel-cliente').innerHTML = '<option value="">-- SELECCIONAR CLIENTE --</option>' + 
+                    dataStore.clientes.map(c => `<option value="${c.nombre}">${c.nombre}</option>`).join('');
+            });
 
-            // 3. Escuchar Productos
+            // Productos
             onSnapshot(getRef('productos'), (snap) => {
-                dataStore.productos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-                const sel = document.getElementById('sel-producto');
-                if (dataStore.productos.length > 0) {
-                    sel.innerHTML = '<option value="">-- SELECCIONAR PRODUCTO --</option>' + 
-                        dataStore.productos.map(p => `<option value="${p.id}">${p.nombre}</option>`).join('');
-                } else {
-                    sel.innerHTML = '<option value="">-- NO HAY PRODUCTOS --</option>';
-                }
-            }, (e) => console.error("Error productos:", e));
+                dataStore.productos = snap.docs.map(d => ({id: d.id, ...d.data()}));
+                document.getElementById('sel-producto').innerHTML = '<option value="">-- ELEGIR PRODUCTO --</option>' + 
+                    dataStore.productos.map(p => `<option value="${p.id}">${p.nombre}</option>`).join('');
+            });
 
-            // 4. Escuchar Historial de Ventas
+            // Ventas
             onSnapshot(getRef('ventas'), (snap) => {
-                const ventas = snap.docs.map(d => ({ id: d.id, ...d.data() }))
-                    .sort((a,b) => (b.timestamp || 0) - (a.timestamp || 0));
-                renderVentas(ventas.slice(0, 10));
-            }, (e) => console.error("Error ventas:", e));
+                const ventas = snap.docs.map(d => d.data()).sort((a,b) => b.timestamp - a.timestamp);
+                renderVentas(ventas.slice(0, 15));
+            });
         }
 
-        // --- MANEJO DE INTERFAZ ---
+        // Cambio de producto -> Cargar Fragancias
+        document.getElementById('sel-producto').onchange = (e) => {
+            const p = dataStore.productos.find(x => x.id === e.target.value);
+            dataStore.seleccionado = p;
+            const selVar = document.getElementById('sel-variante');
+            
+            if (!p) {
+                selVar.innerHTML = '<option value="">-- SELECCIONA UN PRODUCTO --</option>';
+                return;
+            }
+
+            let variantes = [];
+            
+            // 1. Si es un Array ya formado
+            if (p.variantes && Array.isArray(p.variantes)) {
+                variantes = p.variantes;
+            } 
+            // 2. Si es un String separado por comas (ej: "Menta, Lavanda, Rosas")
+            else if (p.variantes && typeof p.variantes === 'string') {
+                variantes = p.variantes.split(',').map(v => v.trim());
+            }
+            // 3. Si no hay nada, intentamos buscar en un campo llamado 'fragancias'
+            else if (p.fragancias) {
+                variantes = Array.isArray(p.fragancias) ? p.fragancias : p.fragancias.split(',').map(v => v.trim());
+            }
+
+            if (variantes.length > 0) {
+                selVar.innerHTML = variantes.map(v => `<option value="${v}">${v.toUpperCase()}</option>`).join('');
+            } else {
+                // Si no hay datos de fragancias en este producto específico de la DB
+                selVar.innerHTML = '<option value="GENERAL">SIN FRAGANCIAS DEFINIDAS (GENERAL)</option>';
+            }
+            
+            actualizarCalculos();
+        };
+
+        const tBtns = ['contado', 'credito', 'mayor'];
+        tBtns.forEach(id => {
+            document.getElementById('t-'+id).onclick = () => {
+                dataStore.tipoVenta = id.toUpperCase();
+                tBtns.forEach(x => document.getElementById('t-'+x).classList.toggle('active', x === id));
+                actualizarCalculos();
+            };
+        });
+
         document.getElementById('btn-cli-reg').onclick = () => {
             document.getElementById('btn-cli-reg').classList.add('active');
             document.getElementById('btn-cli-ocu').classList.remove('active');
@@ -236,33 +219,8 @@
         document.getElementById('btn-cli-ocu').onclick = () => {
             document.getElementById('btn-cli-ocu').classList.add('active');
             document.getElementById('btn-cli-reg').classList.remove('active');
-            document.getElementById('area-cliente-ocu').classList.remove('hidden');
             document.getElementById('area-cliente-reg').classList.add('hidden');
-        };
-
-        const tBtns = ['contado', 'credito', 'mayor'];
-        tBtns.forEach(t => {
-            document.getElementById(`t-${t}`).onclick = () => {
-                dataStore.tipoVenta = t.toUpperCase();
-                tBtns.forEach(x => document.getElementById(`t-${x}`).classList.toggle('active', x === t));
-                document.getElementById('panel-fechas').classList.toggle('visible', t === 'credito');
-                actualizarCalculos();
-            };
-        });
-
-        document.getElementById('sel-producto').onchange = (e) => {
-            const p = dataStore.productos.find(prod => prod.id === e.target.value);
-            dataStore.seleccionado = p;
-            
-            const selVar = document.getElementById('sel-variante');
-            if (p && p.variantes && Array.isArray(p.variantes)) {
-                 selVar.innerHTML = p.variantes.map(v => `<option value="${v}">${v}</option>`).join('');
-            } else if (p && p.variante) { // Soporte para campo singular si existe
-                 selVar.innerHTML = `<option value="${p.variante}">${p.variante}</option>`;
-            } else {
-                 selVar.innerHTML = '<option value="GENERAL">GENERAL</option>';
-            }
-            actualizarCalculos();
+            document.getElementById('area-cliente-ocu').classList.remove('hidden');
         };
 
         function actualizarCalculos() {
@@ -270,87 +228,94 @@
             const cant = parseInt(document.getElementById('inp-cantidad').value) || 0;
             if (!p) return;
             
-            // Lógica de precios según tipo de venta
-            let precio = 0;
-            if (dataStore.tipoVenta === 'CONTADO') precio = p.precio_detal || p.precio || 0;
-            else if (dataStore.tipoVenta === 'CREDITO') precio = p.precio_credito || p.precio || 0;
-            else if (dataStore.tipoVenta === 'MAYOR') precio = p.precio_mayor || p.precio || 0;
-
-            document.getElementById('inp-precio').value = (precio * cant).toFixed(2);
+            let precioUnitario = 0;
+            if (dataStore.tipoVenta === 'CONTADO') precioUnitario = p.precio_detal || p.precio || 0;
+            if (dataStore.tipoVenta === 'CREDITO') precioUnitario = p.precio_credito || p.precio || 0;
+            if (dataStore.tipoVenta === 'MAYOR') precioUnitario = p.precio_mayor || p.precio || 0;
+            
+            document.getElementById('inp-precio').value = (precioUnitario * cant).toFixed(2);
         }
 
         document.getElementById('inp-cantidad').oninput = actualizarCalculos;
 
-        // ACCIÓN: REGISTRAR VENTA
         document.getElementById('btn-venta').onclick = async () => {
-            const btn = document.getElementById('btn-venta');
             const v = document.getElementById('sel-vendedor').value;
             const pId = document.getElementById('sel-producto').value;
-            const cliReg = document.getElementById('btn-cli-reg').classList.contains('active');
-            const cliente = cliReg ? document.getElementById('sel-cliente').value : document.getElementById('inp-cliente-nom').value;
+            const fragancia = document.getElementById('sel-variante').value;
+            const cant = parseInt(document.getElementById('inp-cantidad').value);
+            const reg = document.getElementById('btn-cli-reg').classList.contains('active');
+            const cliente = reg ? document.getElementById('sel-cliente').value : document.getElementById('inp-cliente-nom').value;
 
-            if (!v || !pId || !cliente) {
-                alert("Faltan datos obligatorios.");
+            if (!v || !pId || !cliente || !fragancia || cant <= 0) {
+                alert("Atención: Por favor selecciona vendedor, cliente, producto y fragancia.");
                 return;
             }
 
+            const btn = document.getElementById('btn-venta');
             btn.disabled = true;
-            btn.innerHTML = '<span class="loader"></span> Procesando...';
+            btn.innerText = "PROCESANDO...";
 
             try {
                 const ventaData = {
                     vendedor: v,
                     cliente: cliente.toUpperCase(),
-                    productoNombre: dataStore.seleccionado.nombre,
-                    variante: document.getElementById('sel-variante').value,
+                    producto: dataStore.seleccionado.nombre,
+                    variante: fragancia,
+                    cantidad: cant,
+                    total: parseFloat(document.getElementById('inp-precio').value),
                     tipo: dataStore.tipoVenta,
-                    cantidad: Number(document.getElementById('inp-cantidad').value),
-                    total: Number(document.getElementById('inp-precio').value),
-                    fecha_entrega: document.getElementById('fecha-entrega').value || null,
-                    fecha_cobro: dataStore.tipoVenta === 'CREDITO' ? document.getElementById('fecha-pago').value : null,
                     timestamp: Date.now(),
-                    creadoPor: auth.currentUser.uid
+                    fechaLocal: new Date().toLocaleString()
                 };
 
-                const ref = collection(db, 'artifacts', appId, 'public', 'data', 'ventas');
-                await addDoc(ref, ventaData);
+                await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'ventas'), ventaData);
                 
+                // Actualización de stock opcional si existe registro
+                const invId = `${pId}_${fragancia.replace(/\s+/g, '_')}`;
+                await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'inventario', invId), { 
+                    stock: increment(-cant), 
+                    vendido: increment(cant),
+                    lastUpdate: Date.now() 
+                }, { merge: true });
+
+                alert("Despacho exitoso de " + fragancia);
                 document.getElementById('inp-cliente-nom').value = "";
-                alert("Venta registrada con éxito.");
-            } catch (err) {
-                console.error(err);
-                alert("Error al guardar: " + err.message);
+                document.getElementById('inp-cantidad').value = "1";
+            } catch (e) {
+                console.error(e);
+                alert("Error de conexión");
             } finally {
                 btn.disabled = false;
-                btn.innerHTML = "Procesar Despacho";
+                btn.innerText = "PROCESAR VENTA";
             }
         };
 
         function renderVentas(ventas) {
-            const list = document.getElementById('listaVentas');
+            const container = document.getElementById('listaVentas');
             if (ventas.length === 0) {
-                list.innerHTML = '<div class="text-center py-10 opacity-20 text-xs italic">Sin historial reciente</div>';
+                container.innerHTML = '<div class="text-center py-10 opacity-20 text-xs italic">No hay registros hoy</div>';
                 return;
             }
-            list.innerHTML = ventas.map(v => `
+            container.innerHTML = ventas.map(v => `
                 <div class="sale-card">
-                    <div class="flex justify-between items-start">
+                    <div class="flex justify-between items-start mb-1">
                         <div>
-                            <span class="text-[7px] ${v.tipo === 'CREDITO' ? 'text-red-500' : 'text-gold'} font-black">${v.tipo}</span>
-                            <div class="text-xs font-black uppercase text-white">${v.cliente}</div>
-                            <div class="text-[8px] text-gray-500 font-bold">${v.productoNombre} (${v.variante})</div>
-                            <div class="text-[6px] text-gray-600 mt-1">POR: ${v.vendedor}</div>
+                            <span class="text-[7px] text-gold font-black uppercase tracking-widest">${v.tipo}</span>
+                            <div class="text-xs font-black uppercase">${v.cliente}</div>
                         </div>
                         <div class="text-right">
                             <div class="text-sm font-black text-green-400">$${(v.total || 0).toFixed(2)}</div>
-                            <div class="text-[7px] text-gray-600">${v.cantidad} UNID.</div>
+                            <div class="text-[7px] text-gray-500">${v.cantidad} UNID.</div>
                         </div>
+                    </div>
+                    <div class="text-[8px] text-white font-bold italic uppercase">${v.producto} <span class="text-gold">/ ${v.variante}</span></div>
+                    <div class="flex justify-between items-center mt-2 border-t border-white/5 pt-1">
+                        <div class="text-[6px] text-gray-500 uppercase">VEN: ${v.vendedor}</div>
+                        <div class="text-[6px] text-gray-600">${v.fechaLocal ? v.fechaLocal.split(',')[1] : ''}</div>
                     </div>
                 </div>
             `).join('');
         }
-
-        initApp();
     </script>
 </body>
 </html>
