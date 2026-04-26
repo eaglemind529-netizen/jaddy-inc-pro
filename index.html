@@ -12,10 +12,10 @@
         :root { --oro: #D4AF37; --negro-puro: #050505; }
         body { background-color: var(--negro-puro); color: #E0E0E0; font-family: 'Inter', sans-serif; margin: 0; overflow: hidden; height: 100vh; }
         .texto-dorado { background: linear-gradient(to bottom, #CF9E1D 22%, #F1D37E 45%, #CF9E1D 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .grid-menu { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; width: 100%; max-width: 320px; }
+        .grid-menu { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; width: 100%; max-width: 340px; }
         .box-item { background: #0F0F0F; border: 1px solid #1a1a1a; aspect-ratio: 1 / 1; display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 32px; transition: all 0.2s ease; box-shadow: 0 10px 30px rgba(0,0,0,0.5); text-decoration: none; }
         .box-item:active { transform: scale(0.92); border-color: var(--oro); }
-        .icon-circle { width: 54px; height: 54px; border-radius: 20px; display: flex; align-items: center; justify-content: center; margin-bottom: 12px; font-size: 22px; }
+        .icon-circle { width: 50px; height: 50px; border-radius: 18px; display: flex; align-items: center; justify-content: center; margin-bottom: 10px; font-size: 20px; }
         .gold-box { background: linear-gradient(135deg, #D4AF37 0%, #f9e29c 50%, #996515 100%); }
         .fade-in { animation: fadeIn 0.5s ease-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
@@ -34,38 +34,55 @@
         </div>
     </header>
 
-    <main class="flex-1 flex flex-col items-center justify-center px-6 pb-28">
+    <main class="flex-1 flex flex-col items-center justify-center px-6 pb-20">
         <div class="fade-in w-full flex flex-col items-center">
-            <div class="text-center mb-10">
-                <h2 class="text-white text-[10px] font-black tracking-[0.4em] uppercase opacity-40 mb-4 italic">Módulos de Élite</h2>
+            <div class="text-center mb-8">
+                <h2 class="text-white text-[10px] font-black tracking-[0.4em] uppercase opacity-40 mb-4 italic">Panel de Control</h2>
                 <div class="w-12 h-[2px] gold-box mx-auto rounded-full"></div>
             </div>
 
             <div class="grid-menu">
-                <a href="productos.html" class="box-item">
-                    <div class="icon-circle gold-box text-black shadow-lg shadow-yellow-900/30">
-                        <i class="fas fa-box"></i>
+                <a href="clientes.html" class="box-item border-gold/30">
+                    <div class="icon-circle gold-box text-black shadow-lg shadow-yellow-900/40">
+                        <i class="fas fa-address-card"></i>
                     </div>
-                    <span class="texto-dorado font-black text-[11px] tracking-tighter uppercase">Productos</span>
+                    <span class="texto-dorado font-black text-[11px] tracking-tighter uppercase">Clientes</span>
                 </a>
+
+                <a href="productos.html" class="box-item">
+                    <div class="icon-circle bg-white/5 border border-white/10 text-white">
+                        <i class="fas fa-box opacity-70"></i>
+                    </div>
+                    <span class="text-white font-black text-[11px] tracking-tighter uppercase">Productos</span>
+                </a>
+
                 <a href="inventario.html" class="box-item">
                     <div class="icon-circle bg-white/5 border border-white/10 text-white">
                         <i class="fas fa-list-ul opacity-70"></i>
                     </div>
                     <span class="text-white font-black text-[11px] tracking-tighter uppercase">Inventario</span>
                 </a>
+
                 <a href="ventas.html" class="box-item">
                     <div class="icon-circle bg-white/5 border border-white/10 text-white">
                         <i class="fas fa-shopping-cart opacity-70"></i>
                     </div>
                     <span class="text-white font-black text-[11px] tracking-tighter uppercase">Ventas</span>
                 </a>
+
                 <a href="vendedores.html" class="box-item">
                     <div class="icon-circle bg-white/5 border border-white/10 text-white">
                         <i class="fas fa-users opacity-70"></i>
                     </div>
                     <span class="text-white font-black text-[11px] tracking-tighter uppercase">Vendedores</span>
                 </a>
+
+                <div class="box-item opacity-20">
+                    <div class="icon-circle bg-white/5 border border-white/10 text-white">
+                        <i class="fas fa-chart-line opacity-70"></i>
+                    </div>
+                    <span class="text-white font-black text-[11px] tracking-tighter uppercase italic">Reportes</span>
+                </div>
             </div>
         </div>
     </main>
@@ -93,5 +110,6 @@
     </script>
 </body>
 </html>
+
 
 ```
