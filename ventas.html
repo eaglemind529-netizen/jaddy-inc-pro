@@ -17,6 +17,7 @@
         .sale-card { background: #0F0F0F; border: 1px solid #1A1A1A; border-radius: 20px; padding: 15px; margin-bottom: 12px; animation: fadeIn 0.4s ease; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         #statusDot { width: 12px; height: 12px; border-radius: 50%; }
+        input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); }
     </style>
 </head>
 <body class="p-4 pb-24 max-w-md mx-auto">
@@ -30,6 +31,7 @@
         <h2 class="text-center text-gold font-black uppercase text-[10px] tracking-[4px] mb-6 italic">Panel de Despacho</h2>
         
         <div class="space-y-4">
+            <!-- Vendedor -->
             <div class="relative">
                 <p class="text-[7px] text-gold font-black absolute -top-2 left-3 bg-[#0A0A0A] px-2 uppercase z-10">Despachado por:</p>
                 <select id="sel-vendedor" class="input-field border-gold/30 text-gold">
@@ -37,6 +39,7 @@
                 </select>
             </div>
 
+            <!-- Cliente -->
             <div class="flex gap-2">
                 <button id="btn-cli-reg" onclick="toggleCliente(true)" class="tab-btn active">Registrado</button>
                 <button id="btn-cli-ocu" onclick="toggleCliente(false)" class="tab-btn">Ocasional</button>
@@ -50,6 +53,7 @@
                 <input type="text" id="inp-cliente-nom" placeholder="NOMBRE DE CLIENTE NUEVO" class="input-field">
             </div>
 
+            <!-- Productos -->
             <div class="grid grid-cols-1 gap-3">
                 <select id="sel-producto" class="input-field">
                     <option value="">-- SELECCIONAR PRODUCTO --</option>
@@ -59,10 +63,26 @@
                 </select>
             </div>
 
+            <!-- Tipo de Venta -->
             <div class="grid grid-cols-3 gap-2">
                 <button onclick="setTipo('CONTADO')" id="t-contado" class="tab-btn active">Contado</button>
                 <button onclick="setTipo('CREDITO')" id="t-credito" class="tab-btn">Crédito</button>
                 <button onclick="setTipo('MAYOR')" id="t-mayor" class="tab-btn">Mayor</button>
+            </div>
+
+            <!-- Panel Crédito -->
+            <div id="panel-credito" class="hidden space-y-3 p-4 bg-[#111] rounded-xl border border-gold/10">
+                <p class="text-[8px] text-gold font-black uppercase text-center">Información de Crédito</p>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <p class="text-[7px] mb-1 text-gray-400 uppercase">Fecha Entrega</p>
+                        <input type="date" id="fecha-entrega" class="input-field py-2 text-xs">
+                    </div>
+                    <div>
+                        <p class="text-[7px] mb-1 text-gray-400 uppercase">Fecha de Pago</p>
+                        <input type="date" id="fecha-pago" class="input-field py-2 text-xs">
+                    </div>
+                </div>
             </div>
 
             <div class="grid grid-cols-2 gap-3">
@@ -81,7 +101,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getFirestore, collection, onSnapshot, addDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, collection, onSnapshot, addDoc, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCrjjeOoXPOtJDXDfrHLOA4Ny0QW2zfVWk",
@@ -108,28 +128,24 @@
         });
 
         function cargarDatos() {
-            // Cargar Vendedores
             onSnapshot(collection(db, "vendedores"), (snap) => {
                 const vens = snap.docs.map(d => d.data());
                 document.getElementById('sel-vendedor').innerHTML = '<option value="">-- VENDEDOR --</option>' + 
                     vens.map(v => `<option value="${v.nombre}">${v.nombre}</option>`).join('');
             });
 
-            // Cargar Clientes
             onSnapshot(collection(db, "clientes"), (snap) => {
                 const clis = snap.docs.map(d => d.data());
                 document.getElementById('sel-cliente').innerHTML = '<option value="">-- CLIENTE --</option>' + 
                     clis.map(c => `<option value="${c.nombre}">${c.nombre}</option>`).join('');
             });
 
-            // Cargar Productos (RESTAURADO)
             onSnapshot(collection(db, "productos"), (snap) => {
                 productosGlobal = snap.docs.map(d => ({id: d.id, ...d.data()}));
                 document.getElementById('sel-producto').innerHTML = '<option value="">-- PRODUCTO --</option>' + 
                     productosGlobal.map(p => `<option value="${p.id}">${p.nombre}</option>`).join('');
             });
 
-            // Cargar Ventas
             onSnapshot(query(collection(db, "ventas_realizadas"), orderBy("timestamp", "desc")), (snap) => {
                 renderVentas(snap.docs.map(d => d.data()));
             });
@@ -139,7 +155,6 @@
             pSeleccionado = productosGlobal.find(x => x.id === e.target.value);
             const selVar = document.getElementById('sel-variante');
             if (pSeleccionado && pSeleccionado.variantes) {
-                // Aquí se cargan las fragancias que ya tenías
                 selVar.innerHTML = pSeleccionado.variantes.map(v => `<option value="${v}">${v}</option>`).join('');
             } else {
                 selVar.innerHTML = '<option value="GENERAL">GENERAL</option>';
@@ -159,6 +174,7 @@
             ['contado', 'credito', 'mayor'].forEach(id => {
                 document.getElementById('t-'+id).classList.toggle('active', id === t.toLowerCase());
             });
+            document.getElementById('panel-credito').classList.toggle('hidden', t !== 'CREDITO');
             calcularTotal();
         };
 
@@ -168,39 +184,92 @@
             let precio = pSeleccionado.precio_detal || 0;
             if(tipoVenta === 'CREDITO') precio = pSeleccionado.precio_credito || 0;
             if(tipoVenta === 'MAYOR') precio = pSeleccionado.precio_mayor || 0;
-            document.getElementById('inp-precio').value = (precio * cant).toFixed(2);
+            document.getElementById('inp-precio').value = (precio * cant).toLocaleString();
         };
 
         window.registrarVenta = async () => {
+            const btn = document.getElementById('btn-venta');
             const v = document.getElementById('sel-vendedor').value;
             const p = document.getElementById('sel-producto').value;
             const c = document.getElementById('btn-cli-reg').classList.contains('active') ? 
                       document.getElementById('sel-cliente').value : document.getElementById('inp-cliente-nom').value;
 
-            if(!v || !p || !c) return alert("Faltan datos");
+            if(!v || !p || !c) {
+                alert("Completa los campos de vendedor, cliente y producto.");
+                return;
+            }
 
-            await addDoc(collection(db, "ventas_realizadas"), {
+            // Fecha actual para reportes
+            const ahora = new Date();
+            const ventaData = {
                 vendedor: v,
                 cliente: c.toUpperCase(),
                 producto: pSeleccionado.nombre,
                 variante: document.getElementById('sel-variante').value,
                 cantidad: parseInt(document.getElementById('inp-cantidad').value),
-                total: parseFloat(document.getElementById('inp-precio').value),
+                total: parseFloat(document.getElementById('inp-precio').value.replace(/,/g, '')),
                 tipo: tipoVenta,
-                timestamp: Date.now()
-            });
-            alert("Venta guardada");
+                timestamp: ahora.getTime(), // Para ordenamiento
+                fecha_exacta: ahora.toISOString(), // ISO para reportes técnicos
+                fecha_legible: ahora.toLocaleDateString(), // DD/MM/AAAA
+                hora_venta: ahora.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            };
+
+            if(tipoVenta === 'CREDITO') {
+                ventaData.fecha_entrega = document.getElementById('fecha-entrega').value;
+                ventaData.fecha_pago = document.getElementById('fecha-pago').value;
+                if(!ventaData.fecha_entrega || !ventaData.fecha_pago) {
+                    alert("Asigna las fechas de entrega y pago para el crédito.");
+                    return;
+                }
+            }
+
+            btn.disabled = true;
+            btn.innerText = "Registrando...";
+
+            try {
+                await addDoc(collection(db, "ventas_realizadas"), ventaData);
+                // Limpiar campos específicos
+                document.getElementById('inp-cantidad').value = 1;
+                document.getElementById('fecha-entrega').value = "";
+                document.getElementById('fecha-pago').value = "";
+                alert("Venta registrada con éxito.");
+            } catch (e) {
+                console.error(e);
+                alert("Error de conexión con la base de datos.");
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "Procesar Venta";
+            }
         };
 
         function renderVentas(ventas) {
             document.getElementById('listaVentas').innerHTML = ventas.map(v => `
                 <div class="sale-card">
-                    <div class="flex justify-between">
-                        <span class="text-gold text-[8px] font-black">${v.tipo}</span>
-                        <span class="text-green-400 font-black">$${v.total}</span>
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <div class="flex items-center gap-2 mb-1">
+                                <span class="text-gold text-[7px] font-black tracking-widest bg-gold/10 px-2 py-0.5 rounded uppercase">${v.tipo}</span>
+                                <span class="text-gray-500 text-[7px] uppercase font-bold">${v.fecha_legible} | ${v.hora_venta || ''}</span>
+                            </div>
+                            <div class="text-[11px] uppercase font-black text-white">${v.cliente}</div>
+                        </div>
+                        <span class="text-green-400 font-black text-sm">$${(v.total || 0).toLocaleString()}</span>
                     </div>
-                    <div class="text-xs uppercase font-bold">${v.cliente}</div>
-                    <div class="text-[9px] text-gray-400">${v.producto} / ${v.variante}</div>
+                    <div class="text-[9px] text-gray-400 mt-1 uppercase italic">${v.producto} • ${v.variante} (x${v.cantidad})</div>
+                    
+                    ${v.tipo === 'CREDITO' ? `
+                        <div class="mt-2 grid grid-cols-2 gap-2 border-t border-white/5 pt-2">
+                            <div class="text-[7px]">
+                                <p class="text-gray-500 uppercase">Entrega programada:</p> 
+                                <p class="text-white font-bold">${v.fecha_entrega}</p>
+                            </div>
+                            <div class="text-[7px]">
+                                <p class="text-gray-500 uppercase">Cobro programado:</p> 
+                                <p class="text-gold font-bold">${v.fecha_pago}</p>
+                            </div>
+                        </div>
+                    ` : ''}
                 </div>
             `).join('');
         }
@@ -209,6 +278,5 @@
     </script>
 </body>
 </html>
-
 
 ```
