@@ -1,4 +1,4 @@
-
+```html
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -30,7 +30,7 @@
         <h2 class="text-center text-gold font-black uppercase text-[10px] tracking-[4px] mb-6 italic">Panel de Despacho</h2>
         
         <div class="space-y-4">
-            <!-- Selección de Vendedor (NUEVO) -->
+            <!-- Selección de Vendedor -->
             <div class="relative">
                 <p class="text-[7px] text-gold font-black absolute -top-2 left-3 bg-[#0A0A0A] px-2 uppercase">Despachado por:</p>
                 <select id="sel-vendedor" class="input-field border-gold/30 text-gold">
@@ -123,14 +123,23 @@
                 cargarProductos();
                 cargarVendedores();
                 cargarVentas();
+                cargarClientesParaVenta(); // Conexión con módulo clientes
             }
         });
 
         function cargarVendedores() {
             onSnapshot(collection(db, "vendedores"), (snap) => {
-                vendedoresGlobal = snap.docs.map(d => d.data());
+                vendedoresGlobal = snap.docs.map(d => ({id: d.id, ...d.data()}));
                 document.getElementById('sel-vendedor').innerHTML = '<option value="">-- SELECCIONAR VENDEDOR --</option>' + 
                     vendedoresGlobal.map(v => `<option value="${v.id}">${v.codigo} - ${v.nombre}</option>`).join('');
+            });
+        }
+
+        function cargarClientesParaVenta() {
+            onSnapshot(collection(db, "clientes"), (snap) => {
+                const clientes = snap.docs.map(d => ({id: d.id, ...d.data()}));
+                document.getElementById('sel-cliente').innerHTML = '<option value="">-- SELECCIONAR CLIENTE --</option>' + 
+                    clientes.map(c => `<option value="${c.nombre}">${c.nombre} (${c.codigo})</option>`).join('');
             });
         }
 
@@ -193,7 +202,6 @@
             const precioTotal = parseFloat(document.getElementById('inp-precio').value);
             
             if (!vId || !prodId || cant <= 0) {
-                alert("Selecciona un Vendedor y Producto.");
                 return;
             }
 
@@ -211,7 +219,7 @@
                     vendedorNombre: ven.nombre,
                     vendedorCodigo: ven.codigo,
                     prodId: prodId,
-                    nombre: productoSeleccionado.nombre,
+                    producto: productoSeleccionado.nombre,
                     variante: variante,
                     cantidad: cant,
                     precio: precioTotal,
@@ -220,17 +228,17 @@
                     timestamp: new Date().getTime()
                 });
 
+                // Actualización simple de inventario si el módulo existe
                 const invDocId = `${prodId}_${variante.replace(/\s+/g, '_')}`;
                 await setDoc(doc(db, "inventario_master", invDocId), {
                     ventas: increment(cant),
                     stock: increment(-cant)
                 }, { merge: true });
 
-                alert("¡Venta registrada con éxito!");
                 document.getElementById('inp-cantidad').value = "1";
                 calcularTotal(); 
             } catch (e) {
-                alert("Error: " + e.message);
+                console.error("Error: ", e);
             } finally {
                 btn.innerText = "PROCESAR VENTA";
                 btn.disabled = false;
@@ -263,10 +271,11 @@
                             <div class="text-[7px] text-gray-500 font-bold">${v.cantidad} UD.</div>
                         </div>
                     </div>
+                    <div class="text-[8px] text-gray-400 uppercase font-bold italic">${v.producto} - ${v.variante}</div>
                 </div>`).join('');
         }
     </script>
 </body>
 </html>
 
-
+```
