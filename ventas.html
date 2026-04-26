@@ -9,14 +9,13 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root { --gold: #D4AF37; --bg: #050505; }
-        body { background: var(--bg); color: white; font-family: 'Inter', sans-serif; margin: 0; overflow-x: hidden; }
+        body { background: var(--bg); color: white; font-family: 'Inter', sans-serif; margin: 0; overflow-x: hidden; -webkit-tap-highlight-color: transparent; }
         .gold-border { border: 1px solid rgba(212, 175, 55, 0.2); }
         .input-field { background: #111; border: 1px solid #222; border-radius: 12px; padding: 14px; width: 100%; color: white; font-size: 14px; font-weight: bold; text-transform: uppercase; appearance: none; }
         .input-field:focus { border-color: var(--gold); outline: none; }
         
-        /* Botones de Tabulación Mejorados */
-        .tab-btn { flex: 1; padding: 12px; font-size: 10px; font-weight: 900; text-transform: uppercase; border-radius: 10px; border: 1px solid #222; color: #555; transition: all 0.2s; background: transparent; }
-        .tab-btn.active { background: white; color: black; border-color: white; transform: scale(1.02); }
+        .tab-btn { flex: 1; padding: 12px; font-size: 10px; font-weight: 900; text-transform: uppercase; border-radius: 10px; border: 1px solid #222; color: #555; transition: all 0.2s; background: transparent; cursor: pointer; }
+        .tab-btn.active { background: white !important; color: black !important; border-color: white !important; transform: scale(1.02); }
         
         .sale-card { background: #0F0F0F; border: 1px solid #1A1A1A; border-radius: 20px; padding: 15px; margin-bottom: 12px; animation: fadeIn 0.4s ease; }
         
@@ -26,6 +25,10 @@
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes slideDown { from { opacity: 0; max-height: 0; } to { opacity: 1; max-height: 200px; } }
         
+        #statusDot { width: 12px; height: 12px; border-radius: 50%; transition: all 0.5s ease; }
+        .status-offline { background: #ff0000; box-shadow: 0 0 10px #ff0000; }
+        .status-online { background: #00ff00; box-shadow: 0 0 10px #00ff00; }
+
         .loader { width: 20px; height: 20px; border: 2px solid #FFF; border-bottom-color: transparent; border-radius: 50%; display: inline-block; animation: rotation 1s linear infinite; }
         @keyframes rotation { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
@@ -34,7 +37,7 @@
 
     <header class="flex justify-between items-center mb-6">
         <button onclick="window.history.back()" class="text-[10px] font-black border border-gold/30 px-4 py-2 rounded-full text-gold uppercase">← Volver</button>
-        <div id="statusDot" class="w-3 h-3 rounded-full bg-red-600 shadow-[0_0_10px_rgba(220,38,38,0.5)]"></div>
+        <div id="statusDot" class="status-offline" title="Desconectado"></div>
     </header>
 
     <section class="bg-[#0A0A0A] p-5 rounded-[28px] gold-border mb-8 shadow-2xl">
@@ -43,9 +46,9 @@
         <div class="space-y-4">
             <!-- Vendedor -->
             <div class="relative">
-                <p class="text-[7px] text-gold font-black absolute -top-2 left-3 bg-[#0A0A0A] px-2 uppercase">Despachado por:</p>
+                <p class="text-[7px] text-gold font-black absolute -top-2 left-3 bg-[#0A0A0A] px-2 uppercase z-10">Despachado por:</p>
                 <select id="sel-vendedor" class="input-field border-gold/30 text-gold">
-                    <option value="">-- CARGANDO VENDEDORES... --</option>
+                    <option value="">-- BUSCANDO VENDEDORES... --</option>
                 </select>
             </div>
 
@@ -86,7 +89,7 @@
                 <button id="t-mayor" class="tab-btn">Al Mayor</button>
             </div>
 
-            <!-- PANEL DE FECHAS (SÓLO CRÉDITO) -->
+            <!-- PANEL DE FECHAS (CRÉDITO) -->
             <div id="panel-fechas" class="date-panel">
                 <div class="relative">
                     <p class="text-[7px] text-gold font-black uppercase mb-1 ml-1">Fecha Entrega</p>
@@ -117,101 +120,90 @@
     </section>
 
     <h2 class="text-[10px] font-black text-gray-500 uppercase tracking-[2px] mb-4 ml-2 italic">Historial de Hoy</h2>
-    <div id="listaVentas" class="space-y-3">
-        <div class="text-center py-10 opacity-20 text-xs font-bold italic">Cargando registros...</div>
+    <div id="listaVentas" class="space-y-3 pb-10">
+        <div class="text-center py-10 opacity-20 text-xs font-bold italic">Esperando conexión...</div>
     </div>
 
-    <!-- Firebase SDK -->
+    <!-- Firebase SDKs -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, getDoc, setDoc, onSnapshot, collection, query, addDoc, increment, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, onSnapshot, collection, addDoc, increment, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
+        // CONFIGURACIÓN
         const firebaseConfig = JSON.parse(__firebase_config);
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app';
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        let user = null;
-        let dataStore = {
-            productos: [],
-            vendedores: [],
-            clientes: [],
-            seleccionado: null,
-            tipoVenta: 'CONTADO'
+        let dataStore = { productos: [], vendedores: [], clientes: [], seleccionado: null, tipoVenta: 'CONTADO' };
+
+        // UI Helpers
+        const dot = document.getElementById('statusDot');
+        const setStatus = (online) => {
+            dot.className = online ? 'status-online' : 'status-offline';
         };
 
-        // UI Elements
-        const selVendedor = document.getElementById('sel-vendedor');
-        const selCliente = document.getElementById('sel-cliente');
-        const selProducto = document.getElementById('sel-producto');
-        const selVariante = document.getElementById('sel-variante');
-        const inpCantidad = document.getElementById('inp-cantidad');
-        const inpTotal = document.getElementById('inp-precio');
-        const panelFechas = document.getElementById('panel-fechas');
-        const btnVenta = document.getElementById('btn-venta');
-
-        // Inicialización de Auth
-        async function start() {
+        // INICIO DE SESIÓN Y CONEXIÓN
+        async function init() {
             try {
-                await signInAnonymously(auth);
-                onAuthStateChanged(auth, (u) => {
-                    if (u) {
-                        user = u;
-                        document.getElementById('statusDot').classList.replace('bg-red-600', 'bg-green-500');
-                        document.getElementById('fecha-entrega').value = new Date().toISOString().split('T')[0];
-                        escucharDatos();
+                // Prioridad al Token Personalizado para evitar bloqueos
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+
+                onAuthStateChanged(auth, (user) => {
+                    if (user) {
+                        setStatus(true);
+                        console.log("Conectado como:", user.uid);
+                        activarListeners();
+                    } else {
+                        setStatus(false);
                     }
                 });
-            } catch (e) { console.error("Auth Error", e); }
-        }
-
-        function escucharDatos() {
-            const pathBase = (col) => collection(db, 'artifacts', appId, 'public', 'data', col);
-
-            // Cargar Vendedores
-            onSnapshot(pathBase('vendedores'), (s) => {
-                dataStore.vendedores = s.docs.map(d => ({id: d.id, ...d.data()}));
-                selVendedor.innerHTML = '<option value="">-- SELECCIONAR VENDEDOR --</option>' + 
-                    dataStore.vendedores.map(v => `<option value="${v.id}">${v.nombre}</option>`).join('');
-            });
-
-            // Cargar Clientes
-            onSnapshot(pathBase('clientes'), (s) => {
-                dataStore.clientes = s.docs.map(d => ({id: d.id, ...d.data()}));
-                selCliente.innerHTML = '<option value="">-- SELECCIONAR CLIENTE --</option>' + 
-                    dataStore.clientes.map(c => `<option value="${c.nombre}">${c.nombre}</option>`).join('');
-            });
-
-            // Cargar Productos
-            onSnapshot(pathBase('productos'), (s) => {
-                dataStore.productos = s.docs.map(d => ({id: d.id, ...d.data()}));
-                selProducto.innerHTML = '<option value="">-- SELECCIONAR PRODUCTO --</option>' + 
-                    dataStore.productos.map(p => `<option value="${p.id}">${p.nombre}</option>`).join('');
-            });
-
-            // Cargar Ventas (Historial)
-            onSnapshot(pathBase('ventas'), (s) => {
-                const ventas = s.docs.map(d => d.data()).sort((a,b) => (b.timestamp || 0) - (a.timestamp || 0));
-                renderVentas(ventas.slice(0, 8));
-            });
-        }
-
-        // Lógica de Producto Seleccionado
-        selProducto.onchange = () => {
-            const prod = dataStore.productos.find(p => p.id === selProducto.value);
-            dataStore.seleccionado = prod;
-            
-            if (prod && prod.variantes && prod.variantes.length > 0) {
-                selVariante.innerHTML = prod.variantes.map(v => `<option value="${v}">${v}</option>`).join('');
-            } else {
-                selVariante.innerHTML = '<option value="GENERAL">GENERAL</option>';
+            } catch (err) {
+                console.error("Error de Auth:", err);
+                setStatus(false);
             }
-            actualizarCalculos();
-        };
+        }
 
-        // Lógica de Botones (Tabs)
+        function activarListeners() {
+            // Rutas exactas según Regla 1
+            const path = (name) => collection(db, 'artifacts', appId, 'public', 'data', name);
+
+            // 1. Cargar Vendedores
+            onSnapshot(path('vendedores'), (snap) => {
+                dataStore.vendedores = snap.docs.map(d => ({id: d.id, ...d.data()}));
+                document.getElementById('sel-vendedor').innerHTML = '<option value="">-- SELECCIONAR VENDEDOR --</option>' + 
+                    dataStore.vendedores.map(v => `<option value="${v.id}">${v.nombre}</option>`).join('');
+            }, (err) => console.error("Error Vendedores:", err));
+
+            // 2. Cargar Clientes
+            onSnapshot(path('clientes'), (snap) => {
+                dataStore.clientes = snap.docs.map(d => ({id: d.id, ...d.data()}));
+                document.getElementById('sel-cliente').innerHTML = '<option value="">-- SELECCIONAR CLIENTE --</option>' + 
+                    dataStore.clientes.map(c => `<option value="${c.nombre}">${c.nombre}</option>`).join('');
+            }, (err) => console.error("Error Clientes:", err));
+
+            // 3. Cargar Productos
+            onSnapshot(path('productos'), (snap) => {
+                dataStore.productos = snap.docs.map(d => ({id: d.id, ...d.data()}));
+                document.getElementById('sel-producto').innerHTML = '<option value="">-- SELECCIONAR PRODUCTO --</option>' + 
+                    dataStore.productos.map(p => `<option value="${p.id}">${p.nombre}</option>`).join('');
+            }, (err) => console.error("Error Productos:", err));
+
+            // 4. Historial de Ventas
+            onSnapshot(path('ventas'), (snap) => {
+                const ventas = snap.docs.map(d => ({id: d.id, ...d.data()}))
+                    .sort((a,b) => (b.timestamp || 0) - (a.timestamp || 0));
+                renderVentas(ventas.slice(0, 10));
+            }, (err) => console.error("Error Ventas:", err));
+        }
+
+        // LÓGICA DE INTERFAZ
         document.getElementById('btn-cli-reg').onclick = () => {
             document.getElementById('btn-cli-reg').classList.add('active');
             document.getElementById('btn-cli-ocu').classList.remove('active');
@@ -226,116 +218,107 @@
             document.getElementById('area-cliente-reg').classList.add('hidden');
         };
 
-        const tipos = ['contado', 'credito', 'mayor'];
-        tipos.forEach(t => {
+        const tBtns = ['contado', 'credito', 'mayor'];
+        tBtns.forEach(t => {
             document.getElementById(`t-${t}`).onclick = () => {
                 dataStore.tipoVenta = t.toUpperCase();
-                tipos.forEach(x => document.getElementById(`t-${x}`).classList.toggle('active', x === t));
-                panelFechas.classList.toggle('visible', t === 'credito');
+                tBtns.forEach(x => document.getElementById(`t-${x}`).classList.toggle('active', x === t));
+                document.getElementById('panel-fechas').classList.toggle('visible', t === 'credito');
                 actualizarCalculos();
             };
         });
 
+        document.getElementById('sel-producto').onchange = (e) => {
+            const p = dataStore.productos.find(prod => prod.id === e.target.value);
+            dataStore.seleccionado = p;
+            if (p && p.variantes && p.variantes.length > 0) {
+                document.getElementById('sel-variante').innerHTML = p.variantes.map(v => `<option value="${v}">${v}</option>`).join('');
+            } else {
+                document.getElementById('sel-variante').innerHTML = '<option value="GENERAL">GENERAL</option>';
+            }
+            actualizarCalculos();
+        };
+
         function actualizarCalculos() {
             const p = dataStore.seleccionado;
-            const cant = parseInt(inpCantidad.value) || 0;
+            const cant = parseInt(document.getElementById('inp-cantidad').value) || 0;
             if (!p) return;
-
-            let precioBase = 0;
-            if (dataStore.tipoVenta === 'CONTADO') precioBase = p.precio_detal || 0;
-            else if (dataStore.tipoVenta === 'CREDITO') precioBase = p.precio_credito || 0;
-            else precioBase = p.precio_mayor || 0;
-
-            inpTotal.value = (precioBase * cant).toFixed(2);
+            let precio = dataStore.tipoVenta === 'CONTADO' ? (p.precio_detal || 0) : 
+                         dataStore.tipoVenta === 'CREDITO' ? (p.precio_credito || 0) : (p.precio_mayor || 0);
+            document.getElementById('inp-precio').value = (precio * cant).toFixed(2);
         }
 
-        inpCantidad.oninput = actualizarCalculos;
+        document.getElementById('inp-cantidad').oninput = actualizarCalculos;
 
-        // GUARDAR VENTA
-        btnVenta.onclick = async () => {
-            if (!user) return;
-            
-            const vId = selVendedor.value;
-            const pId = selProducto.value;
-            const cliente = document.getElementById('btn-cli-reg').classList.contains('active') ? 
-                selCliente.value : document.getElementById('inp-cliente-nom').value;
+        // ACCIÓN DE VENTA
+        document.getElementById('btn-venta').onclick = async () => {
+            const vId = document.getElementById('sel-vendedor').value;
+            const pId = document.getElementById('sel-producto').value;
+            const cliReg = document.getElementById('btn-cli-reg').classList.contains('active');
+            const cliente = cliReg ? document.getElementById('sel-cliente').value : document.getElementById('inp-cliente-nom').value;
 
             if (!vId || !pId || !cliente) {
-                alert("Completa Vendedor, Producto y Cliente");
+                alert("Faltan datos obligatorios.");
                 return;
             }
 
-            btnVenta.disabled = true;
-            btnVenta.innerHTML = '<span class="loader"></span>';
+            const btn = document.getElementById('btn-venta');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="loader"></span> Procesando...';
 
             try {
-                const ventaObj = {
+                const venta = {
                     vendedorId: vId,
                     vendedorNombre: dataStore.vendedores.find(v => v.id === vId).nombre,
                     cliente: cliente.toUpperCase(),
                     productoId: pId,
                     productoNombre: dataStore.seleccionado.nombre,
-                    variante: selVariante.value,
+                    variante: document.getElementById('sel-variante').value,
                     tipo: dataStore.tipoVenta,
-                    cantidad: parseInt(inpCantidad.value),
-                    total: parseFloat(inpTotal.value),
+                    cantidad: parseInt(document.getElementById('inp-cantidad').value),
+                    total: parseFloat(document.getElementById('inp-precio').value),
                     fecha_entrega: document.getElementById('fecha-entrega').value,
                     fecha_pago: dataStore.tipoVenta === 'CREDITO' ? document.getElementById('fecha-pago').value : null,
-                    timestamp: Date.now()
+                    timestamp: Date.now(),
+                    userId: auth.currentUser.uid
                 };
 
-                await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'ventas'), ventaObj);
-                
-                // Actualización de Inventario (Opcional si usas el módulo de inventario)
-                const stockId = `${pId}_${ventaObj.variante}`.replace(/\s+/g, '_');
-                await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'inventario', stockId), {
-                    stock: increment(-ventaObj.cantidad),
-                    vendido: increment(ventaObj.cantidad)
-                }, { merge: true });
-
-                alert("¡Despacho registrado con éxito!");
-                limpiar();
+                await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'ventas'), venta);
+                alert("Venta registrada.");
+                document.getElementById('inp-cliente-nom').value = "";
             } catch (e) {
-                console.error(e);
-                alert("Error al guardar");
+                alert("Error al guardar venta: " + e.message);
             } finally {
-                btnVenta.disabled = false;
-                btnVenta.innerHTML = "Procesar Despacho";
+                btn.disabled = false;
+                btn.innerHTML = "Procesar Despacho";
             }
         };
 
-        function limpiar() {
-            inpCantidad.value = 1;
-            document.getElementById('inp-cliente-nom').value = "";
-            document.getElementById('fecha-pago').value = "";
-            actualizarCalculos();
-        }
-
         function renderVentas(ventas) {
-            const container = document.getElementById('listaVentas');
+            const list = document.getElementById('listaVentas');
             if (ventas.length === 0) {
-                container.innerHTML = '<div class="text-center py-10 opacity-20 text-xs italic">No hay ventas registradas</div>';
+                list.innerHTML = '<div class="text-center py-10 opacity-20 text-xs italic">Sin ventas hoy</div>';
                 return;
             }
-            container.innerHTML = ventas.map(v => `
+            list.innerHTML = ventas.map(v => `
                 <div class="sale-card">
-                    <div class="flex justify-between">
+                    <div class="flex justify-between items-start">
                         <div>
-                            <span class="text-[7px] ${v.tipo === 'CREDITO' ? 'text-red-400' : 'text-gold'} font-black uppercase">${v.tipo}</span>
-                            <div class="text-xs font-black uppercase">${v.cliente}</div>
-                            <div class="text-[8px] text-gray-500 font-bold">${v.productoNombre} (${v.variante})</div>
+                            <span class="text-[7px] ${v.tipo === 'CREDITO' ? 'text-red-500' : 'text-gold'} font-black">${v.tipo}</span>
+                            <div class="text-xs font-black uppercase text-white">${v.cliente}</div>
+                            <div class="text-[8px] text-gray-500 font-bold">${v.productoNombre}</div>
                         </div>
                         <div class="text-right">
-                            <div class="text-sm font-black text-green-400">$${v.total.toFixed(2)}</div>
+                            <div class="text-sm font-black text-green-400">$${(v.total || 0).toFixed(2)}</div>
                             <div class="text-[7px] text-gray-600">${v.cantidad} UNID.</div>
                         </div>
                     </div>
-                    ${v.fecha_pago ? `<div class="mt-2 text-[7px] text-red-500 font-bold">PAGO PENDIENTE: ${v.fecha_pago}</div>` : ''}
                 </div>
             `).join('');
         }
 
-        start();
+        // Iniciar App
+        window.onload = init;
     </script>
 </body>
 </html>
