@@ -48,7 +48,7 @@
             <div class="relative">
                 <p class="text-[7px] text-gold font-black absolute -top-2 left-3 bg-[#0A0A0A] px-2 uppercase z-10">Despachado por:</p>
                 <select id="sel-vendedor" class="input-field border-gold/30 text-gold">
-                    <option value="">-- BUSCANDO VENDEDORES... --</option>
+                    <option value="">-- CONECTANDO CON JADDY... --</option>
                 </select>
             </div>
 
@@ -128,27 +128,36 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, onSnapshot, collection, addDoc, increment, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, onSnapshot, query } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // CONFIGURACIÓN
-        const firebaseConfig = JSON.parse(__firebase_config);
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app';
+        // CONFIGURACIÓN PROPORCIONADA
+        const firebaseConfig = {
+            apiKey: "AIzaSyCrjjeOoXPOtJDXDfrHLOA4Ny0QW2zfVWk",
+            authDomain: "apps-d45d6.firebaseapp.com",
+            projectId: "apps-d45d6",
+            storageBucket: "apps-d45d6.firebasestorage.app",
+            messagingSenderId: "502648373937",
+            appId: "1:502648373937:web:8c3beaa2a6c9289a4d9890",
+            measurementId: "G-7VCRCRSCRQ"
+        };
+
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
 
         let dataStore = { productos: [], vendedores: [], clientes: [], seleccionado: null, tipoVenta: 'CONTADO' };
 
-        // UI Helpers
-        const dot = document.getElementById('statusDot');
+        // UI Status Helper
         const setStatus = (online) => {
-            dot.className = online ? 'status-online' : 'status-offline';
+            const dot = document.getElementById('statusDot');
+            if (dot) dot.className = online ? 'status-online' : 'status-offline';
         };
 
-        // INICIO DE SESIÓN Y CONEXIÓN
-        async function init() {
+        // Inicio de Sesión y Conexión de Datos
+        async function initApp() {
             try {
-                // Prioridad al Token Personalizado para evitar bloqueos
+                // Autenticación primero
                 if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
                     await signInWithCustomToken(auth, __initial_auth_token);
                 } else {
@@ -158,52 +167,54 @@
                 onAuthStateChanged(auth, (user) => {
                     if (user) {
                         setStatus(true);
-                        console.log("Conectado como:", user.uid);
                         activarListeners();
                     } else {
                         setStatus(false);
                     }
                 });
             } catch (err) {
-                console.error("Error de Auth:", err);
+                console.error("Error de conexión:", err);
                 setStatus(false);
             }
         }
 
         function activarListeners() {
-            // Rutas exactas según Regla 1
-            const path = (name) => collection(db, 'artifacts', appId, 'public', 'data', name);
+            // Regla 1: Rutas de colecciones exactas
+            const publicData = (name) => collection(db, 'artifacts', appId, 'public', 'data', name);
 
-            // 1. Cargar Vendedores
-            onSnapshot(path('vendedores'), (snap) => {
+            // Escuchar Vendedores
+            onSnapshot(publicData('vendedores'), (snap) => {
                 dataStore.vendedores = snap.docs.map(d => ({id: d.id, ...d.data()}));
-                document.getElementById('sel-vendedor').innerHTML = '<option value="">-- SELECCIONAR VENDEDOR --</option>' + 
-                    dataStore.vendedores.map(v => `<option value="${v.id}">${v.nombre}</option>`).join('');
-            }, (err) => console.error("Error Vendedores:", err));
+                const sel = document.getElementById('sel-vendedor');
+                sel.innerHTML = '<option value="">-- SELECCIONAR VENDEDOR --</option>' + 
+                    dataStore.vendedores.map(v => `<option value="${v.nombre}">${v.nombre}</option>`).join('');
+            }, (err) => console.log("Error vendedores:", err));
 
-            // 2. Cargar Clientes
-            onSnapshot(path('clientes'), (snap) => {
+            // Escuchar Clientes
+            onSnapshot(publicData('clientes'), (snap) => {
                 dataStore.clientes = snap.docs.map(d => ({id: d.id, ...d.data()}));
-                document.getElementById('sel-cliente').innerHTML = '<option value="">-- SELECCIONAR CLIENTE --</option>' + 
+                const sel = document.getElementById('sel-cliente');
+                sel.innerHTML = '<option value="">-- SELECCIONAR CLIENTE --</option>' + 
                     dataStore.clientes.map(c => `<option value="${c.nombre}">${c.nombre}</option>`).join('');
-            }, (err) => console.error("Error Clientes:", err));
+            }, (err) => console.log("Error clientes:", err));
 
-            // 3. Cargar Productos
-            onSnapshot(path('productos'), (snap) => {
+            // Escuchar Productos
+            onSnapshot(publicData('productos'), (snap) => {
                 dataStore.productos = snap.docs.map(d => ({id: d.id, ...d.data()}));
-                document.getElementById('sel-producto').innerHTML = '<option value="">-- SELECCIONAR PRODUCTO --</option>' + 
+                const sel = document.getElementById('sel-producto');
+                sel.innerHTML = '<option value="">-- SELECCIONAR PRODUCTO --</option>' + 
                     dataStore.productos.map(p => `<option value="${p.id}">${p.nombre}</option>`).join('');
-            }, (err) => console.error("Error Productos:", err));
+            }, (err) => console.log("Error productos:", err));
 
-            // 4. Historial de Ventas
-            onSnapshot(path('ventas'), (snap) => {
+            // Escuchar Historial de Ventas
+            onSnapshot(publicData('ventas'), (snap) => {
                 const ventas = snap.docs.map(d => ({id: d.id, ...d.data()}))
                     .sort((a,b) => (b.timestamp || 0) - (a.timestamp || 0));
                 renderVentas(ventas.slice(0, 10));
-            }, (err) => console.error("Error Ventas:", err));
+            }, (err) => console.log("Error ventas:", err));
         }
 
-        // LÓGICA DE INTERFAZ
+        // --- MANEJO DE INTERFAZ ---
         document.getElementById('btn-cli-reg').onclick = () => {
             document.getElementById('btn-cli-reg').classList.add('active');
             document.getElementById('btn-cli-ocu').classList.remove('active');
@@ -231,10 +242,10 @@
         document.getElementById('sel-producto').onchange = (e) => {
             const p = dataStore.productos.find(prod => prod.id === e.target.value);
             dataStore.seleccionado = p;
-            if (p && p.variantes && p.variantes.length > 0) {
-                document.getElementById('sel-variante').innerHTML = p.variantes.map(v => `<option value="${v}">${v}</option>`).join('');
+            if (p && p.variantes) {
+                 document.getElementById('sel-variante').innerHTML = p.variantes.map(v => `<option value="${v}">${v}</option>`).join('');
             } else {
-                document.getElementById('sel-variante').innerHTML = '<option value="GENERAL">GENERAL</option>';
+                 document.getElementById('sel-variante').innerHTML = '<option value="GENERAL">GENERAL</option>';
             }
             actualizarCalculos();
         };
@@ -250,44 +261,45 @@
 
         document.getElementById('inp-cantidad').oninput = actualizarCalculos;
 
-        // ACCIÓN DE VENTA
+        // ACCIÓN: REGISTRAR VENTA
         document.getElementById('btn-venta').onclick = async () => {
-            const vId = document.getElementById('sel-vendedor').value;
-            const pId = document.getElementById('sel-producto').value;
+            const btn = document.getElementById('btn-venta');
+            const vendedor = document.getElementById('sel-vendedor').value;
+            const prodId = document.getElementById('sel-producto').value;
             const cliReg = document.getElementById('btn-cli-reg').classList.contains('active');
             const cliente = cliReg ? document.getElementById('sel-cliente').value : document.getElementById('inp-cliente-nom').value;
 
-            if (!vId || !pId || !cliente) {
-                alert("Faltan datos obligatorios.");
+            if (!vendedor || !prodId || !cliente) {
+                alert("Por favor completa los campos obligatorios.");
                 return;
             }
 
-            const btn = document.getElementById('btn-venta');
             btn.disabled = true;
             btn.innerHTML = '<span class="loader"></span> Procesando...';
 
             try {
-                const venta = {
-                    vendedorId: vId,
-                    vendedorNombre: dataStore.vendedores.find(v => v.id === vId).nombre,
+                const ventaData = {
+                    vendedor: vendedor,
                     cliente: cliente.toUpperCase(),
-                    productoId: pId,
                     productoNombre: dataStore.seleccionado.nombre,
                     variante: document.getElementById('sel-variante').value,
                     tipo: dataStore.tipoVenta,
-                    cantidad: parseInt(document.getElementById('inp-cantidad').value),
-                    total: parseFloat(document.getElementById('inp-precio').value),
-                    fecha_entrega: document.getElementById('fecha-entrega').value,
-                    fecha_pago: dataStore.tipoVenta === 'CREDITO' ? document.getElementById('fecha-pago').value : null,
+                    cantidad: Number(document.getElementById('inp-cantidad').value),
+                    total: Number(document.getElementById('inp-precio').value),
+                    fecha_entrega: document.getElementById('fecha-entrega').value || null,
+                    fecha_cobro: dataStore.tipoVenta === 'CREDITO' ? document.getElementById('fecha-pago').value : null,
                     timestamp: Date.now(),
-                    userId: auth.currentUser.uid
+                    creadoPor: auth.currentUser.uid
                 };
 
-                await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'ventas'), venta);
-                alert("Venta registrada.");
+                await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'ventas'), ventaData);
+                
+                // Limpiar campos
                 document.getElementById('inp-cliente-nom').value = "";
-            } catch (e) {
-                alert("Error al guardar venta: " + e.message);
+                alert("Venta procesada con éxito.");
+            } catch (err) {
+                console.error(err);
+                alert("Error al guardar la venta.");
             } finally {
                 btn.disabled = false;
                 btn.innerHTML = "Procesar Despacho";
@@ -297,7 +309,7 @@
         function renderVentas(ventas) {
             const list = document.getElementById('listaVentas');
             if (ventas.length === 0) {
-                list.innerHTML = '<div class="text-center py-10 opacity-20 text-xs italic">Sin ventas hoy</div>';
+                list.innerHTML = '<div class="text-center py-10 opacity-20 text-xs italic">Sin ventas registradas</div>';
                 return;
             }
             list.innerHTML = ventas.map(v => `
@@ -306,7 +318,8 @@
                         <div>
                             <span class="text-[7px] ${v.tipo === 'CREDITO' ? 'text-red-500' : 'text-gold'} font-black">${v.tipo}</span>
                             <div class="text-xs font-black uppercase text-white">${v.cliente}</div>
-                            <div class="text-[8px] text-gray-500 font-bold">${v.productoNombre}</div>
+                            <div class="text-[8px] text-gray-500 font-bold">${v.productoNombre} (${v.variante})</div>
+                            <div class="text-[6px] text-gray-600 mt-1">POR: ${v.vendedor}</div>
                         </div>
                         <div class="text-right">
                             <div class="text-sm font-black text-green-400">$${(v.total || 0).toFixed(2)}</div>
@@ -317,8 +330,8 @@
             `).join('');
         }
 
-        // Iniciar App
-        window.onload = init;
+        // Iniciar
+        initApp();
     </script>
 </body>
 </html>
