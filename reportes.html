@@ -1,4 +1,4 @@
-```html
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -9,14 +9,13 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root { --gold: #D4AF37; --bg: #050505; }
-        body { background: var(--bg); color: white; font-family: 'Inter', sans-serif; margin: 0; }
+        body { background: var(--bg); color: white; font-family: 'Inter', sans-serif; margin: 0; overflow-x: hidden; }
         .gold-text { color: var(--gold); }
         .card-stats { background: #0F0F0F; border: 1px solid #1A1A1A; border-radius: 24px; padding: 20px; }
         .premium-gradient { background: linear-gradient(135deg, #1a1a1a 0%, #050505 100%); border: 1px solid rgba(212, 175, 55, 0.1); }
         .bar-ref { height: 6px; border-radius: 10px; background: #222; overflow: hidden; }
         .bar-fill { height: 100%; background: var(--gold); border-radius: 10px; transition: width 1s ease-in-out; }
         
-        /* Estilos de la IA Flotante */
         #ia-launcher { position: fixed; bottom: 20px; right: 20px; width: 60px; height: 60px; background: var(--gold); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; color: black; box-shadow: 0 10px 30px rgba(212, 175, 55, 0.4); z-index: 1000; cursor: pointer; border: 4px solid #050505; }
         #ia-modal { position: fixed; inset: 0; background: #000; z-index: 1001; display: none; flex-direction: column; }
         .chat-container { flex: 1; overflow-y: auto; padding: 20px; }
@@ -31,16 +30,14 @@
 </head>
 <body class="p-4 pb-24 max-w-md mx-auto">
 
-    <!-- BOTÓN FLOTANTE IA -->
     <div id="ia-launcher" onclick="abrirIA()">
         <i class="fas fa-robot"></i>
     </div>
 
-    <!-- MODAL CHAT IA -->
     <div id="ia-modal">
         <header class="p-4 border-b border-white/10 flex items-center justify-between bg-black">
             <div class="flex items-center gap-3">
-                <div class="w-8 h-8 rounded-full bg-gold flex items-center justify-center text-black"><i class="fas fa-robot"></i></div>
+                <div class="w-8 h-8 rounded-full bg-[#D4AF37] flex items-center justify-center text-black"><i class="fas fa-robot"></i></div>
                 <div>
                     <h2 class="text-[10px] font-black uppercase text-white tracking-widest">Asistente Jaddy</h2>
                     <p class="text-[7px] font-bold text-green-500 uppercase">En línea ahora</p>
@@ -54,12 +51,12 @@
         <div id="typingIndicator" class="typing"><i class="fas fa-spinner fa-spin mr-1"></i> IA pensando...</div>
         <div class="input-area">
             <input type="text" id="userInput" class="chat-input" placeholder="Pregúntame algo...">
-            <button id="sendBtn" class="w-10 h-10 bg-gold rounded-full text-black flex items-center justify-center"><i class="fas fa-paper-plane"></i></button>
+            <button id="sendBtn" class="w-10 h-10 bg-[#D4AF37] rounded-full text-black flex items-center justify-center"><i class="fas fa-paper-plane"></i></button>
         </div>
     </div>
 
     <header class="flex justify-between items-center mb-8">
-        <button onclick="window.location.href='index.html'" class="text-[10px] font-black border border-gold/30 px-4 py-2 rounded-full text-gold uppercase">← Inicio</button>
+        <button onclick="window.history.back()" class="text-[10px] font-black border border-gold/30 px-4 py-2 rounded-full text-[#D4AF37] uppercase">← Regresar</button>
         <h1 class="text-[10px] font-black text-white uppercase tracking-[4px]">Financial Intelligence</h1>
     </header>
 
@@ -69,18 +66,18 @@
         <div class="card-stats premium-gradient border-green-500/20">
             <div class="flex justify-between items-end mb-4">
                 <div>
-                    <p class="text-[7px] font-black text-gray-500 uppercase mb-1">Inversión en Inventario (Costo)</p>
+                    <p class="text-[7px] font-black text-gray-400 uppercase mb-1">Inversión en Inventario Vendido</p>
                     <h3 id="inversion-total" class="text-2xl font-black text-white">$0.00</h3>
                 </div>
                 <div class="text-right">
-                    <p class="text-[7px] font-black text-green-500 uppercase mb-1">Ganancia Proyectada</p>
+                    <p class="text-[7px] font-black text-green-500 uppercase mb-1">Ganancia Neta Bruta</p>
                     <h3 id="ganancia-neta" class="text-xl font-black text-green-400">+$0.00</h3>
                 </div>
             </div>
             
             <div class="mb-2">
                 <div class="flex justify-between text-[8px] font-bold uppercase mb-1 text-gray-400">
-                    <span>Retorno de Inversión</span>
+                    <span>Retorno Estimado</span>
                     <span id="porcentaje-retorno">0%</span>
                 </div>
                 <div class="bar-ref"><div id="barra-retorno" class="bar-fill bg-green-500" style="width: 0%"></div></div>
@@ -93,17 +90,17 @@
     <!-- RESUMEN DE FLUJO -->
     <section class="grid grid-cols-1 gap-4 mb-8">
         <div class="card-stats">
-            <p class="text-[8px] font-black text-gray-500 uppercase tracking-[2px] mb-1">Ventas Brutas Totales</p>
-            <h2 id="total-ventas" class="text-4xl font-black text-white">$0.00</h2>
+            <p class="text-[8px] font-black text-gray-500 uppercase tracking-[2px] mb-1 text-center">Ventas Brutas Totales</p>
+            <h2 id="total-ventas" class="text-4xl font-black text-white text-center">$0.00</h2>
         </div>
 
         <div class="grid grid-cols-2 gap-4">
             <div class="card-stats">
-                <p class="text-[7px] font-black text-green-500 uppercase mb-2">Contado</p>
+                <p class="text-[7px] font-black text-green-500 uppercase mb-2">Ingreso Contado</p>
                 <h3 id="total-contado" class="text-xl font-black text-white">$0.00</h3>
             </div>
             <div class="card-stats">
-                <p class="text-[7px] font-black text-blue-500 uppercase mb-2">A Crédito</p>
+                <p class="text-[7px] font-black text-blue-500 uppercase mb-2">CxC (Crédito)</p>
                 <h3 id="total-credito" class="text-xl font-black text-white">$0.00</h3>
             </div>
         </div>
@@ -111,13 +108,15 @@
 
     <!-- ANALÍTICA DE PRODUCTOS -->
     <section class="mb-8">
-        <h2 class="text-[9px] font-black text-gold uppercase tracking-[3px] mb-4 ml-2">Rendimiento de Productos</h2>
-        <div id="lista-productos-analisis" class="space-y-3"></div>
+        <h2 class="text-[9px] font-black text-[#D4AF37] uppercase tracking-[3px] mb-4 ml-2">Rendimiento por Producto</h2>
+        <div id="lista-productos-analisis" class="space-y-3">
+            <div class="text-center py-10 text-gray-600 text-[10px] uppercase font-bold tracking-widest">Calculando logística...</div>
+        </div>
     </section>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, collection, onSnapshot, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCrjjeOoXPOtJDXDfrHLOA4Ny0QW2zfVWk",
@@ -130,87 +129,140 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
-        const apiKeyIA = ""; // Clave inyectada
+        const apiKeyIA = ""; // Se requiere para el asistente
 
         let datosVentas = [];
         let datosProductos = [];
 
-        // --- LÓGICA DE ANALÍTICA (ORIGINAL) ---
         function iniciar() {
-            onSnapshot(collection(db, "ventas_realizadas"), (snap) => {
-                datosVentas = snap.docs.map(d => d.data());
-                onSnapshot(collection(db, "productos"), (snapP) => {
-                    datosProductos = snapP.docs.map(d => d.data());
+            // Escuchar cambios en productos para tener los costos actualizados
+            onSnapshot(collection(db, "productos"), (snapP) => {
+                datosProductos = snapP.docs.map(d => ({ id: d.id, ...d.data() }));
+                
+                // Una vez tenemos productos, escuchamos las ventas
+                onSnapshot(collection(db, "ventas_realizadas"), (snapV) => {
+                    datosVentas = snapV.docs.map(d => ({ id: d.id, ...d.data() }));
+                    console.log("Ventas cargadas:", datosVentas.length);
                     calcularAnalitica();
                 });
             });
         }
 
+        function parseNum(val) {
+            if (!val) return 0;
+            if (typeof val === 'number') return val;
+            return parseFloat(val.toString().replace(/[$,]/g, '')) || 0;
+        }
+
         function calcularAnalitica() {
-            let totalVentas = 0, totalContado = 0, totalCredito = 0, inversionVentas = 0;
-            const statsProd = {}, statsCli = {};
+            let totalVentas = 0;
+            let totalContado = 0;
+            let totalCredito = 0;
+            let inversionTotalVendida = 0;
+            const statsProd = {};
 
             datosVentas.forEach(v => {
-                const monto = parseFloat(v.precio || 0);
+                // El campo 'precio' o 'total' según como lo guardes
+                const monto = parseNum(v.precio || v.total || 0);
+                const cantidad = parseInt(v.cantidad || 1);
+                
                 totalVentas += monto;
-                if(v.tipo === 'CREDITO') totalCredito += monto; else totalContado += monto;
 
+                // Tipo de venta
+                const tipo = (v.tipo || v.metodo || '').toUpperCase();
+                if (tipo.includes('CREDITO')) {
+                    totalCredito += monto;
+                } else {
+                    totalContado += monto;
+                }
+
+                // Buscar costo del producto para logística
                 const prodOriginal = datosProductos.find(p => p.nombre === v.producto);
-                const costoU = prodOriginal ? parseFloat(prodOriginal.costo || 0) : 0;
-                const costoT = costoU * (v.cantidad || 1);
-                inversionVentas += costoT;
+                const costoUnidad = prodOriginal ? parseNum(prodOriginal.costo) : 0;
+                const costoTotalVenta = costoUnidad * cantidad;
+                
+                inversionTotalVendida += costoTotalVenta;
 
-                if(!statsProd[v.producto]) statsProd[v.producto] = { monto: 0, cant: 0, costo: 0 };
+                // Agrupar por producto
+                if (!statsProd[v.producto]) {
+                    statsProd[v.producto] = { monto: 0, cant: 0, costo: 0 };
+                }
                 statsProd[v.producto].monto += monto;
-                statsProd[v.producto].cant += (v.cantidad || 1);
-                statsProd[v.producto].costo += costoT;
+                statsProd[v.producto].cant += cantidad;
+                statsProd[v.producto].costo += costoTotalVenta;
             });
 
-            const ganancia = totalVentas - inversionVentas;
-            const roi = inversionVentas > 0 ? ((totalVentas / inversionVentas) * 100).toFixed(0) : 0;
-
-            document.getElementById('total-ventas').innerText = `$${totalVentas.toFixed(2)}`;
-            document.getElementById('total-contado').innerText = `$${totalContado.toFixed(2)}`;
-            document.getElementById('total-credito').innerText = `$${totalCredito.toFixed(2)}`;
-            document.getElementById('inversion-total').innerText = `$${inversionVentas.toFixed(2)}`;
-            document.getElementById('ganancia-neta').innerText = `+$${ganancia.toFixed(2)}`;
+            // Actualizar UI
+            document.getElementById('total-ventas').innerText = `$${totalVentas.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
+            document.getElementById('total-contado').innerText = `$${totalContado.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
+            document.getElementById('total-credito').innerText = `$${totalCredito.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
+            document.getElementById('inversion-total').innerText = `$${inversionTotalVendida.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
+            
+            const gananciaNeta = totalVentas - inversionTotalVendida;
+            document.getElementById('ganancia-neta').innerText = `${gananciaNeta >= 0 ? '+' : ''}$${gananciaNeta.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
+            
+            const roi = inversionTotalVendida > 0 ? ((totalVentas / inversionTotalVendida) * 100).toFixed(0) : 0;
             document.getElementById('porcentaje-retorno').innerText = `${roi}%`;
             document.getElementById('barra-retorno').style.width = `${Math.min(roi, 100)}%`;
 
             const meta = document.getElementById('mensaje-meta');
-            if (totalVentas < inversionVentas) {
-                meta.innerHTML = `⚠️ Faltan <span class="text-white font-bold">$${(inversionVentas - totalVentas).toFixed(2)}</span> para recuperar la inversión inicial.`;
+            if (totalVentas < inversionTotalVendida) {
+                meta.innerHTML = `⚠️ Faltan <span class="text-white font-bold">$${(inversionTotalVendida - totalVentas).toFixed(2)}</span> para cubrir el costo de lo vendido.`;
+                meta.classList.replace('text-green-400', 'text-orange-400');
             } else {
-                meta.innerHTML = `🚀 ¡Negocio Rentable! Ya superaste el punto de equilibrio.`;
+                meta.innerHTML = `🚀 Logística Positiva: El margen de ganancia es de <span class="text-white font-bold">$${gananciaNeta.toFixed(2)}</span>`;
+                meta.classList.add('text-green-400');
             }
 
             renderizarProductos(statsProd, totalVentas);
         }
 
-        function renderizarProductos(data, totalG) {
+        function renderizarProductos(data, totalGlobal) {
             const container = document.getElementById('lista-productos-analisis');
-            container.innerHTML = Object.entries(data).sort((a,b) => b[1].monto - a[1].monto).map(([nombre, d]) => `
-                <div class="card-stats py-3">
+            const entries = Object.entries(data).sort((a, b) => b[1].monto - a[1].monto);
+
+            if (entries.length === 0) {
+                container.innerHTML = `<div class="text-center py-10 text-gray-600 text-[10px] uppercase font-bold tracking-widest">No hay ventas registradas aún</div>`;
+                return;
+            }
+
+            container.innerHTML = entries.map(([nombre, d]) => {
+                const porcentajeDelTotal = totalGlobal > 0 ? ((d.monto / totalGlobal) * 100).toFixed(0) : 0;
+                const margen = d.monto - d.costo;
+                
+                return `
+                <div class="card-stats py-4">
                     <div class="flex justify-between items-center mb-1">
-                        <span class="text-[10px] font-black uppercase text-white">${nombre}</span>
-                        <span class="text-xs font-black text-gold">$${d.monto.toFixed(2)}</span>
+                        <span class="text-[11px] font-black uppercase text-white">${nombre}</span>
+                        <span class="text-sm font-black text-[#D4AF37]">$${d.monto.toFixed(2)}</span>
                     </div>
-                    <div class="flex justify-between mb-2">
-                        <span class="text-[7px] text-gray-500 font-bold uppercase">${d.cant} UNIDADES</span>
-                        <span class="text-[7px] text-green-500 font-bold uppercase">MARGEN: +$${(d.monto - d.costo).toFixed(2)}</span>
+                    <div class="flex justify-between mb-3">
+                        <span class="text-[8px] text-gray-500 font-bold uppercase">${d.cant} UNID. VENDIDAS</span>
+                        <span class="text-[8px] ${margen >= 0 ? 'text-green-500' : 'text-red-500'} font-bold uppercase">GANANCIA: $${margen.toFixed(2)}</span>
                     </div>
-                    <div class="bar-ref"><div class="bar-fill" style="width: ${((d.monto / totalG) * 100).toFixed(0)}%"></div></div>
-                </div>`).join('');
+                    <div class="bar-ref">
+                        <div class="bar-fill" style="width: ${porcentajeDelTotal}%"></div>
+                    </div>
+                    <div class="text-right mt-1">
+                        <span class="text-[7px] text-gray-600 font-bold uppercase">${porcentajeDelTotal}% del total de ventas</span>
+                    </div>
+                </div>`;
+            }).join('');
         }
 
-        // --- LÓGICA DE IA INTEGRADA ---
+        // LÓGICA IA
         window.abrirIA = () => { document.getElementById('ia-modal').style.display = 'flex'; };
         window.cerrarIA = () => { document.getElementById('ia-modal').style.display = 'none'; };
 
         async function llamarIA(pregunta) {
             document.getElementById('typingIndicator').style.display = 'block';
-            const context = JSON.stringify({ ventas: datosVentas, productos: datosProductos });
-            const prompt = `Eres el asistente de Jaddy INC. Datos actuales: ${context}. Responde a Freddy sobre su negocio de perfumes.`;
+            const context = JSON.stringify({ 
+                total_ventas: document.getElementById('total-ventas').innerText,
+                ganancia: document.getElementById('ganancia-neta').innerText,
+                productos_top: Object.keys(datosVentas).length
+            });
+            
+            const prompt = `Eres el asistente experto de Jaddy INC. Analiza estos datos: ${context}. Responde a Freddy sobre su negocio de perfumes de forma motivadora y financiera.`;
 
             try {
                 const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKeyIA}`, {
@@ -221,7 +273,10 @@
                 const data = await res.json();
                 document.getElementById('typingIndicator').style.display = 'none';
                 return data.candidates[0].content.parts[0].text;
-            } catch (e) { return "Error al conectar con la IA."; }
+            } catch (e) { 
+                document.getElementById('typingIndicator').style.display = 'none';
+                return "Freddy, ahora mismo tengo un problema de conexión, pero tus números se ven sólidos."; 
+            }
         }
 
         const sendBtn = document.getElementById('sendBtn');
@@ -249,5 +304,4 @@
 </body>
 </html>
 
-```
 
