@@ -1,187 +1,154 @@
+
 ```html
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Cartera de Deudores - Jaddy INC</title>
+    <title>Cobranza | Jaddy INC</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;700;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        :root { --oro: #D4AF37; --negro-puro: #050505; --peligro: #ff4d4d; }
-        body { 
-            background-color: var(--negro-puro); 
-            color: #E0E0E0; 
-            font-family: 'Inter', sans-serif; 
-            margin: 0; 
-            min-height: 100vh;
-        }
+        :root { --gold: #D4AF37; --bg: #050505; }
+        body { background: var(--bg); color: white; font-family: 'Inter', sans-serif; margin: 0; }
         .texto-dorado { background: linear-gradient(to bottom, #CF9E1D 22%, #F1D37E 45%, #CF9E1D 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .gold-box { background: linear-gradient(135deg, #D4AF37 0%, #f9e29c 50%, #996515 100%); }
-        
-        .card-deuda {
-            background: #0F0F0F;
-            border-left: 4px solid var(--oro);
-            border-radius: 16px;
-            padding: 16px;
-            margin-bottom: 12px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-        }
-        .urgente { border-left-color: var(--peligro); }
-        .badge-oro { background: rgba(212, 175, 55, 0.1); color: var(--oro); border: 1px solid rgba(212, 175, 55, 0.2); }
-
-        .search-bar {
-            background: #151515;
-            border: 1px solid #222;
-            border-radius: 12px;
-            padding: 12px 16px;
-            color: white;
-            width: 100%;
-            outline: none;
-        }
-        
-        .btn-accion {
-            width: 36px;
-            height: 36px;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: #1a1a1a;
-            color: white;
-        }
+        .card-cobro { background: #0A0A0A; border: 1px solid #1A1A1A; border-left: 4px solid var(--gold); border-radius: 20px; padding: 18px; margin-bottom: 12px; }
+        .badge-credito { background: rgba(212, 175, 55, 0.1); color: var(--gold); border: 1px solid rgba(212, 175, 55, 0.3); font-size: 8px; padding: 2px 8px; border-radius: 6px; font-weight: 900; }
+        .btn-cobrar { background: white; color: black; font-weight: 900; border-radius: 12px; padding: 8px 16px; font-size: 10px; text-transform: uppercase; }
     </style>
 </head>
-<body class="flex flex-col">
+<body class="p-4 pb-24 max-w-md mx-auto">
 
-    <!-- Header -->
-    <header class="sticky top-0 h-16 border-b border-gray-900 bg-black flex items-center justify-between px-6 z-50">
-        <div class="flex items-center gap-3">
-            <a href="index.html" class="text-oro"><i class="fas fa-chevron-left"></i></a>
-            <h1 class="texto-dorado uppercase tracking-widest text-xs font-black">Cartera Master</h1>
-        </div>
-        <div class="flex items-center gap-2">
-            <div id="punto-estado" class="w-2 h-2 bg-green-600 rounded-full"></div>
-            <span id="texto-estado" class="text-[8px] text-gray-500 font-bold uppercase tracking-widest">EN LÍNEA</span>
+    <header class="flex justify-between items-center mb-6">
+        <button onclick="window.history.back()" class="text-[10px] font-black border border-gold/30 px-4 py-2 rounded-full text-gold uppercase">← Volver</button>
+        <div class="flex flex-col items-end">
+            <span id="status-text" class="text-[8px] text-gray-500 font-black tracking-widest uppercase">Cargando...</span>
+            <div id="statusDot" class="w-2 h-2 rounded-full bg-red-500"></div>
         </div>
     </header>
 
-    <main class="p-6">
-        <!-- Resumen Dinámico -->
-        <div class="flex gap-4 mb-8">
-            <div class="flex-1 bg-black border border-gray-900 p-4 rounded-2xl">
-                <p class="text-[8px] text-gray-500 font-black uppercase mb-1">Total Créditos</p>
-                <p id="total-cartera" class="text-xl font-black texto-dorado">$0.00</p>
-            </div>
-            <div class="flex-1 bg-black border border-gray-900 p-4 rounded-2xl">
-                <p class="text-[8px] text-gray-500 font-black uppercase mb-1">Clientes</p>
-                <p id="total-clientes" class="text-xl font-black text-white">0</p>
-            </div>
+    <div class="mb-8">
+        <h1 class="texto-dorado text-2xl font-black uppercase tracking-tighter">Gestión de Cobros</h1>
+        <p class="text-gray-500 text-[10px] font-bold uppercase tracking-[3px]">Cartera de Créditos</p>
+    </div>
+
+    <div class="grid grid-cols-2 gap-3 mb-8">
+        <div class="bg-[#0F0F0F] p-4 rounded-2xl border border-gray-900">
+            <p class="text-[7px] text-gray-500 uppercase font-black mb-1">Total por Cobrar</p>
+            <p id="total-monto" class="text-lg font-black text-white">$0</p>
+        </div>
+        <div class="bg-[#0F0F0F] p-4 rounded-2xl border border-gray-900">
+            <p class="text-[7px] text-gray-500 uppercase font-black mb-1">Pendientes</p>
+            <p id="total-conteo" class="text-lg font-black text-gold">0</p>
+        </div>
+    </div>
+
+    <div class="relative mb-6">
+        <input type="text" id="busqueda" placeholder="BUSCAR CLIENTE..." class="w-full bg-[#0F0F0F] border border-gray-800 rounded-xl py-4 px-5 text-xs font-bold text-white uppercase outline-none focus:border-gold/50">
+    </div>
+
+    <div id="listaCobranza" class="space-y-4">
         </div>
 
-        <!-- Buscador -->
-        <div class="relative mb-6">
-            <i class="fas fa-search absolute right-4 top-4 text-gray-600"></i>
-            <input type="text" id="buscador" class="search-bar" placeholder="Buscar cliente..." oninput="renderizarDeudores()">
-        </div>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, collection, onSnapshot, query, where, doc, updateDoc, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-        <!-- Lista de Deudores Dinámica -->
-        <div class="space-y-4" id="contenedor-deudores">
-            <!-- Se llena con JS -->
-        </div>
-    </main>
-
-    <script>
-        // Función para cargar ventas desde localStorage (o tu sistema de persistencia)
-        function obtenerVentasCredito() {
-            // Intentamos obtener las ventas guardadas. Ajusta 'ventas_jaddy' al nombre que uses en tu repo.
-            const ventasRaw = localStorage.getItem('ventas_jaddy') || '[]';
-            const ventas = JSON.parse(ventasRaw);
-            
-            // Filtramos solo las que son a crédito
-            return ventas.filter(v => v.metodoPago === 'Crédito' || v.tipo === 'Crédito');
-        }
-
-        function renderizarDeudores() {
-            const contenedor = document.getElementById('contenedor-deudores');
-            const filtro = document.getElementById('buscador').value.toLowerCase();
-            const deudores = obtenerVentasCredito();
-            
-            let html = '';
-            let totalAcumulado = 0;
-
-            // Filtrar por nombre si hay búsqueda
-            const listaFiltrada = deudores.filter(d => 
-                (d.cliente || 'Consumidor Final').toLowerCase().includes(filtro)
-            );
-
-            if (listaFiltrada.length === 0) {
-                contenedor.innerHTML = `<p class="text-center text-gray-600 text-xs mt-10 uppercase tracking-widest">No hay créditos registrados</p>`;
-                document.getElementById('total-cartera').innerText = `$0.00`;
-                document.getElementById('total-clientes').innerText = `0`;
-                return;
-            }
-
-            listaFiltrada.forEach(venta => {
-                const monto = parseFloat(venta.total || 0);
-                totalAcumulado += monto;
-                
-                html += `
-                    <div class="card-deuda">
-                        <div class="flex justify-between items-start mb-3">
-                            <div>
-                                <h3 class="font-black text-sm uppercase tracking-tighter">${venta.cliente || 'Cliente sin nombre'}</h3>
-                                <p class="text-[10px] text-gray-500">Fecha: ${venta.fecha || 'N/A'}</p>
-                            </div>
-                            <span class="badge-oro px-2 py-1 rounded text-[8px] font-black uppercase italic">Pendiente</span>
-                        </div>
-                        <div class="flex justify-between items-end">
-                            <div>
-                                <p class="text-[9px] text-gray-400 uppercase font-bold">Saldo a cobrar</p>
-                                <p class="text-lg font-black text-white">$${monto.toLocaleString('es-CO', {minimumFractionDigits: 2})}</p>
-                            </div>
-                            <div class="flex gap-2">
-                                <button onclick="notificarWhatsApp('${venta.cliente}')" class="btn-accion"><i class="fab fa-whatsapp"></i></button>
-                                <button class="btn-accion text-oro"><i class="fas fa-hand-holding-usd"></i></button>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            });
-
-            contenedor.innerHTML = html;
-            document.getElementById('total-cartera').innerText = `$${totalAcumulado.toLocaleString('es-CO', {minimumFractionDigits: 2})}`;
-            document.getElementById('total-clientes').innerText = listaFiltrada.length;
-        }
-
-        function notificarWhatsApp(nombre) {
-            // Ejemplo de acción
-            console.log("Notificando a " + nombre);
-        }
-
-        // Detección de conexión
-        function updateConnection() {
-            const punto = document.getElementById('punto-estado');
-            const texto = document.getElementById('texto-estado');
-            if (navigator.onLine) {
-                punto.className = "w-2 h-2 bg-green-600 rounded-full animate-pulse";
-                texto.innerText = "EN LÍNEA";
-            } else {
-                punto.className = "w-2 h-2 bg-orange-500 rounded-full";
-                texto.innerText = "MODO OFFLINE";
-            }
-        }
-
-        window.onload = () => {
-            renderizarDeudores();
-            updateConnection();
+        const firebaseConfig = {
+            apiKey: "AIzaSyCrjjeOoXPOtJDXDfrHLOA4Ny0QW2zfVWk",
+            authDomain: "apps-d45d6.firebaseapp.com",
+            projectId: "apps-d45d6",
+            storageBucket: "apps-d45d6.firebasestorage.app",
+            messagingSenderId: "502648373937",
+            appId: "1:502648373937:web:8c3beaa2a6c9289a4d9890"
         };
 
-        window.addEventListener('online', updateConnection);
-        window.addEventListener('offline', updateConnection);
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // Referencia a la colección que usas en ventas
+        const ventasRef = collection(db, "ventas_realizadas");
+
+        // Consulta: Solo ventas tipo "CREDITO" y que NO estén marcadas como pagadas
+        const q = query(
+            ventasRef, 
+            where("tipo", "==", "CREDITO"),
+            orderBy("timestamp", "desc")
+        );
+
+        onSnapshot(q, (snapshot) => {
+            const lista = document.getElementById('listaCobranza');
+            const dot = document.getElementById('statusDot');
+            const statusText = document.getElementById('status-text');
+            
+            dot.className = "w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_#00ff00]";
+            statusText.innerText = "SISTEMA ONLINE";
+
+            let html = '';
+            let totalDinero = 0;
+            let contador = 0;
+
+            snapshot.forEach((doc) => {
+                const v = doc.data();
+                // Si ya implementas pagos parciales, aquí filtrarías si el saldo es > 0
+                if(v.estado !== "PAGADO") { 
+                    totalDinero += v.total;
+                    contador++;
+
+                    html += `
+                        <div class="card-cobro">
+                            <div class="flex justify-between items-start mb-4">
+                                <div>
+                                    <span class="badge-credito uppercase italic">Venta a Crédito</span>
+                                    <h3 class="text-sm font-black uppercase mt-1">${v.cliente}</h3>
+                                    <p class="text-[9px] text-gray-500 font-bold">${v.fecha_legible} | ${v.vendedor}</p>
+                                </div>
+                                <div class="text-right">
+                                    <p class="text-xs font-black text-white">$${v.total.toLocaleString()}</p>
+                                    <p class="text-[7px] text-gold font-black uppercase">Cobro: ${v.fecha_pago || 'PEND'}</p>
+                                </div>
+                            </div>
+                            <div class="flex gap-2">
+                                <a href="https://wa.me/?text=Hola%20${v.cliente},%20te%20saludamos%20de%20Jaddy%20INC.%20Recordatorio%20de%20pago%20por%20$${v.total}" 
+                                   class="flex-1 bg-[#111] border border-gray-800 text-[9px] font-black uppercase py-3 rounded-xl flex items-center justify-center gap-2">
+                                    <i class="fab fa-whatsapp text-green-500"></i> Cobrar
+                                </a>
+                                <button onclick="marcarComoPagado('${doc.id}')" class="btn-cobrar flex-1">
+                                    Recibir Pago
+                                </button>
+                            </div>
+                            <div class="mt-3 pt-3 border-t border-white/5 text-[8px] text-gray-500 italic">
+                                Item: ${v.producto} (${v.variante}) x${v.cantidad}
+                            </div>
+                        </div>
+                    `;
+                }
+            });
+
+            lista.innerHTML = html || '<p class="text-center text-gray-600 text-[10px] font-black uppercase py-10">No hay cuentas pendientes</p>';
+            document.getElementById('total-monto').innerText = `$${totalDinero.toLocaleString()}`;
+            document.getElementById('total-conteo').innerText = contador;
+        });
+
+        // Función para marcar como pagado (Actualiza la misma venta en Firebase)
+        window.marcarComoPagado = async (id) => {
+            if(confirm("¿Confirmas que recibiste el pago completo?")) {
+                try {
+                    const ventaDoc = doc(db, "ventas_realizadas", id);
+                    await updateDoc(ventaDoc, {
+                        estado: "PAGADO",
+                        fecha_cobro_real: new Date().toLocaleDateString()
+                    });
+                    alert("¡Pago registrado con éxito!");
+                } catch (e) {
+                    alert("Error al procesar pago");
+                }
+            }
+        };
+
     </script>
 </body>
 </html>
+
 
 ```
