@@ -79,6 +79,7 @@
 
     <main class="flex-1 px-6 pt-8 content-spacer">
         
+        <!-- Pestaña Comercial -->
         <div id="tab-comercial" class="tab-content active">
             <div class="text-center mb-8">
                 <h2 class="text-white text-[9px] font-black tracking-[0.4em] uppercase opacity-40 mb-2 italic">Gestión Comercial</h2>
@@ -91,11 +92,17 @@
                     </div>
                     <span class="text-white font-black text-[11px] tracking-tighter uppercase">Ventas</span>
                 </a>
-                <a href="deudores.html" class="box-item border-oro/20">
-                    <div class="icon-circle bg-oro/10 text-oro">
-                        <i class="fas fa-hand-holding-dollar"></i>
+                <a href="deudores.html" class="box-item">
+                    <div class="icon-circle bg-white/5 border border-white/10 text-white">
+                        <i class="fas fa-hand-holding-dollar opacity-70"></i>
                     </div>
                     <span class="text-white font-black text-[11px] tracking-tighter uppercase">Cartera</span>
+                </a>
+                <a href="egresos.html" class="box-item border-oro/20">
+                    <div class="icon-circle bg-oro/10 text-oro">
+                        <i class="fas fa-file-invoice-dollar"></i>
+                    </div>
+                    <span class="texto-dorado font-black text-[11px] tracking-tighter uppercase">Finanzas</span>
                 </a>
                 <a href="clientes.html" class="box-item">
                     <div class="icon-circle bg-white/5 border border-white/10 text-white">
@@ -171,13 +178,10 @@
         }
 
         function toggleChat() {
-            // Lógica de apertura de chat omitida para brevedad, se mantiene funcionalidad original
             console.log("Chat activado");
         }
 
         // --- SISTEMA MASTER OFFLINE (PWA) ---
-        
-        // 1. Detección Inteligente de Conexión
         function actualizarEstadoConexion() {
             const punto = document.getElementById('punto-estado');
             const texto = document.getElementById('texto-estado');
@@ -200,11 +204,10 @@
         window.addEventListener('offline', actualizarEstadoConexion);
         actualizarEstadoConexion();
 
-        // 2. Registro de Service Worker Dinámico
         if ('serviceWorker' in navigator) {
             const swCode = `
                 const CACHE_NAME = 'luxury-v1';
-                const OFFLINE_URLS = ['./', './index.html', './deudores.html', './ventas.html', './clientes.html'];
+                const OFFLINE_URLS = ['./', './index.html', './deudores.html', './ventas.html', './clientes.html', './egresos.html'];
 
                 self.addEventListener('install', (e) => {
                     e.waitUntil(caches.open(CACHE_NAME).then(c => c.addAll(OFFLINE_URLS)));
