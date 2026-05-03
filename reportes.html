@@ -1,4 +1,4 @@
-
+```html
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -13,8 +13,6 @@
         .gold-text { color: var(--gold); }
         .card-stats { background: #0F0F0F; border: 1px solid #1A1A1A; border-radius: 24px; padding: 20px; }
         .premium-gradient { background: linear-gradient(135deg, #1a1a1a 0%, #050505 100%); border: 1px solid rgba(212, 175, 55, 0.1); }
-        .bar-ref { height: 6px; border-radius: 10px; background: #222; overflow: hidden; }
-        .bar-fill { height: 100%; background: var(--gold); border-radius: 10px; transition: width 1s ease-in-out; }
         
         #ia-launcher { position: fixed; bottom: 20px; right: 20px; width: 60px; height: 60px; background: var(--gold); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; color: black; box-shadow: 0 10px 30px rgba(212, 175, 55, 0.4); z-index: 1000; cursor: pointer; border: 4px solid #050505; }
         #ia-modal { position: fixed; inset: 0; background: #000; z-index: 1001; display: none; flex-direction: column; }
@@ -24,8 +22,12 @@
         .msg-user { background: var(--gold); color: black; margin-left: auto; border-bottom-right-radius: 4px; font-weight: 600; }
         .input-area { background: #111; padding: 15px; border-top: 1px solid #222; display: flex; gap: 10px; align-items: center; }
         .chat-input { background: #222; border: 1px solid #333; border-radius: 25px; padding: 12px 20px; color: white; flex: 1; outline: none; }
-        .typing { font-size: 9px; color: var(--gold); margin: 0 20px 10px; display: none; font-weight: 900; text-transform: uppercase; }
-        ::-webkit-scrollbar { width: 0px; }
+        
+        .filter-btn { background: #111; border: 1px solid #222; color: #666; padding: 8px 4px; border-radius: 10px; font-size: 7px; font-weight: 900; text-transform: uppercase; transition: 0.3s; letter-spacing: 0.5px; }
+        .filter-btn.active { background: var(--gold); border-color: var(--gold); color: black; box-shadow: 0 4px 15px rgba(212, 175, 55, 0.2); }
+
+        .date-input-custom { background: #111; border: 1px solid #222; color: white; font-size: 10px; padding: 5px; border-radius: 8px; outline: none; width: 100%; }
+        .date-input-custom::-webkit-calendar-picker-indicator { filter: invert(1); cursor: pointer; }
     </style>
 </head>
 <body class="p-4 pb-24 max-w-md mx-auto">
@@ -40,83 +42,87 @@
                 <div class="w-8 h-8 rounded-full bg-[#D4AF37] flex items-center justify-center text-black"><i class="fas fa-robot"></i></div>
                 <div>
                     <h2 class="text-[10px] font-black uppercase text-white tracking-widest">Asistente Jaddy</h2>
-                    <p class="text-[7px] font-bold text-green-500 uppercase">En línea ahora</p>
+                    <p class="text-[7px] font-bold text-orange-500 uppercase">Análisis en Vivo</p>
                 </div>
             </div>
             <button onclick="cerrarIA()" class="text-gray-500 text-xl"><i class="fas fa-times"></i></button>
         </header>
         <div id="chatBox" class="chat-container">
-            <div class="msg msg-ia">Hola Freddy. He analizado tus números de hoy. ¿Quieres que te diga cuánto nos falta para el punto de equilibrio o qué cliente tiene la mayor deuda?</div>
+            <div class="msg msg-ia">Hola Freddy. He corregido el error de los números saltarines. Ahora la analítica es estable y suma correctamente los abonos de préstamos como parte de tus egresos.</div>
         </div>
-        <div id="typingIndicator" class="typing"><i class="fas fa-spinner fa-spin mr-1"></i> IA pensando...</div>
         <div class="input-area">
-            <input type="text" id="userInput" class="chat-input" placeholder="Pregúntame algo...">
-            <button id="sendBtn" class="w-10 h-10 bg-[#D4AF37] rounded-full text-black flex items-center justify-center"><i class="fas fa-paper-plane"></i></button>
+            <input type="text" class="chat-input" id="chatInput" placeholder="Pregúntame algo..." onkeypress="if(event.key === 'Enter') enviarMsgIA()">
+            <button onclick="enviarMsgIA()" class="w-10 h-10 bg-gold rounded-full text-black flex items-center justify-center"><i class="fas fa-paper-plane"></i></button>
         </div>
     </div>
 
-    <header class="flex justify-between items-center mb-8">
+    <header class="flex justify-between items-center mb-6">
         <button onclick="window.history.back()" class="text-[10px] font-black border border-gold/30 px-4 py-2 rounded-full text-[#D4AF37] uppercase">← Regresar</button>
         <h1 class="text-[10px] font-black text-white uppercase tracking-[4px]">Financial Intelligence</h1>
     </header>
 
-    <!-- SECCIÓN DE RENTABILIDAD -->
+    <div class="bg-[#0A0A0A] border border-white/5 p-3 rounded-2xl mb-4">
+        <div class="flex items-center justify-between mb-2">
+            <p class="text-[7px] font-black text-gold/60 uppercase tracking-widest"><i class="fas fa-calendar-alt mr-1"></i> Rango Personalizado</p>
+            <button onclick="limpiarCalendario()" class="text-[7px] font-black text-gray-500 uppercase">Limpiar</button>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+            <div>
+                <label class="text-[6px] font-black text-gray-500 uppercase mb-1 block">Desde</label>
+                <input type="date" id="fecha-inicio" onchange="aplicarCalendario()" class="date-input-custom">
+            </div>
+            <div>
+                <label class="text-[6px] font-black text-gray-500 uppercase mb-1 block">Hasta</label>
+                <input type="date" id="fecha-fin" onchange="aplicarCalendario()" class="date-input-custom">
+            </div>
+        </div>
+    </div>
+
+    <div class="flex justify-between gap-1 mb-6">
+        <button onclick="cambiarFiltro('hoy')" id="btn-hoy" class="filter-btn active flex-1">Hoy</button>
+        <button onclick="cambiarFiltro('semana')" id="btn-semana" class="filter-btn flex-1">Semana</button>
+        <button onclick="cambiarFiltro('mes')" id="btn-mes" class="filter-btn flex-1">Mes</button>
+        <button onclick="cambiarFiltro('anio')" id="btn-anio" class="filter-btn flex-1">Año</button>
+        <button onclick="cambiarFiltro('todo')" id="btn-todo" class="filter-btn flex-1 border-gold/40">Todo</button>
+    </div>
+
     <section class="mb-8">
-        <h2 class="text-[9px] font-black text-green-400 uppercase tracking-[3px] mb-4 ml-2 text-center">Salud del Negocio (Rentabilidad)</h2>
+        <h2 class="text-[9px] font-black text-green-400 uppercase tracking-[3px] mb-4 ml-2 text-center">Salud del Negocio (<span id="txt-periodo">Hoy</span>)</h2>
         <div class="card-stats premium-gradient border-green-500/20">
             <div class="flex justify-between items-end mb-4">
                 <div>
-                    <p class="text-[7px] font-black text-gray-400 uppercase mb-1">Inversión en Inventario Vendido</p>
+                    <p class="text-[7px] font-black text-gray-400 uppercase mb-1">Inversión en Inventario (Vendido)</p>
                     <h3 id="inversion-total" class="text-2xl font-black text-white">$0.00</h3>
                 </div>
                 <div class="text-right">
-                    <p class="text-[7px] font-black text-green-500 uppercase mb-1">Ganancia Neta Bruta</p>
+                    <p class="text-[7px] font-black text-green-500 uppercase mb-1">Utilidad Final Real</p>
                     <h3 id="ganancia-neta" class="text-xl font-black text-green-400">+$0.00</h3>
                 </div>
             </div>
-            
-            <div class="mb-2">
-                <div class="flex justify-between text-[8px] font-bold uppercase mb-1 text-gray-400">
-                    <span>Retorno Estimado</span>
-                    <span id="porcentaje-retorno">0%</span>
-                </div>
-                <div class="bar-ref"><div id="barra-retorno" class="bar-fill bg-green-500" style="width: 0%"></div></div>
-            </div>
-            
             <p id="mensaje-meta" class="text-[9px] text-center italic text-gray-400 mt-4 px-2"></p>
         </div>
     </section>
 
-    <!-- RESUMEN DE FLUJO -->
     <section class="grid grid-cols-1 gap-4 mb-8">
         <div class="card-stats">
             <p class="text-[8px] font-black text-gray-500 uppercase tracking-[2px] mb-1 text-center">Ventas Brutas Totales</p>
             <h2 id="total-ventas" class="text-4xl font-black text-white text-center">$0.00</h2>
         </div>
-
         <div class="grid grid-cols-2 gap-4">
-            <div class="card-stats">
-                <p class="text-[7px] font-black text-green-500 uppercase mb-2">Ingreso Contado</p>
-                <h3 id="total-contado" class="text-xl font-black text-white">$0.00</h3>
+            <div class="card-stats border-red-900/30">
+                <p class="text-[7px] font-black text-red-500 uppercase mb-2">Total Gastos + Abonos</p>
+                <h3 id="total-egresos" class="text-xl font-black text-white">$0.00</h3>
             </div>
-            <div class="card-stats">
+            <div class="card-stats border-blue-900/30">
                 <p class="text-[7px] font-black text-blue-500 uppercase mb-2">CxC (Crédito)</p>
                 <h3 id="total-credito" class="text-xl font-black text-white">$0.00</h3>
             </div>
         </div>
     </section>
 
-    <!-- ANALÍTICA DE PRODUCTOS -->
-    <section class="mb-8">
-        <h2 class="text-[9px] font-black text-[#D4AF37] uppercase tracking-[3px] mb-4 ml-2">Rendimiento por Producto</h2>
-        <div id="lista-productos-analisis" class="space-y-3">
-            <div class="text-center py-10 text-gray-600 text-[10px] uppercase font-bold tracking-widest">Calculando logística...</div>
-        </div>
-    </section>
-
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCrjjeOoXPOtJDXDfrHLOA4Ny0QW2zfVWk",
@@ -129,179 +135,185 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
-        const apiKeyIA = ""; // Se requiere para el asistente
+        const appId = 'jaddy-inc-finanzas';
+        
+        // Almacenes de datos estables
+        let store = {
+            ventas: [],
+            productos: [],
+            egresos: [],
+            prestamos: []
+        };
 
-        let datosVentas = [];
-        let datosProductos = [];
+        let filtroActual = 'hoy';
 
         function iniciar() {
-            // Escuchar cambios en productos para tener los costos actualizados
-            onSnapshot(collection(db, "productos"), (snapP) => {
-                datosProductos = snapP.docs.map(d => ({ id: d.id, ...d.data() }));
-                
-                // Una vez tenemos productos, escuchamos las ventas
-                onSnapshot(collection(db, "ventas_realizadas"), (snapV) => {
-                    datosVentas = snapV.docs.map(d => ({ id: d.id, ...d.data() }));
-                    console.log("Ventas cargadas:", datosVentas.length);
-                    calcularAnalitica();
-                });
+            // Escuchar cada colección y guardar con ID único para evitar duplicados/parpadeo
+            onSnapshot(collection(db, "productos"), snap => {
+                store.productos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+                renderizarConDebounce();
             });
+
+            onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'egresos'), snap => {
+                store.egresos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+                renderizarConDebounce();
+            });
+
+            onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'prestamos'), snap => {
+                store.prestamos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+                renderizarConDebounce();
+            });
+
+            onSnapshot(collection(db, "ventas_realizadas"), snap => {
+                store.ventas = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+                renderizarConDebounce();
+            });
+        }
+
+        // Debounce para evitar que los números "bailen" cuando hay ráfagas de cambios
+        let timeoutCalc;
+        function renderizarConDebounce() {
+            clearTimeout(timeoutCalc);
+            timeoutCalc = setTimeout(calcularTodo, 100);
         }
 
         function parseNum(val) {
             if (!val) return 0;
             if (typeof val === 'number') return val;
-            return parseFloat(val.toString().replace(/[$,]/g, '')) || 0;
+            let n = parseFloat(val.toString().replace(/[$,]/g, ''));
+            return isNaN(n) ? 0 : n;
         }
 
-        function calcularAnalitica() {
+        function esFechaEnPeriodo(fechaInput) {
+            if (filtroActual === 'todo') return true;
+            if (!fechaInput) return false;
+            
+            let fecha;
+            if (typeof fechaInput === 'number') fecha = new Date(fechaInput);
+            else if (typeof fechaInput === 'string' && fechaInput.includes('/')) {
+                const parts = fechaInput.split('/');
+                fecha = new Date(parts[2], parts[1]-1, parts[0]);
+            } else fecha = new Date(fechaInput);
+
+            if (isNaN(fecha.getTime())) return false;
+            const ahora = new Date();
+            
+            if (filtroActual === 'custom') {
+                const fInicio = new Date(document.getElementById('fecha-inicio').value + "T00:00:00");
+                const fFin = new Date(document.getElementById('fecha-fin').value + "T23:59:59");
+                return fecha >= fInicio && fecha <= fFin;
+            }
+
+            if (filtroActual === 'hoy') return fecha.toDateString() === ahora.toDateString();
+            if (filtroActual === 'semana') {
+                const hoy = new Date();
+                const diff = hoy.getDate() - hoy.getDay() + (hoy.getDay() === 0 ? -6 : 1);
+                const lunes = new Date(hoy.setDate(diff));
+                lunes.setHours(0,0,0,0);
+                return fecha >= lunes;
+            }
+            if (filtroActual === 'mes') return fecha.getMonth() === ahora.getMonth() && fecha.getFullYear() === ahora.getFullYear();
+            if (filtroActual === 'anio') return fecha.getFullYear() === ahora.getFullYear();
+            return true;
+        }
+
+        function calcularTodo() {
             let totalVentas = 0;
-            let totalContado = 0;
+            let totalGastos = 0;
+            let totalAbonos = 0;
             let totalCredito = 0;
-            let inversionTotalVendida = 0;
-            const statsProd = {};
+            let costoVendido = 0;
 
-            datosVentas.forEach(v => {
-                // El campo 'precio' o 'total' según como lo guardes
-                const monto = parseNum(v.precio || v.total || 0);
-                const cantidad = parseInt(v.cantidad || 1);
-                
-                totalVentas += monto;
-
-                // Tipo de venta
-                const tipo = (v.tipo || v.metodo || '').toUpperCase();
-                if (tipo.includes('CREDITO')) {
-                    totalCredito += monto;
-                } else {
-                    totalContado += monto;
+            // 1. Egresos Directos (Tabla Egresos)
+            store.egresos.forEach(e => {
+                if (esFechaEnPeriodo(e.createdAt || e.fecha)) {
+                    totalGastos += parseNum(e.monto);
                 }
-
-                // Buscar costo del producto para logística
-                const prodOriginal = datosProductos.find(p => p.nombre === v.producto);
-                const costoUnidad = prodOriginal ? parseNum(prodOriginal.costo) : 0;
-                const costoTotalVenta = costoUnidad * cantidad;
-                
-                inversionTotalVendida += costoTotalVenta;
-
-                // Agrupar por producto
-                if (!statsProd[v.producto]) {
-                    statsProd[v.producto] = { monto: 0, cant: 0, costo: 0 };
-                }
-                statsProd[v.producto].monto += monto;
-                statsProd[v.producto].cant += cantidad;
-                statsProd[v.producto].costo += costoTotalVenta;
             });
 
-            // Actualizar UI
-            document.getElementById('total-ventas').innerText = `$${totalVentas.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
-            document.getElementById('total-contado').innerText = `$${totalContado.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
-            document.getElementById('total-credito').innerText = `$${totalCredito.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
-            document.getElementById('inversion-total').innerText = `$${inversionTotalVendida.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
-            
-            const gananciaNeta = totalVentas - inversionTotalVendida;
-            document.getElementById('ganancia-neta').innerText = `${gananciaNeta >= 0 ? '+' : ''}$${gananciaNeta.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
-            
-            const roi = inversionTotalVendida > 0 ? ((totalVentas / inversionTotalVendida) * 100).toFixed(0) : 0;
-            document.getElementById('porcentaje-retorno').innerText = `${roi}%`;
-            document.getElementById('barra-retorno').style.width = `${Math.min(roi, 100)}%`;
-
-            const meta = document.getElementById('mensaje-meta');
-            if (totalVentas < inversionTotalVendida) {
-                meta.innerHTML = `⚠️ Faltan <span class="text-white font-bold">$${(inversionTotalVendida - totalVentas).toFixed(2)}</span> para cubrir el costo de lo vendido.`;
-                meta.classList.replace('text-green-400', 'text-orange-400');
-            } else {
-                meta.innerHTML = `🚀 Logística Positiva: El margen de ganancia es de <span class="text-white font-bold">$${gananciaNeta.toFixed(2)}</span>`;
-                meta.classList.add('text-green-400');
-            }
-
-            renderizarProductos(statsProd, totalVentas);
-        }
-
-        function renderizarProductos(data, totalGlobal) {
-            const container = document.getElementById('lista-productos-analisis');
-            const entries = Object.entries(data).sort((a, b) => b[1].monto - a[1].monto);
-
-            if (entries.length === 0) {
-                container.innerHTML = `<div class="text-center py-10 text-gray-600 text-[10px] uppercase font-bold tracking-widest">No hay ventas registradas aún</div>`;
-                return;
-            }
-
-            container.innerHTML = entries.map(([nombre, d]) => {
-                const porcentajeDelTotal = totalGlobal > 0 ? ((d.monto / totalGlobal) * 100).toFixed(0) : 0;
-                const margen = d.monto - d.costo;
-                
-                return `
-                <div class="card-stats py-4">
-                    <div class="flex justify-between items-center mb-1">
-                        <span class="text-[11px] font-black uppercase text-white">${nombre}</span>
-                        <span class="text-sm font-black text-[#D4AF37]">$${d.monto.toFixed(2)}</span>
-                    </div>
-                    <div class="flex justify-between mb-3">
-                        <span class="text-[8px] text-gray-500 font-bold uppercase">${d.cant} UNID. VENDIDAS</span>
-                        <span class="text-[8px] ${margen >= 0 ? 'text-green-500' : 'text-red-500'} font-bold uppercase">GANANCIA: $${margen.toFixed(2)}</span>
-                    </div>
-                    <div class="bar-ref">
-                        <div class="bar-fill" style="width: ${porcentajeDelTotal}%"></div>
-                    </div>
-                    <div class="text-right mt-1">
-                        <span class="text-[7px] text-gray-600 font-bold uppercase">${porcentajeDelTotal}% del total de ventas</span>
-                    </div>
-                </div>`;
-            }).join('');
-        }
-
-        // LÓGICA IA
-        window.abrirIA = () => { document.getElementById('ia-modal').style.display = 'flex'; };
-        window.cerrarIA = () => { document.getElementById('ia-modal').style.display = 'none'; };
-
-        async function llamarIA(pregunta) {
-            document.getElementById('typingIndicator').style.display = 'block';
-            const context = JSON.stringify({ 
-                total_ventas: document.getElementById('total-ventas').innerText,
-                ganancia: document.getElementById('ganancia-neta').innerText,
-                productos_top: Object.keys(datosVentas).length
+            // 2. Abonos de Préstamos (Solo los abonos realizados en el periodo)
+            store.prestamos.forEach(p => {
+                if (p.abonos && Array.isArray(p.abonos)) {
+                    p.abonos.forEach(abono => {
+                        // El abono.id suele ser el timestamp de cuando se hizo
+                        if (esFechaEnPeriodo(abono.id || abono.fecha)) {
+                            totalAbonos += parseNum(abono.monto);
+                        }
+                    });
+                }
             });
-            
-            const prompt = `Eres el asistente experto de Jaddy INC. Analiza estos datos: ${context}. Responde a Freddy sobre su negocio de perfumes de forma motivadora y financiera.`;
 
-            try {
-                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKeyIA}`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ contents: [{ parts: [{ text: pregunta }] }], systemInstruction: { parts: [{ text: prompt }] } })
-                });
-                const data = await res.json();
-                document.getElementById('typingIndicator').style.display = 'none';
-                return data.candidates[0].content.parts[0].text;
-            } catch (e) { 
-                document.getElementById('typingIndicator').style.display = 'none';
-                return "Freddy, ahora mismo tengo un problema de conexión, pero tus números se ven sólidos."; 
-            }
+            // 3. Ventas y Costos
+            store.ventas.forEach(v => {
+                if (esFechaEnPeriodo(v.fecha)) {
+                    const monto = parseNum(v.precio || v.total || 0);
+                    const cant = parseInt(v.cantidad || 1);
+                    totalVentas += monto;
+
+                    if ((v.tipo || v.metodo || '').toUpperCase().includes('CREDITO')) {
+                        totalCredito += monto;
+                    }
+
+                    // Calcular inversión basada en costo del producto
+                    const prod = store.productos.find(p => p.nombre === v.producto);
+                    if (prod) {
+                        costoVendido += (parseNum(prod.costo) * cant);
+                    }
+                }
+            });
+
+            const totalEgresosAbonos = totalGastos + totalAbonos;
+            const utilidadFinal = totalVentas - costoVendido - totalEgresosAbonos;
+
+            // Actualización de UI Segura
+            requestAnimationFrame(() => {
+                document.getElementById('total-ventas').innerText = `$${totalVentas.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
+                document.getElementById('total-egresos').innerText = `$${totalEgresosAbonos.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
+                document.getElementById('total-credito').innerText = `$${totalCredito.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
+                document.getElementById('inversion-total').innerText = `$${costoVendido.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
+                document.getElementById('ganancia-neta').innerText = `${utilidadFinal >= 0 ? '+' : ''}$${utilidadFinal.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
+                
+                const meta = document.getElementById('mensaje-meta');
+                meta.innerHTML = utilidadFinal < 0 
+                    ? `⚠️ Estás por debajo del punto de equilibrio por <span class="text-white font-bold">$${Math.abs(utilidadFinal).toFixed(2)}</span>`
+                    : `✅ Tu beneficio neto real es de <span class="text-white font-bold">$${utilidadFinal.toFixed(2)}</span>`;
+                meta.className = `text-[9px] text-center italic mt-4 px-2 ${utilidadFinal < 0 ? 'text-red-400' : 'text-green-400'}`;
+            });
         }
 
-        const sendBtn = document.getElementById('sendBtn');
-        const userInput = document.getElementById('userInput');
-
-        sendBtn.onclick = async () => {
-            const q = userInput.value.trim();
-            if(!q) return;
-            userInput.value = "";
-            appendMsg('user', q);
-            const r = await llamarIA(q);
-            appendMsg('ia', r);
+        window.limpiarCalendario = () => {
+            document.getElementById('fecha-inicio').value = '';
+            document.getElementById('fecha-fin').value = '';
+            cambiarFiltro('hoy');
         };
 
-        function appendMsg(role, text) {
-            const d = document.createElement('div');
-            d.className = `msg msg-${role}`;
-            d.innerHTML = text.replace(/\n/g, '<br>');
-            document.getElementById('chatBox').appendChild(d);
-            document.getElementById('chatBox').scrollTop = document.getElementById('chatBox').scrollHeight;
-        }
+        window.aplicarCalendario = () => {
+            const fInicio = document.getElementById('fecha-inicio').value;
+            const fFin = document.getElementById('fecha-fin').value;
+            if(fInicio && fFin) {
+                filtroActual = 'custom';
+                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                document.getElementById('txt-periodo').innerText = `Personalizado`;
+                calcularTodo();
+            }
+        };
+
+        window.cambiarFiltro = (filtro) => {
+            filtroActual = filtro;
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            const btn = document.getElementById(`btn-${filtro}`);
+            if(btn) btn.classList.add('active');
+            const labels = { hoy: 'Hoy', semana: 'Esta Semana', mes: 'Este Mes', anio: 'Este Año', todo: 'Historial' };
+            document.getElementById('txt-periodo').innerText = labels[filtro];
+            calcularTodo();
+        };
+
+        window.abrirIA = () => { document.getElementById('ia-modal').style.display = 'flex'; };
+        window.cerrarIA = () => { document.getElementById('ia-modal').style.display = 'none'; };
 
         iniciar();
     </script>
 </body>
 </html>
 
-
+```
