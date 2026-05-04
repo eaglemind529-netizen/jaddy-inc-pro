@@ -22,6 +22,10 @@
             overflow-x: hidden;
             -webkit-overflow-scrolling: touch; 
         }
+        
+        /* Protección de carga */
+        #safety-overlay { position: fixed; inset: 0; background: black; z-index: 9999; display: flex; align-items: center; justify-content: center; }
+
         .texto-dorado { background: linear-gradient(to bottom, #CF9E1D 22%, #F1D37E 45%, #CF9E1D 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         .grid-menu { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; width: 100%; max-width: 340px; margin: 0 auto; }
         .box-item { background: #0F0F0F; border: 1px solid #1a1a1a; aspect-ratio: 1 / 1; display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 32px; transition: all 0.2s ease; box-shadow: 0 10px 30px rgba(0,0,0,0.5); text-decoration: none; }
@@ -29,9 +33,7 @@
         .icon-circle { width: 50px; height: 50px; border-radius: 18px; display: flex; align-items: center; justify-content: center; margin-bottom: 10px; font-size: 20px; }
         .gold-box { background: linear-gradient(135deg, #D4AF37 0%, #f9e29c 50%, #996515 100%); }
         
-        .tab-btn { 
-            flex: 1; padding: 15px 5px; font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; color: #444; transition: all 0.3s; border-bottom: 2px solid transparent; cursor: pointer; background: transparent; border: none;
-        }
+        .tab-btn { flex: 1; padding: 15px 5px; font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; color: #444; transition: all 0.3s; border-bottom: 2px solid transparent; cursor: pointer; background: transparent; border: none; }
         .tab-btn.active { color: var(--oro); border-bottom: 2px solid var(--oro); background: linear-gradient(to top, rgba(212, 175, 55, 0.05), transparent); }
         .tab-content { display: none; width: 100%; }
         .tab-content.active { display: block; animation: fadeIn 0.3s ease-out forwards; }
@@ -39,17 +41,27 @@
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .content-spacer { padding-bottom: 100px; }
 
-        /* Indicador de Offline Dinámico */
         #status-bar { transition: all 0.5s ease; }
-        .status-offline { background-color: #7f1d1d !important; } /* Rojo oscuro */
+        .status-offline { background-color: #7f1d1d !important; }
     </style>
+    <script>
+        // SEGURIDAD: Verificar sesión antes de mostrar nada
+        if (localStorage.getItem('jaddy_session') !== 'active') {
+            window.location.href = 'login.html';
+        }
+    </script>
 </head>
 <body class="flex flex-col">
+
+    <!-- Capa de seguridad blanca mientras carga JS -->
+    <div id="safety-overlay">
+        <div class="w-10 h-10 border-2 border-oro/20 border-t-oro rounded-full animate-spin"></div>
+    </div>
 
     <!-- Header con Estado de Conexión Realtime -->
     <header id="status-bar" class="sticky top-0 h-16 border-b border-gray-900 bg-black flex items-center justify-between px-6 z-50">
         <div class="flex items-center gap-3">
-            <div class="w-7 h-7 gold-box rounded flex items-center justify-center text-black text-[10px] font-bold shadow-lg shadow-yellow-900/20">JI</div>
+            <div class="w-7 h-7 gold-box rounded flex items-center justify-center text-black text-[10px] font-bold">JI</div>
             <h1 class="texto-dorado uppercase tracking-widest text-sm font-black">Jaddy INC</h1>
         </div>
         <div class="flex items-center gap-2">
@@ -58,7 +70,6 @@
         </div>
     </header>
 
-    <!-- Selector de Secciones (Funciona sin señal) -->
     <nav class="sticky top-16 bg-black border-b border-gray-900 z-40 flex w-full">
         <button onclick="switchTab('comercial')" id="btn-comercial" class="tab-btn active">Comercial</button>
         <button onclick="switchTab('stock')" id="btn-stock" class="tab-btn">Almacén</button>
@@ -74,28 +85,20 @@
                 <div class="w-8 h-[1px] bg-oro/30 mx-auto"></div>
             </div>
             <div class="grid-menu">
-                <a href="ventas.html" class="box-item">
-                    <div class="icon-circle gold-box text-black">
-                        <i class="fas fa-shopping-cart"></i>
-                    </div>
+                <a href="#" class="box-item">
+                    <div class="icon-circle gold-box text-black"><i class="fas fa-shopping-cart"></i></div>
                     <span class="text-white font-black text-[11px] uppercase">Ventas</span>
                 </a>
-                <a href="deudores.html" class="box-item">
-                    <div class="icon-circle bg-white/5 border border-white/10 text-white">
-                        <i class="fas fa-hand-holding-dollar opacity-70"></i>
-                    </div>
+                <a href="#" class="box-item">
+                    <div class="icon-circle bg-white/5 border border-white/10 text-white"><i class="fas fa-hand-holding-dollar opacity-70"></i></div>
                     <span class="text-white font-black text-[11px] uppercase">Cartera</span>
                 </a>
-                <a href="egresos.html" class="box-item">
-                    <div class="icon-circle bg-oro/10 text-oro">
-                        <i class="fas fa-file-invoice-dollar"></i>
-                    </div>
+                <a href="#" class="box-item">
+                    <div class="icon-circle bg-oro/10 text-oro"><i class="fas fa-file-invoice-dollar"></i></div>
                     <span class="texto-dorado font-black text-[11px] uppercase">Finanzas</span>
                 </a>
-                <a href="clientes.html" class="box-item">
-                    <div class="icon-circle bg-white/5 border border-white/10 text-white">
-                        <i class="fas fa-address-card opacity-70"></i>
-                    </div>
+                <a href="#" class="box-item">
+                    <div class="icon-circle bg-white/5 border border-white/10 text-white"><i class="fas fa-address-card opacity-70"></i></div>
                     <span class="text-white font-black text-[11px] uppercase">Clientes</span>
                 </a>
             </div>
@@ -108,16 +111,12 @@
                 <div class="w-8 h-[1px] bg-oro/30 mx-auto"></div>
             </div>
             <div class="grid-menu">
-                <a href="inventario.html" class="box-item">
-                    <div class="icon-circle bg-white/5 border border-white/10 text-white">
-                        <i class="fas fa-list-ul opacity-70"></i>
-                    </div>
+                <a href="#" class="box-item">
+                    <div class="icon-circle bg-white/5 border border-white/10 text-white"><i class="fas fa-list-ul opacity-70"></i></div>
                     <span class="text-white font-black text-[11px] uppercase">Inventario</span>
                 </a>
-                <a href="productos.html" class="box-item">
-                    <div class="icon-circle bg-white/5 border border-white/10 text-white">
-                        <i class="fas fa-box opacity-70"></i>
-                    </div>
+                <a href="#" class="box-item">
+                    <div class="icon-circle bg-white/5 border border-white/10 text-white"><i class="fas fa-box opacity-70"></i></div>
                     <span class="text-white font-black text-[11px] uppercase">Productos</span>
                 </a>
             </div>
@@ -130,29 +129,28 @@
                 <div class="w-8 h-[1px] bg-oro/30 mx-auto"></div>
             </div>
             <div class="grid-menu">
-                <a href="vendedores.html" class="box-item">
-                    <div class="icon-circle bg-white/5 border border-white/10 text-white">
-                        <i class="fas fa-users opacity-70"></i>
-                    </div>
+                <a href="#" class="box-item">
+                    <div class="icon-circle bg-white/5 border border-white/10 text-white"><i class="fas fa-users opacity-70"></i></div>
                     <span class="text-white font-black text-[11px] uppercase">Vendedores</span>
                 </a>
-                <a href="reportes.html" class="box-item border-oro/30">
-                    <div class="icon-circle border border-oro/20 text-oro">
-                        <i class="fas fa-chart-line"></i>
-                    </div>
+                <a href="#" class="box-item border-oro/30">
+                    <div class="icon-circle border border-oro/20 text-oro"><i class="fas fa-chart-line"></i></div>
                     <span class="texto-dorado font-black text-[11px] uppercase">Reportes</span>
                 </a>
             </div>
         </div>
     </main>
 
-    <!-- Barra Inferior Decorativa -->
-    <nav class="fixed bottom-0 left-0 right-0 h-12 bg-black/90 backdrop-blur-xl border-t border-gray-900 flex items-center justify-center z-50">
-        <div class="text-[7px] text-oro tracking-[0.4em] uppercase opacity-30 font-black">Luxury System Master v1.5 [Offline Enabled]</div>
+    <!-- Barra Inferior -->
+    <nav class="fixed bottom-0 left-0 right-0 h-14 bg-black/90 backdrop-blur-xl border-t border-gray-900 flex items-center justify-between px-8 z-50">
+        <div class="text-[7px] text-oro tracking-[0.4em] uppercase opacity-30 font-black">Luxury System Master v1.5</div>
+        <button onclick="logout()" class="text-[8px] text-white/40 font-black uppercase tracking-widest border border-white/10 px-3 py-1 rounded-full">Salir</button>
     </nav>
 
     <script>
-        // LÓGICA DE NAVEGACIÓN (Funciona 100% Offline)
+        // Remover overlay de seguridad
+        document.getElementById('safety-overlay').style.display = 'none';
+
         const tabs = ['comercial', 'stock', 'analisis'];
         let currentIdx = 0;
 
@@ -162,23 +160,24 @@
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
             document.getElementById('tab-' + tabId).classList.add('active');
             document.getElementById('btn-' + tabId).classList.add('active');
-            
-            // Vibración táctil si el dispositivo lo soporta
             if (window.navigator.vibrate) window.navigator.vibrate(5);
         };
 
-        // GESTIÓN DE SEÑAL
+        function logout() {
+            localStorage.removeItem('jaddy_session');
+            window.location.href = 'login.html';
+        }
+
         function updateConnectionStatus() {
             const punto = document.getElementById('punto-estado');
             const texto = document.getElementById('texto-estado');
             const bar = document.getElementById('status-bar');
-
             if (navigator.onLine) {
-                punto.classList.replace('bg-red-600', 'bg-green-600');
+                punto.className = "w-2 h-2 bg-green-600 rounded-full animate-pulse";
                 texto.innerText = "SISTEMA ONLINE";
                 bar.classList.remove('status-offline');
             } else {
-                punto.classList.replace('bg-green-600', 'bg-red-600');
+                punto.className = "w-2 h-2 bg-red-600 rounded-full animate-pulse";
                 texto.innerText = "MODO OFFLINE";
                 bar.classList.add('status-offline');
             }
@@ -188,7 +187,7 @@
         window.addEventListener('offline', updateConnectionStatus);
         updateConnectionStatus();
 
-        // SWIPE GESTURES
+        // Swipes
         let touchstartX = 0;
         const swipeArea = document.getElementById('swipe-area');
         swipeArea.addEventListener('touchstart', e => touchstartX = e.changedTouches[0].screenX, {passive: true});
@@ -199,26 +198,6 @@
                 else if (diff < 0 && currentIdx > 0) switchTab(tabs[currentIdx - 1]);
             }
         }, {passive: true});
-
-        // REGISTRO DE SERVICE WORKER PARA CARGA SIN SEÑAL
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                // Creamos un Service Worker en línea para que no necesites archivos extras
-                const swCode = `
-                    const CACHE_NAME = 'luxury-v1';
-                    const urlsToCache = [location.href];
-                    self.addEventListener('install', e => {
-                        e.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(urlsToCache)));
-                    });
-                    self.addEventListener('fetch', e => {
-                        e.respondWith(caches.match(e.request).then(res => res || fetch(e.request)));
-                    });
-                `;
-                const blob = new Blob([swCode], {type: 'application/javascript'});
-                const swUrl = URL.createObjectURL(blob);
-                navigator.serviceWorker.register(swUrl).catch(err => console.log('SW failed', err));
-            });
-        }
     </script>
 </body>
 </html>
