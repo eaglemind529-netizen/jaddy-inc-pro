@@ -28,7 +28,7 @@
 
         .texto-dorado { background: linear-gradient(to bottom, #CF9E1D 22%, #F1D37E 45%, #CF9E1D 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         .grid-menu { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; width: 100%; max-width: 340px; margin: 0 auto; }
-        .box-item { background: #0F0F0F; border: 1px solid #1a1a1a; aspect-ratio: 1 / 1; display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 32px; transition: all 0.2s ease; box-shadow: 0 10px 30px rgba(0,0,0,0.5); text-decoration: none; }
+        .box-item { background: #0F0F0F; border: 1px solid #1a1a1a; aspect-ratio: 1 / 1; display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 32px; transition: all 0.2s ease; box-shadow: 0 10px 30px rgba(0,0,0,0.5); text-decoration: none; outline: none; }
         .box-item:active { transform: scale(0.92); border-color: var(--oro); }
         .icon-circle { width: 50px; height: 50px; border-radius: 18px; display: flex; align-items: center; justify-content: center; margin-bottom: 10px; font-size: 20px; }
         .gold-box { background: linear-gradient(135deg, #D4AF37 0%, #f9e29c 50%, #996515 100%); }
@@ -53,7 +53,7 @@
 </head>
 <body class="flex flex-col">
 
-    <!-- Capa de seguridad blanca mientras carga JS -->
+    <!-- Capa de seguridad mientras carga JS -->
     <div id="safety-overlay">
         <div class="w-10 h-10 border-2 border-oro/20 border-t-oro rounded-full animate-spin"></div>
     </div>
@@ -85,19 +85,19 @@
                 <div class="w-8 h-[1px] bg-oro/30 mx-auto"></div>
             </div>
             <div class="grid-menu">
-                <a href="#" class="box-item">
+                <a href="ventas.html" class="box-item">
                     <div class="icon-circle gold-box text-black"><i class="fas fa-shopping-cart"></i></div>
                     <span class="text-white font-black text-[11px] uppercase">Ventas</span>
                 </a>
-                <a href="#" class="box-item">
+                <a href="cartera.html" class="box-item">
                     <div class="icon-circle bg-white/5 border border-white/10 text-white"><i class="fas fa-hand-holding-dollar opacity-70"></i></div>
                     <span class="text-white font-black text-[11px] uppercase">Cartera</span>
                 </a>
-                <a href="#" class="box-item">
+                <a href="finanzas.html" class="box-item">
                     <div class="icon-circle bg-oro/10 text-oro"><i class="fas fa-file-invoice-dollar"></i></div>
                     <span class="texto-dorado font-black text-[11px] uppercase">Finanzas</span>
                 </a>
-                <a href="#" class="box-item">
+                <a href="clientes.html" class="box-item">
                     <div class="icon-circle bg-white/5 border border-white/10 text-white"><i class="fas fa-address-card opacity-70"></i></div>
                     <span class="text-white font-black text-[11px] uppercase">Clientes</span>
                 </a>
@@ -111,11 +111,11 @@
                 <div class="w-8 h-[1px] bg-oro/30 mx-auto"></div>
             </div>
             <div class="grid-menu">
-                <a href="#" class="box-item">
+                <a href="inventario.html" class="box-item">
                     <div class="icon-circle bg-white/5 border border-white/10 text-white"><i class="fas fa-list-ul opacity-70"></i></div>
                     <span class="text-white font-black text-[11px] uppercase">Inventario</span>
                 </a>
-                <a href="#" class="box-item">
+                <a href="productos.html" class="box-item">
                     <div class="icon-circle bg-white/5 border border-white/10 text-white"><i class="fas fa-box opacity-70"></i></div>
                     <span class="text-white font-black text-[11px] uppercase">Productos</span>
                 </a>
@@ -129,11 +129,11 @@
                 <div class="w-8 h-[1px] bg-oro/30 mx-auto"></div>
             </div>
             <div class="grid-menu">
-                <a href="#" class="box-item">
+                <a href="vendedores.html" class="box-item">
                     <div class="icon-circle bg-white/5 border border-white/10 text-white"><i class="fas fa-users opacity-70"></i></div>
                     <span class="text-white font-black text-[11px] uppercase">Vendedores</span>
                 </a>
-                <a href="#" class="box-item border-oro/30">
+                <a href="reportes.html" class="box-item border-oro/30">
                     <div class="icon-circle border border-oro/20 text-oro"><i class="fas fa-chart-line"></i></div>
                     <span class="texto-dorado font-black text-[11px] uppercase">Reportes</span>
                 </a>
