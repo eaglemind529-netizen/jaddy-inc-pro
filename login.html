@@ -1,0 +1,168 @@
+```html
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#050505">
+    <title>Acceso - Jaddy INC</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root { --oro: #D4AF37; --negro-puro: #050505; }
+        body { 
+            background-color: var(--negro-puro); 
+            color: #E0E0E0; 
+            font-family: 'Inter', sans-serif; 
+            margin: 0; 
+            height: 100vh; 
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+        .texto-dorado { background: linear-gradient(to bottom, #CF9E1D 22%, #F1D37E 45%, #CF9E1D 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .gold-box { background: linear-gradient(135deg, #D4AF37 0%, #f9e29c 50%, #996515 100%); }
+        
+        .auth-card {
+            width: 90%;
+            max-width: 380px;
+            background: #0F0F0F;
+            border: 1px solid #1a1a1a;
+            border-radius: 40px;
+            padding: 40px 30px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8);
+            animation: slideUp 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px) scale(0.95); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .input-luxury {
+            width: 100%;
+            background: #151515;
+            border: 1px solid #222;
+            padding: 18px 20px;
+            border-radius: 20px;
+            color: white;
+            margin-bottom: 15px;
+            outline: none;
+            transition: all 0.3s;
+            font-size: 14px;
+        }
+        .input-luxury:focus { border-color: var(--oro); background: #1a1a1a; box-shadow: 0 0 15px rgba(212, 175, 55, 0.1); }
+
+        .btn-auth {
+            width: 100%;
+            background: linear-gradient(135deg, #D4AF37 0%, #f9e29c 50%, #996515 100%);
+            color: black;
+            font-weight: 900;
+            text-transform: uppercase;
+            padding: 18px;
+            border-radius: 20px;
+            letter-spacing: 2px;
+            box-shadow: 0 10px 25px rgba(212, 175, 55, 0.25);
+            cursor: pointer;
+            margin-top: 10px;
+            border: none;
+            transition: transform 0.2s;
+        }
+        .btn-auth:active { transform: scale(0.96); }
+
+        .auth-toggle {
+            margin-top: 30px;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #444;
+            cursor: pointer;
+            text-align: center;
+            font-weight: bold;
+        }
+        .auth-toggle span { color: var(--oro); }
+    </style>
+</head>
+<body>
+
+    <section class="flex flex-col items-center w-full">
+        <div class="mb-12 text-center">
+            <div class="w-20 h-20 gold-box rounded-[28px] flex items-center justify-center text-black text-3xl font-black shadow-2xl mx-auto mb-6">JI</div>
+            <h2 class="texto-dorado text-3xl font-black uppercase tracking-[0.2em]">Luxury Access</h2>
+            <p class="text-gray-600 text-[9px] uppercase tracking-[0.5em] mt-3 font-bold opacity-60">Jaddy INC System</p>
+        </div>
+
+        <div class="auth-card">
+            <h3 id="auth-title" class="text-white text-center font-bold uppercase tracking-widest text-[10px] mb-10 opacity-40">Identificación de Usuario</h3>
+            
+            <div id="auth-msg" class="text-center text-red-500 text-[10px] font-black mb-6 hidden uppercase tracking-widest">Credenciales Inválidas</div>
+            
+            <input type="text" id="user-input" class="input-luxury" placeholder="Usuario" autocomplete="off">
+            <input type="password" id="pass-input" class="input-luxury" placeholder="Contraseña">
+            
+            <button onclick="handleAuth()" id="auth-btn" class="btn-auth">Entrar</button>
+            
+            <div class="auth-toggle" onclick="toggleAuthMode()">
+                <p id="toggle-text">¿Sin acceso al sistema? <span>Registrar</span></p>
+            </div>
+        </div>
+    </section>
+
+    <script>
+        let isLogin = true;
+
+        // Base de datos local (puedes cambiar "admin" y "1234" por lo que quieras)
+        function getDB() {
+            return JSON.parse(localStorage.getItem('jaddy_users')) || { "admin": "1234" };
+        }
+
+        function handleAuth() {
+            const user = document.getElementById('user-input').value.trim();
+            const pass = document.getElementById('pass-input').value.trim();
+            
+            if (!user || !pass) return showMsg("Complete los campos");
+
+            let db = getDB();
+
+            if (isLogin) {
+                if (db[user] && db[user] === pass) {
+                    localStorage.setItem('jaddy_session', 'active');
+                    localStorage.setItem('jaddy_user', user);
+                    window.location.href = 'index.html';
+                } else {
+                    showMsg("Acceso Denegado");
+                }
+            } else {
+                if (db[user]) {
+                    showMsg("El usuario ya existe");
+                } else {
+                    db[user] = pass;
+                    localStorage.setItem('jaddy_users', JSON.stringify(db));
+                    showMsg("¡Registrado! Inicie sesión", true);
+                    toggleAuthMode();
+                }
+            }
+        }
+
+        function toggleAuthMode() {
+            isLogin = !isLogin;
+            document.getElementById('auth-title').innerText = isLogin ? "Identificación de Usuario" : "Crear Nueva Credencial";
+            document.getElementById('auth-btn').innerText = isLogin ? "Entrar" : "Crear";
+            document.getElementById('toggle-text').innerHTML = isLogin ? 
+                "¿Sin acceso al sistema? <span>Registrar</span>" : 
+                "¿Ya tienes cuenta? <span>Regresar</span>";
+        }
+
+        function showMsg(t, isSuccess = false) {
+            const msg = document.getElementById('auth-msg');
+            msg.innerText = t;
+            msg.style.color = isSuccess ? '#D4AF37' : '#ef4444';
+            msg.classList.remove('hidden');
+            setTimeout(() => msg.classList.add('hidden'), 3000);
+        }
+    </script>
+</body>
+</html>
+
+```
