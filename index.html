@@ -4,6 +4,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#050505">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>Luxury System - Jaddy INC</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;700;900&display=swap" rel="stylesheet">
@@ -27,57 +30,42 @@
         .gold-box { background: linear-gradient(135deg, #D4AF37 0%, #f9e29c 50%, #996515 100%); }
         
         .tab-btn { 
-            flex: 1; padding: 15px 5px; font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; color: #444; transition: all 0.3s; border-bottom: 2px solid transparent; cursor: pointer; background: transparent; border-top: none; border-left: none; border-right: none;
+            flex: 1; padding: 15px 5px; font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; color: #444; transition: all 0.3s; border-bottom: 2px solid transparent; cursor: pointer; background: transparent; border: none;
         }
         .tab-btn.active { color: var(--oro); border-bottom: 2px solid var(--oro); background: linear-gradient(to top, rgba(212, 175, 55, 0.05), transparent); }
         .tab-content { display: none; width: 100%; }
         .tab-content.active { display: block; animation: fadeIn 0.3s ease-out forwards; }
 
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .content-spacer { padding-bottom: 100px; }
 
-        /* Banner de estado de conexión */
-        #offline-indicator {
-            display: none;
-            background: #D4AF37;
-            color: black;
-            text-align: center;
-            font-size: 9px;
-            font-weight: 900;
-            padding: 5px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            position: fixed;
-            top: 64px;
-            width: 100%;
-            z-index: 45;
-        }
-
-        .floating-btn { position: fixed; bottom: 80px; right: 20px; width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(135deg, #D4AF37 0%, #996515 100%); display: flex; align-items: center; justify-content: center; box-shadow: 0 10px 20px rgba(0,0,0,0.4); z-index: 999; border: none; cursor: pointer; }
+        /* Indicador de Offline Dinámico */
+        #status-bar { transition: all 0.5s ease; }
+        .status-offline { background-color: #7f1d1d !important; } /* Rojo oscuro */
     </style>
 </head>
 <body class="flex flex-col">
 
-    <div id="offline-indicator">⚠️ Modo Offline: Los datos se guardarán localmente</div>
-
-    <header class="sticky top-0 h-16 border-b border-gray-900 bg-black flex items-center justify-between px-6 z-50">
+    <!-- Header con Estado de Conexión Realtime -->
+    <header id="status-bar" class="sticky top-0 h-16 border-b border-gray-900 bg-black flex items-center justify-between px-6 z-50">
         <div class="flex items-center gap-3">
             <div class="w-7 h-7 gold-box rounded flex items-center justify-center text-black text-[10px] font-bold shadow-lg shadow-yellow-900/20">JI</div>
             <h1 class="texto-dorado uppercase tracking-widest text-sm font-black">Jaddy INC</h1>
         </div>
         <div class="flex items-center gap-2">
             <div id="punto-estado" class="w-2 h-2 bg-green-600 rounded-full animate-pulse"></div>
-            <span id="texto-estado" class="text-[8px] text-gray-500 font-bold uppercase tracking-widest">SISTEMA ACTIVO</span>
+            <span id="texto-estado" class="text-[8px] text-gray-500 font-bold uppercase tracking-widest">SISTEMA ONLINE</span>
         </div>
     </header>
 
+    <!-- Selector de Secciones (Funciona sin señal) -->
     <nav class="sticky top-16 bg-black border-b border-gray-900 z-40 flex w-full">
         <button onclick="switchTab('comercial')" id="btn-comercial" class="tab-btn active">Comercial</button>
         <button onclick="switchTab('stock')" id="btn-stock" class="tab-btn">Almacén</button>
         <button onclick="switchTab('analisis')" id="btn-analisis" class="tab-btn">Equipo</button>
     </nav>
 
-    <main class="flex-1 px-6 pt-8 content-spacer">
+    <main id="swipe-area" class="flex-1 px-6 pt-8 content-spacer">
         
         <!-- Pestaña Comercial -->
         <div id="tab-comercial" class="tab-content active">
@@ -87,32 +75,33 @@
             </div>
             <div class="grid-menu">
                 <a href="ventas.html" class="box-item">
-                    <div class="icon-circle gold-box text-black shadow-lg shadow-yellow-600/20">
+                    <div class="icon-circle gold-box text-black">
                         <i class="fas fa-shopping-cart"></i>
                     </div>
-                    <span class="text-white font-black text-[11px] tracking-tighter uppercase">Ventas</span>
+                    <span class="text-white font-black text-[11px] uppercase">Ventas</span>
                 </a>
                 <a href="deudores.html" class="box-item">
                     <div class="icon-circle bg-white/5 border border-white/10 text-white">
                         <i class="fas fa-hand-holding-dollar opacity-70"></i>
                     </div>
-                    <span class="text-white font-black text-[11px] tracking-tighter uppercase">Cartera</span>
+                    <span class="text-white font-black text-[11px] uppercase">Cartera</span>
                 </a>
-                <a href="egresos.html" class="box-item border-oro/20">
+                <a href="egresos.html" class="box-item">
                     <div class="icon-circle bg-oro/10 text-oro">
                         <i class="fas fa-file-invoice-dollar"></i>
                     </div>
-                    <span class="texto-dorado font-black text-[11px] tracking-tighter uppercase">Finanzas</span>
+                    <span class="texto-dorado font-black text-[11px] uppercase">Finanzas</span>
                 </a>
                 <a href="clientes.html" class="box-item">
                     <div class="icon-circle bg-white/5 border border-white/10 text-white">
                         <i class="fas fa-address-card opacity-70"></i>
                     </div>
-                    <span class="text-white font-black text-[11px] tracking-tighter uppercase">Clientes</span>
+                    <span class="text-white font-black text-[11px] uppercase">Clientes</span>
                 </a>
             </div>
         </div>
 
+        <!-- Pestaña Almacén -->
         <div id="tab-stock" class="tab-content">
             <div class="text-center mb-8">
                 <h2 class="text-white text-[9px] font-black tracking-[0.4em] uppercase opacity-40 mb-2 italic">Control de Almacén</h2>
@@ -123,17 +112,18 @@
                     <div class="icon-circle bg-white/5 border border-white/10 text-white">
                         <i class="fas fa-list-ul opacity-70"></i>
                     </div>
-                    <span class="text-white font-black text-[11px] tracking-tighter uppercase">Inventario</span>
+                    <span class="text-white font-black text-[11px] uppercase">Inventario</span>
                 </a>
                 <a href="productos.html" class="box-item">
                     <div class="icon-circle bg-white/5 border border-white/10 text-white">
                         <i class="fas fa-box opacity-70"></i>
                     </div>
-                    <span class="text-white font-black text-[11px] tracking-tighter uppercase">Productos</span>
+                    <span class="text-white font-black text-[11px] uppercase">Productos</span>
                 </a>
             </div>
         </div>
 
+        <!-- Pestaña Equipo -->
         <div id="tab-analisis" class="tab-content">
             <div class="text-center mb-8">
                 <h2 class="text-white text-[9px] font-black tracking-[0.4em] uppercase opacity-40 mb-2 italic">Equipo y Datos</h2>
@@ -144,88 +134,90 @@
                     <div class="icon-circle bg-white/5 border border-white/10 text-white">
                         <i class="fas fa-users opacity-70"></i>
                     </div>
-                    <span class="text-white font-black text-[11px] tracking-tighter uppercase">Vendedores</span>
+                    <span class="text-white font-black text-[11px] uppercase">Vendedores</span>
                 </a>
                 <a href="reportes.html" class="box-item border-oro/30">
                     <div class="icon-circle border border-oro/20 text-oro">
                         <i class="fas fa-chart-line"></i>
                     </div>
-                    <span class="texto-dorado font-black text-[11px] tracking-tighter uppercase">Reportes</span>
+                    <span class="texto-dorado font-black text-[11px] uppercase">Reportes</span>
                 </a>
             </div>
         </div>
     </main>
 
-    <button onclick="toggleChat()" class="floating-btn">
-        <i class="fas fa-headset text-black text-2xl"></i>
-    </button>
-
+    <!-- Barra Inferior Decorativa -->
     <nav class="fixed bottom-0 left-0 right-0 h-12 bg-black/90 backdrop-blur-xl border-t border-gray-900 flex items-center justify-center z-50">
-        <div class="text-[7px] text-oro tracking-[0.4em] uppercase opacity-30 font-black">Luxury System Master v1.2</div>
+        <div class="text-[7px] text-oro tracking-[0.4em] uppercase opacity-30 font-black">Luxury System Master v1.5 [Offline Enabled]</div>
     </nav>
 
     <script>
-        // --- LOGICA DE NAVEGACION ---
-        function switchTab(tabId) {
+        // LÓGICA DE NAVEGACIÓN (Funciona 100% Offline)
+        const tabs = ['comercial', 'stock', 'analisis'];
+        let currentIdx = 0;
+
+        window.switchTab = function(tabId) {
+            currentIdx = tabs.indexOf(tabId);
             document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            const targetContent = document.getElementById('tab-' + tabId);
-            const targetBtn = document.getElementById('btn-' + tabId);
-            if (targetContent && targetBtn) {
-                targetContent.classList.add('active');
-                targetBtn.classList.add('active');
-            }
-        }
+            document.getElementById('tab-' + tabId).classList.add('active');
+            document.getElementById('btn-' + tabId).classList.add('active');
+            
+            // Vibración táctil si el dispositivo lo soporta
+            if (window.navigator.vibrate) window.navigator.vibrate(5);
+        };
 
-        function toggleChat() {
-            console.log("Chat activado");
-        }
-
-        // --- SISTEMA MASTER OFFLINE (PWA) ---
-        function actualizarEstadoConexion() {
+        // GESTIÓN DE SEÑAL
+        function updateConnectionStatus() {
             const punto = document.getElementById('punto-estado');
             const texto = document.getElementById('texto-estado');
-            const banner = document.getElementById('offline-indicator');
+            const bar = document.getElementById('status-bar');
 
             if (navigator.onLine) {
-                punto.classList.replace('bg-orange-500', 'bg-green-600');
-                punto.classList.add('animate-pulse');
-                texto.innerText = "SISTEMA ACTIVO";
-                banner.style.display = "none";
+                punto.classList.replace('bg-red-600', 'bg-green-600');
+                texto.innerText = "SISTEMA ONLINE";
+                bar.classList.remove('status-offline');
             } else {
-                punto.classList.replace('bg-green-600', 'bg-orange-500');
-                punto.classList.remove('animate-pulse');
-                texto.innerText = "MODO LOCAL (OFFLINE)";
-                banner.style.display = "block";
+                punto.classList.replace('bg-green-600', 'bg-red-600');
+                texto.innerText = "MODO OFFLINE";
+                bar.classList.add('status-offline');
             }
         }
 
-        window.addEventListener('online', actualizarEstadoConexion);
-        window.addEventListener('offline', actualizarEstadoConexion);
-        actualizarEstadoConexion();
+        window.addEventListener('online', updateConnectionStatus);
+        window.addEventListener('offline', updateConnectionStatus);
+        updateConnectionStatus();
 
+        // SWIPE GESTURES
+        let touchstartX = 0;
+        const swipeArea = document.getElementById('swipe-area');
+        swipeArea.addEventListener('touchstart', e => touchstartX = e.changedTouches[0].screenX, {passive: true});
+        swipeArea.addEventListener('touchend', e => {
+            const diff = touchstartX - e.changedTouches[0].screenX;
+            if (Math.abs(diff) > 70) {
+                if (diff > 0 && currentIdx < 2) switchTab(tabs[currentIdx + 1]);
+                else if (diff < 0 && currentIdx > 0) switchTab(tabs[currentIdx - 1]);
+            }
+        }, {passive: true});
+
+        // REGISTRO DE SERVICE WORKER PARA CARGA SIN SEÑAL
         if ('serviceWorker' in navigator) {
-            const swCode = `
-                const CACHE_NAME = 'luxury-v1';
-                const OFFLINE_URLS = ['./', './index.html', './deudores.html', './ventas.html', './clientes.html', './egresos.html'];
-
-                self.addEventListener('install', (e) => {
-                    e.waitUntil(caches.open(CACHE_NAME).then(c => c.addAll(OFFLINE_URLS)));
-                });
-
-                self.addEventListener('fetch', (e) => {
-                    e.respondWith(
-                        caches.match(e.request).then(res => res || fetch(e.request).catch(() => caches.match('./index.html')))
-                    );
-                });
-            `;
-
-            const blob = new Blob([swCode], { type: 'text/javascript' });
-            const swUrl = URL.createObjectURL(blob);
-
-            navigator.serviceWorker.register(swUrl)
-                .then(() => console.log('Soporte Offline Activado.'))
-                .catch(err => console.log('Error PWA:', err));
+            window.addEventListener('load', () => {
+                // Creamos un Service Worker en línea para que no necesites archivos extras
+                const swCode = `
+                    const CACHE_NAME = 'luxury-v1';
+                    const urlsToCache = [location.href];
+                    self.addEventListener('install', e => {
+                        e.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(urlsToCache)));
+                    });
+                    self.addEventListener('fetch', e => {
+                        e.respondWith(caches.match(e.request).then(res => res || fetch(e.request)));
+                    });
+                `;
+                const blob = new Blob([swCode], {type: 'application/javascript'});
+                const swUrl = URL.createObjectURL(blob);
+                navigator.serviceWorker.register(swUrl).catch(err => console.log('SW failed', err));
+            });
         }
     </script>
 </body>
