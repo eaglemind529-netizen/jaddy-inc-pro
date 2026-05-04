@@ -69,7 +69,7 @@
                     <input type="text" required placeholder="Nombre acreedor" id="deuda-acreedor" class="w-full bg-black border border-zinc-800 p-4 rounded-2xl text-white font-black text-xs outline-none">
                     <input type="number" required placeholder="Monto préstamo $" id="deuda-monto" class="w-full bg-black border border-zinc-800 p-4 rounded-2xl text-white font-black text-lg outline-none">
                     
-                    <textarea id="deuda-descripcion" placeholder="¿Para qué es este préstamo? (Detalles adicionales...)" rows="2" class="w-full bg-black border border-zinc-800 p-4 rounded-2xl text-zinc-400 font-medium text-[10px] outline-none resize-none focus:border-amber-500/50 transition-colors"></textarea>
+                    <textarea id="deuda-descripcion" placeholder="¿Para qué es este préstamo?" rows="2" class="w-full bg-black border border-zinc-800 p-4 rounded-2xl text-zinc-400 font-medium text-[10px] outline-none resize-none"></textarea>
 
                     <div class="grid grid-cols-2 gap-2">
                         <div class="space-y-1">
@@ -81,6 +81,7 @@
                             <input type="date" id="deuda-fecha-venc" class="w-full bg-black border border-zinc-800 p-3 rounded-2xl text-white font-black text-[10px] outline-none">
                         </div>
                     </div>
+                    
                     <div class="flex items-center justify-between p-4 bg-black/40 rounded-2xl border border-zinc-800">
                         <span class="text-[9px] font-black uppercase text-zinc-500 italic">¿Aplicar Interés inicial?</span>
                         <button type="button" id="toggle-interes" class="w-10 h-5 rounded-full relative transition-all bg-zinc-800">
@@ -88,61 +89,51 @@
                         </button>
                     </div>
                     <input type="number" placeholder="Interés inicial %" id="deuda-interes-valor" class="hidden w-full bg-black border border-amber-500/40 p-4 rounded-2xl text-amber-500 font-black text-xs outline-none">
+                    
                     <button type="submit" id="submit-deuda-btn" class="w-full py-4 rounded-2xl bg-amber-500 text-black font-black italic text-xs tracking-widest uppercase">Crear Deuda</button>
+                    <button type="button" id="cancel-edit-btn" onclick="window.cancelEdit()" class="hidden w-full py-2 text-[10px] text-zinc-500 font-black uppercase italic">Cancelar Edición</button>
                 </form>
                 <div id="list-deudas" class="space-y-4"></div>
             </div>
         </main>
 
-        <!-- Detalle de Préstamo (Modal Full) -->
+        <!-- Detalle de Préstamo (Modal) -->
         <div id="detalle-modal" class="fixed inset-0 z-[100] hidden flex flex-col bg-black modal-backdrop slide-up">
             <div class="p-6 border-b border-zinc-900 flex justify-between items-center bg-black/50 backdrop-blur-md">
                 <div>
                     <h2 id="det-acreedor" class="text-white font-black uppercase italic text-sm">Cargando...</h2>
-                    <p id="det-desc-sub" class="text-[9px] text-zinc-500 font-bold uppercase italic max-w-[200px] truncate"></p>
+                    <p id="det-desc-sub" class="text-[9px] text-zinc-500 font-bold uppercase italic"></p>
                 </div>
                 <button onclick="closeDetalleModal()" class="w-10 h-10 rounded-full bg-zinc-900 flex items-center justify-center text-white"><i class="fas fa-times"></i></button>
             </div>
             <div class="flex-1 overflow-y-auto p-6 space-y-4" id="det-historial"></div>
             <div class="p-6 bg-zinc-900 border-t border-zinc-800 space-y-4">
                 <div class="flex gap-2">
-                    <input type="number" id="det-monto-input" placeholder="0.00 $" class="flex-1 bg-black border border-zinc-800 rounded-2xl p-4 text-lg font-black text-white outline-none focus:border-amber-500">
+                    <input type="number" id="det-monto-input" placeholder="0.00 $" class="flex-1 bg-black border border-zinc-800 rounded-2xl p-4 text-lg font-black text-white outline-none">
                     <button id="det-abono-btn" class="bg-white text-black font-black px-6 rounded-2xl uppercase italic text-xs">Abonar</button>
                 </div>
-                <button id="det-prorroga-btn" class="w-full py-4 rounded-2xl bg-amber-500 text-black font-black uppercase italic text-xs shadow-lg shadow-amber-500/10"><i class="fas fa-plus mr-2"></i>Aplicar Interés / Prórroga</button>
+                <button id="det-prorroga-btn" class="w-full py-4 rounded-2xl bg-amber-500 text-black font-black uppercase italic text-xs"><i class="fas fa-plus mr-2"></i>Interés / Prórroga</button>
             </div>
         </div>
 
         <!-- Prórroga Modal -->
         <div id="progroga-modal" class="fixed inset-0 z-[120] hidden flex items-center justify-center p-6 modal-backdrop">
-            <div class="bg-zinc-900 border border-amber-500/30 w-full max-w-xs rounded-[2.5rem] p-8 space-y-6 shadow-2xl">
+            <div class="bg-zinc-900 border border-amber-500/30 w-full max-w-xs rounded-[2.5rem] p-8 space-y-6">
                 <div class="text-center">
                     <h3 class="text-amber-500 font-black uppercase italic text-sm">Ajustar Prórroga</h3>
-                    <p class="text-[9px] text-zinc-500 font-bold uppercase mt-1">Suma días y porcentaje</p>
                 </div>
                 <div class="space-y-4">
-                    <div class="space-y-1">
-                        <label class="text-[8px] font-black text-zinc-500 uppercase ml-2 italic">Días a sumar</label>
-                        <input type="number" id="prorroga-dias" placeholder="Ej: 15" class="w-full bg-black border border-zinc-800 p-4 rounded-2xl text-white font-black text-xs outline-none">
-                    </div>
-                    <div class="space-y-1">
-                        <label class="text-[8px] font-black text-zinc-500 uppercase ml-2 italic">% Interés extra</label>
-                        <input type="number" id="prorroga-interes" placeholder="Ej: 5" class="w-full bg-black border border-zinc-800 p-4 rounded-2xl text-amber-500 font-black text-xs outline-none">
-                    </div>
+                    <input type="number" id="prorroga-dias" placeholder="Días a sumar" class="w-full bg-black border border-zinc-800 p-4 rounded-2xl text-white font-black text-xs outline-none">
+                    <input type="number" id="prorroga-interes" placeholder="% Interés extra" class="w-full bg-black border border-zinc-800 p-4 rounded-2xl text-amber-500 font-black text-xs outline-none">
                 </div>
-                <div class="flex flex-col gap-2">
-                    <button id="confirm-prorroga-btn" class="w-full py-4 rounded-2xl bg-amber-500 text-black font-black text-[10px] uppercase italic">Confirmar Cambios</button>
-                    <button onclick="closeProrrogaModal()" class="w-full py-4 rounded-2xl bg-zinc-800 text-zinc-400 font-black text-[10px] uppercase italic">Cancelar</button>
-                </div>
+                <button id="confirm-prorroga-btn" class="w-full py-4 rounded-2xl bg-amber-500 text-black font-black text-[10px] uppercase italic">Confirmar</button>
+                <button onclick="closeProrrogaModal()" class="w-full py-2 text-zinc-500 font-black text-[8px] uppercase italic block mx-auto">Cerrar</button>
             </div>
         </div>
 
         <!-- Confirmar Borrado -->
         <div id="confirm-modal" class="fixed inset-0 z-[110] hidden flex items-center justify-center p-6 modal-backdrop">
-            <div class="bg-zinc-900 border border-zinc-800 w-full max-w-xs rounded-[2rem] p-8 space-y-6 shadow-2xl text-center">
-                <div class="w-16 h-16 bg-red-500/10 text-red-500 rounded-full flex items-center justify-center mx-auto text-2xl">
-                    <i class="fas fa-trash-alt"></i>
-                </div>
+            <div class="bg-zinc-900 border border-zinc-800 w-full max-w-xs rounded-[2rem] p-8 space-y-6 text-center">
                 <h3 class="text-white font-black uppercase italic text-sm">¿Eliminar registro?</h3>
                 <div class="flex flex-col gap-2">
                     <button id="confirm-yes-btn" class="w-full py-4 rounded-2xl bg-red-500 text-white font-black text-[10px] uppercase italic">Eliminar</button>
@@ -156,7 +147,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
         import { 
-            getFirestore, collection, doc, getDoc, addDoc, updateDoc, deleteDoc, onSnapshot, query,
+            getFirestore, collection, doc, addDoc, updateDoc, deleteDoc, onSnapshot, query, getDocs,
             enableIndexedDbPersistence 
         } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
@@ -181,7 +172,7 @@
         let hasInterest = false;
         let activeDebtId = null;
         let editingDebtId = null;
-        let cachedDeudas = []; // Memoria local para carga instantánea
+        let cachedDeudas = []; 
 
         const categories = [
             { id: 'alquiler', label: 'Alquiler', icon: '🏠' },
@@ -191,17 +182,7 @@
             { id: 'inversion', label: 'Inversión', icon: '💎' }
         ];
 
-        const getToday = () => new Date().toISOString().split('T')[0];
         const getFormatDate = () => new Date().toLocaleString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
-
-        document.getElementById('deuda-fecha-inicio').value = getToday();
-
-        window.switchTab = (tab) => {
-            document.getElementById('content-egresos').classList.toggle('hidden', tab !== 'egresos');
-            document.getElementById('content-deudas').classList.toggle('hidden', tab !== 'deudas');
-            document.getElementById('tab-egresos').className = `flex-1 py-3 rounded-xl text-[10px] font-black transition-all ${tab === 'egresos' ? 'active-tab' : 'text-zinc-500'}`;
-            document.getElementById('tab-deudas').className = `flex-1 py-3 rounded-xl text-[10px] font-black transition-all ${tab === 'deudas' ? 'active-tab' : 'text-zinc-500'}`;
-        };
 
         onAuthStateChanged(auth, (user) => {
             if (user) {
@@ -225,7 +206,6 @@
             onSnapshot(query(collection(db, 'artifacts', appId, 'public', 'data', 'prestamos')), (snap) => {
                 cachedDeudas = snap.docs.map(d => ({ ...d.data(), id: d.id }));
                 renderDeudas(cachedDeudas);
-                // Si el modal está abierto, actualizamos su contenido inmediatamente
                 if (activeDebtId) {
                     const active = cachedDeudas.find(d => d.id === activeDebtId);
                     if (active) renderHistorial(active);
@@ -233,31 +213,47 @@
             });
         }
 
+        // --- LÓGICA EGRESOS ---
         function renderEgresos(data) {
-            let total = 0;
             const container = document.getElementById('list-egresos');
-            container.innerHTML = data.filter(e => e.tipo !== 'ABONO_PRESTAMO').sort((a,b) => b.createdAt - a.createdAt).map(e => {
-                total += parseFloat(e.monto || 0);
-                return `
-                    <div class="bg-zinc-900/60 p-4 rounded-2xl flex justify-between items-center border border-zinc-800/40">
-                        <div class="flex items-center gap-4">
-                            <div class="w-10 h-10 rounded-xl bg-black flex items-center justify-center text-lg">${categories.find(c => c.id === e.categoria)?.icon || '📦'}</div>
-                            <div>
-                                <p class="text-white font-black text-[10px] uppercase italic">${e.categoria}</p>
-                                <p class="text-[9px] text-zinc-500">${e.detalle || ''}</p>
-                                <p class="text-[7px] text-zinc-700 font-bold uppercase italic">${e.fecha || ''}</p>
+            
+            // FILTRO ESTRICTO: Solo mostrar/sumar si tienen monto y fecha para evitar el bug de los 629
+            const validData = data.filter(e => e.monto != null && !isNaN(parseFloat(e.monto)) && e.fecha);
+            
+            const currentMonth = new Date().getMonth() + 1;
+            const currentYear = new Date().getFullYear();
+
+            let total = 0;
+            container.innerHTML = validData
+                .sort((a,b) => b.createdAt - a.createdAt)
+                .map(e => {
+                    const parts = e.fecha.split('/');
+                    const isThisMonth = parts.length >= 3 && parseInt(parts[1]) === currentMonth && parseInt(parts[2]) === currentYear;
+                    
+                    if (isThisMonth) total += parseFloat(e.monto);
+
+                    return `
+                        <div class="bg-zinc-900/60 p-4 rounded-2xl flex justify-between items-center border border-zinc-800/40">
+                            <div class="flex items-center gap-4">
+                                <div class="w-10 h-10 rounded-xl bg-black flex items-center justify-center text-lg">${categories.find(c => c.id === e.categoria)?.icon || '📦'}</div>
+                                <div>
+                                    <p class="text-white font-black text-[10px] uppercase italic">${e.categoria || 'otros'}</p>
+                                    <p class="text-[9px] text-zinc-500">${e.detalle || 'Gasto'}</p>
+                                    <p class="text-[7px] text-zinc-700 font-bold italic">${e.fecha}</p>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-red-500 font-black italic text-sm">-$${parseFloat(e.monto).toFixed(2)}</p>
+                                <button onclick="window.askDelete('egresos', '${e.id}')" class="text-zinc-800 mt-1"><i class="fas fa-trash text-[8px]"></i></button>
                             </div>
                         </div>
-                        <div class="text-right">
-                            <p class="text-red-500 font-black italic text-sm">-$${parseFloat(e.monto).toFixed(2)}</p>
-                            <button onclick="window.askDelete('egresos', '${e.id}')" class="text-zinc-800 mt-1"><i class="fas fa-trash text-[8px]"></i></button>
-                        </div>
-                    </div>
-                `;
-            }).join('');
+                    `;
+                }).join('');
+            
             document.getElementById('total-egresos').innerText = `$${total.toFixed(2)}`;
         }
 
+        // --- LÓGICA DEUDAS ---
         function renderDeudas(data) {
             let totalD = 0;
             const container = document.getElementById('list-deudas');
@@ -269,29 +265,17 @@
                 totalD += saldo;
 
                 return `
-                    <div class="bg-zinc-900 border border-zinc-800 rounded-3xl overflow-hidden shadow-xl active:scale-[0.98] transition-all relative">
-                        <div onclick="window.openDetalleModal('${p.id}')" class="p-5 pr-14 cursor-pointer">
-                            <div class="flex justify-between items-start">
-                                <div>
-                                    <p class="text-white font-black text-[10px] uppercase italic opacity-60">${p.acreedor}</p>
-                                    <p class="text-amber-500 font-black text-3xl italic mt-1">$${saldo.toFixed(2)}</p>
-                                    ${p.descripcion ? `<p class="text-[8px] text-zinc-500 font-medium italic mt-2 max-w-[150px] line-clamp-1">${p.descripcion}</p>` : ''}
-                                </div>
-                                <div class="text-right">
-                                    <p class="text-[7px] text-amber-500 font-black uppercase italic">Vence</p>
-                                    <p class="text-[10px] text-white font-black">${p.fechaVencimiento || '-'}</p>
-                                </div>
-                            </div>
-                            <div class="mt-4 flex justify-between items-center bg-black/40 p-3 rounded-xl border border-zinc-800/40">
-                                <span class="text-[8px] text-zinc-500 font-black uppercase italic">Ver historial y abonar</span>
-                                <i class="fas fa-chevron-right text-zinc-700 text-[10px]"></i>
-                            </div>
+                    <div class="bg-zinc-900 border border-zinc-800 rounded-3xl relative">
+                        <div onclick="window.openDetalleModal('${p.id}')" class="p-5 cursor-pointer">
+                            <p class="text-white font-black text-[10px] uppercase italic opacity-60">${p.acreedor}</p>
+                            <p class="text-amber-500 font-black text-3xl italic">$${saldo.toFixed(2)}</p>
+                            <p class="text-[8px] text-zinc-500 font-black uppercase mt-2">Vence: ${p.fechaVencimiento || '-'}</p>
                         </div>
                         <div class="absolute right-3 top-5 flex flex-col gap-2">
-                            <button onclick="event.stopPropagation(); window.editDebt('${p.id}')" class="w-8 h-8 rounded-full bg-zinc-800 flex items-center justify-center text-zinc-400 hover:text-white transition-colors">
+                            <button onclick="event.stopPropagation(); window.editDebt('${p.id}')" class="w-8 h-8 rounded-full bg-zinc-800 flex items-center justify-center text-zinc-400">
                                 <i class="fas fa-pen text-[10px]"></i>
                             </button>
-                            <button onclick="event.stopPropagation(); window.askDelete('prestamos', '${p.id}')" class="w-8 h-8 rounded-full bg-zinc-800 flex items-center justify-center text-zinc-600 hover:text-red-500 transition-colors">
+                            <button onclick="event.stopPropagation(); window.askDelete('prestamos', '${p.id}')" class="w-8 h-8 rounded-full bg-zinc-800 flex items-center justify-center text-zinc-700">
                                 <i class="fas fa-trash-alt text-[10px]"></i>
                             </button>
                         </div>
@@ -301,25 +285,33 @@
             document.getElementById('total-deuda').innerText = `$${totalD.toFixed(2)}`;
         }
 
-        window.editDebt = async (id) => {
+        window.editDebt = (id) => {
             editingDebtId = id;
-            const data = cachedDeudas.find(d => d.id === id);
-            if (data) {
-                document.getElementById('deuda-acreedor').value = data.acreedor;
-                document.getElementById('deuda-monto').value = data.montoBase;
-                document.getElementById('deuda-descripcion').value = data.descripcion || '';
-                document.getElementById('deuda-fecha-inicio').value = data.fechaInicio;
-                document.getElementById('deuda-fecha-venc').value = data.fechaVencimiento;
+            const p = cachedDeudas.find(d => d.id === id);
+            if (p) {
+                document.getElementById('deuda-acreedor').value = p.acreedor;
+                document.getElementById('deuda-monto').value = p.montoBase;
+                document.getElementById('deuda-descripcion').value = p.descripcion || '';
+                document.getElementById('deuda-fecha-inicio').value = p.fechaInicio;
+                document.getElementById('deuda-fecha-venc').value = p.fechaVencimiento;
                 document.getElementById('submit-deuda-btn').innerText = "Actualizar Deuda";
+                document.getElementById('cancel-edit-btn').classList.remove('hidden');
                 document.getElementById('deuda-form').scrollIntoView({ behavior: 'smooth' });
             }
+        };
+
+        window.cancelEdit = () => {
+            editingDebtId = null;
+            document.getElementById('deuda-form').reset();
+            document.getElementById('submit-deuda-btn').innerText = "Crear Deuda";
+            document.getElementById('cancel-edit-btn').classList.add('hidden');
         };
 
         window.openDetalleModal = (id) => {
             activeDebtId = id;
             const data = cachedDeudas.find(d => d.id === id);
             if (data) {
-                renderHistorial(data); // Renderizado instantáneo desde memoria
+                renderHistorial(data);
                 document.getElementById('detalle-modal').classList.remove('hidden');
                 document.body.style.overflow = 'hidden';
             }
@@ -334,119 +326,88 @@
         function renderHistorial(p) {
             document.getElementById('det-acreedor').innerText = p.acreedor;
             document.getElementById('det-desc-sub').innerText = p.descripcion || 'Sin descripción';
-            
             const hist = document.getElementById('det-historial');
             const movs = p.abonos || [];
             
-            hist.innerHTML = `
-                ${p.descripcion ? `
-                <div class="bg-zinc-900/20 border border-zinc-800/40 rounded-2xl p-4">
-                    <p class="text-zinc-500 font-black text-[7px] uppercase mb-1">Detalles del préstamo</p>
-                    <p class="text-zinc-300 text-[10px] leading-relaxed italic">${p.descripcion}</p>
-                </div>
-                ` : ''}
-
-                <div class="bg-zinc-900/40 border border-zinc-800 rounded-2xl p-4 flex justify-between items-center">
+            hist.innerHTML = movs.sort((a,b) => b.id - a.id).map(m => `
+                <div class="p-4 rounded-2xl flex justify-between items-center bg-black border border-zinc-800">
                     <div>
-                        <p class="text-zinc-500 font-black text-[8px] uppercase">Capital Inicial</p>
-                        <p class="text-white font-black italic text-lg">$${parseFloat(p.montoBase).toFixed(2)}</p>
+                        <p class="text-[9px] font-black uppercase ${m.tipo === 'INTERES' ? 'text-amber-500' : 'text-zinc-500'}">${m.tipo}</p>
+                        <p class="text-[7px] text-zinc-600">${m.fecha}</p>
                     </div>
-                    <div class="text-right">
-                        <p class="text-zinc-500 font-black text-[8px] uppercase">Con Interés Inicial</p>
-                        <p class="text-zinc-400 font-black italic text-xs">$${parseFloat(p.montoTotalConInteres).toFixed(2)}</p>
+                    <div class="flex items-center gap-4">
+                        <span class="text-sm font-black italic ${m.tipo === 'INTERES' ? 'text-amber-500' : 'text-white'}">${m.tipo === 'INTERES' ? '+' : '-'}$${m.monto.toFixed(2)}</span>
+                        <button onclick="window.deleteMov('${p.id}', '${m.id}')" class="text-zinc-800"><i class="fas fa-trash-alt text-[10px]"></i></button>
                     </div>
                 </div>
-                ${movs.length === 0 ? '<p class="text-center py-10 text-[10px] text-zinc-700 font-black uppercase italic">Sin movimientos registrados</p>' : ''}
-                ${movs.sort((a,b) => b.id - a.id).map(m => `
-                    <div class="p-4 rounded-2xl flex justify-between items-center border ${m.tipo === 'INTERES' ? 'bg-amber-500/5 border-amber-500/20' : 'bg-black border-zinc-800'}">
-                        <div>
-                            <div class="flex items-center gap-2">
-                                <span class="text-[9px] font-black uppercase italic ${m.tipo === 'INTERES' ? 'text-amber-500' : 'text-zinc-500'}">
-                                    ${m.tipo === 'INTERES' ? 'Prórroga' : 'Abono'}
-                                </span>
-                                <span class="text-[7px] text-zinc-700 font-bold">${m.fecha}</span>
-                            </div>
-                            <p class="text-[9px] text-zinc-400 mt-0.5">${m.tipo === 'INTERES' ? `+${m.dias} días (${m.porcentaje}%)` : 'Pago recibido'}</p>
-                        </div>
-                        <div class="flex items-center gap-4">
-                            <span class="text-sm font-black italic ${m.tipo === 'INTERES' ? 'text-amber-500' : 'text-white'}">
-                                ${m.tipo === 'INTERES' ? '+' : '-'}$${m.monto.toFixed(2)}
-                            </span>
-                            <button onclick="window.deleteMov('${p.id}', ${m.id})" class="text-zinc-800 hover:text-red-500"><i class="fas fa-trash-alt text-[10px]"></i></button>
-                        </div>
-                    </div>
-                `).join('')}
-            `;
+            `).join('') || '<p class="text-center text-[10px] text-zinc-700 py-10 uppercase italic font-black">Sin movimientos</p>';
         }
 
         document.getElementById('det-abono-btn').onclick = async () => {
             const input = document.getElementById('det-monto-input');
             const monto = parseFloat(input.value);
-            if (!monto || monto <= 0) return;
+            if (!monto || monto <= 0 || !activeDebtId) return;
 
-            const data = cachedDeudas.find(d => d.id === activeDebtId);
-            if (!data) return;
-
-            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'prestamos', activeDebtId);
-            const mov = { id: Date.now(), monto, fecha: getFormatDate(), tipo: 'ABONO' };
+            const p = cachedDeudas.find(d => d.id === activeDebtId);
+            const mid = "MOV_" + Date.now();
+            const mov = { id: mid, monto, fecha: getFormatDate(), tipo: 'ABONO' };
             
-            await updateDoc(docRef, { abonos: [...(data.abonos || []), mov] });
-            
-            await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'egresos'), {
-                categoria: 'otros', monto, detalle: `Abono a ${data.acreedor}`, createdAt: Date.now(), fecha: getFormatDate(), uid: currentUser?.uid, tipo: 'ABONO_PRESTAMO'
+            await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'prestamos', activeDebtId), {
+                abonos: [...(p.abonos || []), mov]
             });
 
+            await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'egresos'), {
+                categoria: 'otros', monto, detalle: `Abono a ${p.acreedor}`,
+                createdAt: Date.now(), fecha: new Date().toLocaleDateString('es-ES'),
+                syncId: mid, prestamoId: activeDebtId
+            });
             input.value = '';
         };
-
-        window.openProrrogaModal = () => document.getElementById('progroga-modal').classList.remove('hidden');
-        window.closeProrrogaModal = () => {
-            document.getElementById('progroga-modal').classList.add('hidden');
-            document.getElementById('prorroga-dias').value = '';
-            document.getElementById('prorroga-interes').value = '';
-        };
-
-        document.getElementById('det-prorroga-btn').onclick = () => window.openProrrogaModal();
 
         document.getElementById('confirm-prorroga-btn').onclick = async () => {
             const dias = parseInt(document.getElementById('prorroga-dias').value);
             const pct = parseFloat(document.getElementById('prorroga-interes').value);
-            if (!dias || isNaN(pct)) return;
+            if (!dias || isNaN(pct) || !activeDebtId) return;
 
-            const data = cachedDeudas.find(d => d.id === activeDebtId);
-            if (!data) return;
-
-            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'prestamos', activeDebtId);
-            const movs = data.abonos || [];
+            const p = cachedDeudas.find(d => d.id === activeDebtId);
+            const movs = p.abonos || [];
             const extraInt = movs.filter(m => m.tipo === 'INTERES').reduce((a,c) => a + c.monto, 0);
             const abonos = movs.filter(m => m.tipo === 'ABONO').reduce((a,c) => a + c.monto, 0);
-            const saldoActual = (parseFloat(data.montoTotalConInteres) + extraInt) - abonos;
+            const saldoActual = (parseFloat(p.montoTotalConInteres) + extraInt) - abonos;
 
-            const montoInteres = saldoActual * (pct / 100);
+            const montoInt = saldoActual * (pct / 100);
+            const fechaV = new Date(p.fechaVencimiento || new Date());
+            fechaV.setDate(fechaV.getDate() + dias);
 
-            const fechaOriginal = new Date(data.fechaVencimiento || getToday());
-            fechaOriginal.setDate(fechaOriginal.getDate() + dias);
-            const nuevaFechaVenc = fechaOriginal.toISOString().split('T')[0];
-
-            const nuevoMov = { id: Date.now(), monto: montoInteres, fecha: getFormatDate(), tipo: 'INTERES', porcentaje: pct, dias: dias };
+            const mov = { id: "INT_" + Date.now(), monto: montoInt, fecha: getFormatDate(), tipo: 'INTERES', porcentaje: pct, dias };
             
-            await updateDoc(docRef, { 
-                abonos: [...movs, nuevoMov],
-                fechaVencimiento: nuevaFechaVenc 
+            await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'prestamos', activeDebtId), {
+                abonos: [...movs, mov],
+                fechaVencimiento: fechaV.toISOString().split('T')[0]
             });
-
             closeProrrogaModal();
         };
 
         window.deleteMov = async (pId, mId) => {
-            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'prestamos', pId);
-            const data = cachedDeudas.find(d => d.id === pId);
-            if (data) {
-                const filt = data.abonos.filter(m => m.id !== mId);
-                await updateDoc(docRef, { abonos: filt });
+            const p = cachedDeudas.find(d => d.id === pId);
+            if (mId.startsWith("MOV_")) {
+                const eSnap = await getDocs(collection(db, 'artifacts', appId, 'public', 'data', 'egresos'));
+                eSnap.forEach(ed => { if (ed.data().syncId === mId) deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'egresos', ed.id)); });
             }
+            await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'prestamos', pId), {
+                abonos: p.abonos.filter(m => m.id !== mId)
+            });
         };
 
+        // --- GENERAL ---
+        window.switchTab = (tab) => {
+            document.getElementById('content-egresos').classList.toggle('hidden', tab !== 'egresos');
+            document.getElementById('content-deudas').classList.toggle('hidden', tab !== 'deudas');
+            document.getElementById('tab-egresos').className = `flex-1 py-3 rounded-xl text-[10px] font-black transition-all ${tab === 'egresos' ? 'active-tab' : 'text-zinc-500'}`;
+            document.getElementById('tab-deudas').className = `flex-1 py-3 rounded-xl text-[10px] font-black transition-all ${tab === 'deudas' ? 'active-tab' : 'text-zinc-500'}`;
+        };
+
+        window.selectCategory = (id) => { activeCategory = id; renderCategories(); };
         function renderCategories() {
             document.getElementById('categories-grid').innerHTML = categories.map(cat => `
                 <button type="button" onclick="window.selectCategory('${cat.id}')" class="p-2 rounded-xl border text-[8px] font-black flex flex-col items-center gap-1 transition-all ${activeCategory === cat.id ? 'category-selected' : 'border-zinc-800 text-zinc-600'}">
@@ -454,14 +415,14 @@
                 </button>
             `).join('');
         }
-        window.selectCategory = (id) => { activeCategory = id; renderCategories(); };
 
         document.getElementById('egreso-form').onsubmit = async (e) => {
             e.preventDefault();
+            const m = parseFloat(document.getElementById('egreso-monto').value);
+            const d = document.getElementById('egreso-detalle').value;
             await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'egresos'), {
-                categoria: activeCategory, monto: parseFloat(document.getElementById('egreso-monto').value),
-                detalle: document.getElementById('egreso-detalle').value,
-                createdAt: Date.now(), fecha: new Date().toLocaleDateString('es-ES'), uid: currentUser?.uid
+                categoria: activeCategory, monto: m, detalle: d,
+                createdAt: Date.now(), fecha: new Date().toLocaleDateString('es-ES')
             });
             e.target.reset();
             window.selectCategory('otros');
@@ -469,50 +430,34 @@
 
         document.getElementById('deuda-form').onsubmit = async (e) => {
             e.preventDefault();
-            const base = parseFloat(document.getElementById('deuda-monto').value);
-            const int = parseFloat(document.getElementById('deuda-interes-valor').value || 0);
-            const desc = document.getElementById('deuda-descripcion').value;
-            const total = base + (base * (int / 100));
-            const acreedor = document.getElementById('deuda-acreedor').value;
-            const fInic = document.getElementById('deuda-fecha-inicio').value;
-            const fVenc = document.getElementById('deuda-fecha-venc').value;
+            const b = parseFloat(document.getElementById('deuda-monto').value);
+            const i = parseFloat(document.getElementById('deuda-interes-valor').value || 0);
+            const total = b + (b * (i/100));
+            const data = {
+                acreedor: document.getElementById('deuda-acreedor').value,
+                montoBase: b, montoTotalConInteres: total,
+                descripcion: document.getElementById('deuda-descripcion').value,
+                fechaInicio: document.getElementById('deuda-fecha-inicio').value,
+                fechaVencimiento: document.getElementById('deuda-fecha-venc').value
+            };
 
             if (editingDebtId) {
-                await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'prestamos', editingDebtId), {
-                    acreedor, montoBase: base, montoTotalConInteres: total,
-                    descripcion: desc,
-                    fechaInicio: fInic, fechaVencimiento: fVenc
-                });
-                editingDebtId = null;
-                document.getElementById('submit-deuda-btn').innerText = "Crear Deuda";
+                await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'prestamos', editingDebtId), data);
+                window.cancelEdit();
             } else {
-                await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'prestamos'), {
-                    acreedor, montoBase: base, montoTotalConInteres: total,
-                    descripcion: desc,
-                    fechaInicio: fInic, fechaVencimiento: fVenc,
-                    abonos: [], createdAt: Date.now(), uid: currentUser?.uid
-                });
+                await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'prestamos'), { ...data, abonos: [], createdAt: Date.now() });
+                e.target.reset();
+                resetToggle();
             }
-            e.target.reset();
-            document.getElementById('deuda-fecha-inicio').value = getToday();
-            resetToggle();
         };
 
         document.getElementById('toggle-interes').onclick = () => {
             hasInterest = !hasInterest;
-            const btn = document.getElementById('toggle-interes');
-            const circle = document.getElementById('toggle-circle');
-            btn.className = `w-10 h-5 rounded-full relative transition-all ${hasInterest ? 'bg-amber-500 shadow-[0_0_10px_#f59e0b]' : 'bg-zinc-800'}`;
-            circle.style.left = hasInterest ? '1.375rem' : '0.125rem';
+            document.getElementById('toggle-circle').style.left = hasInterest ? '1.375rem' : '0.125rem';
             document.getElementById('deuda-interes-valor').classList.toggle('hidden', !hasInterest);
         };
 
-        function resetToggle() {
-            hasInterest = false;
-            document.getElementById('toggle-interes').className = `w-10 h-5 rounded-full relative transition-all bg-zinc-800`;
-            document.getElementById('toggle-circle').style.left = '0.125rem';
-            document.getElementById('deuda-interes-valor').classList.add('hidden');
-        }
+        function resetToggle() { hasInterest = false; document.getElementById('deuda-interes-valor').classList.add('hidden'); document.getElementById('toggle-circle').style.left = '0.125rem'; }
 
         window.askDelete = (col, id) => {
             document.getElementById('confirm-modal').classList.remove('hidden');
@@ -523,6 +468,8 @@
         };
 
         window.closeConfirmModal = () => document.getElementById('confirm-modal').classList.add('hidden');
+        window.openProrrogaModal = () => document.getElementById('progroga-modal').classList.remove('hidden');
+        window.closeProrrogaModal = () => document.getElementById('progroga-modal').classList.add('hidden');
 
         renderCategories();
         signInAnonymously(auth);
