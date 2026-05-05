@@ -88,6 +88,7 @@
             border: none;
             transition: transform 0.2s;
         }
+        .btn-auth:disabled { opacity: 0.5; cursor: not-allowed; }
         .btn-auth:active { transform: scale(0.96); }
 
         .auth-toggle {
@@ -101,14 +102,26 @@
             font-weight: bold;
         }
         .auth-toggle span { color: var(--oro); }
+        
+        #loading-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 100;
+            display: none; align-items: center; justify-content: center;
+            backdrop-blur: 4px;
+        }
     </style>
 </head>
 <body>
 
+    <div id="loading-overlay">
+        <div class="flex flex-col items-center">
+            <div class="w-10 h-10 border-2 border-oro/20 border-t-oro rounded-full animate-spin mb-4"></div>
+            <p class="text-[10px] text-oro tracking-[0.3em] font-black uppercase">Procesando...</p>
+        </div>
+    </div>
+
     <section class="flex flex-col items-center w-full">
         <div class="mb-12 text-center">
             <div class="w-20 h-20 gold-box rounded-[28px] flex items-center justify-center text-black text-3xl font-black shadow-2xl mx-auto mb-6">JI</div>
-            <!-- Frase actualizada aquí -->
             <h2 class="texto-dorado text-3xl font-black uppercase tracking-[0.1em]">Asistente Administrativo</h2>
             <p class="text-gray-600 text-[9px] uppercase tracking-[0.5em] mt-3 font-bold opacity-60">Jaddy INC System</p>
         </div>
@@ -116,9 +129,9 @@
         <div class="auth-card">
             <h3 id="auth-title" class="text-white text-center font-bold uppercase tracking-widest text-[10px] mb-10 opacity-40">Identificación de Usuario</h3>
             
-            <div id="auth-msg" class="text-center text-red-500 text-[10px] font-black mb-6 hidden uppercase tracking-widest">Credenciales Inválidas</div>
+            <div id="auth-msg" class="text-center text-red-500 text-[10px] font-black mb-6 hidden uppercase tracking-widest"></div>
             
-            <input type="text" id="user-input" class="input-luxury" placeholder="Usuario" autocomplete="off" style="margin-bottom: 15px;">
+            <input type="email" id="email-input" class="input-luxury" placeholder="Correo Electrónico" autocomplete="email" style="margin-bottom: 15px;">
             
             <div class="pass-container">
                 <input type="password" id="pass-input" class="input-luxury" placeholder="Contraseña">
@@ -138,10 +151,27 @@
         </div>
     </section>
 
-    <script>
+    <!-- Firebase SDKs -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCrjjeOoXPOtJDXDfrHLOA4Ny0QW2zfVWk",
+            authDomain: "apps-d45d6.firebaseapp.com",
+            projectId: "apps-d45d6",
+            storageBucket: "apps-d45d6.firebasestorage.app",
+            messagingSenderId: "502648373937",
+            appId: "1:502648373937:web:8c3beaa2a6c9289a4d9890",
+            measurementId: "G-7VCRCRSCRQ"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+
         let isLogin = true;
 
-        function togglePass() {
+        window.togglePass = function() {
             const input = document.getElementById('pass-input');
             const icon = document.getElementById('eye-icon');
             if (input.type === 'password') {
@@ -151,57 +181,80 @@
                 input.type = 'password';
                 icon.innerHTML = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle>';
             }
-        }
+        };
 
-        function getDB() {
-            return JSON.parse(localStorage.getItem('jaddy_users')) || { "admin": "1234" };
-        }
-
-        function handleAuth() {
-            const user = document.getElementById('user-input').value.trim();
-            const pass = document.getElementById('pass-input').value.trim();
-            
-            if (!user || !pass) return showMsg("Complete los campos");
-
-            let db = getDB();
-
-            if (isLogin) {
-                if (db[user] && db[user] === pass) {
-                    localStorage.setItem('jaddy_session', 'active');
-                    localStorage.setItem('jaddy_user', user);
-                    showMsg("Bienvenido, " + user, true);
-                    setTimeout(() => { window.location.href = 'index.html'; }, 1000);
-                } else {
-                    showMsg("Acceso Denegado");
-                }
-            } else {
-                if (db[user]) {
-                    showMsg("El usuario ya existe");
-                } else {
-                    db[user] = pass;
-                    localStorage.setItem('jaddy_users', JSON.stringify(db));
-                    showMsg("¡Registrado! Inicie sesión", true);
-                    toggleAuthMode();
-                }
-            }
-        }
-
-        function toggleAuthMode() {
+        window.toggleAuthMode = function() {
             isLogin = !isLogin;
-            document.getElementById('auth-title').innerText = isLogin ? "Identificación de Usuario" : "Crear Nueva Credencial";
-            document.getElementById('auth-btn').innerText = isLogin ? "Entrar" : "Crear";
-            document.getElementById('toggle-text').innerHTML = isLogin ? 
+            const title = document.getElementById('auth-title');
+            const btn = document.getElementById('auth-btn');
+            const toggle = document.getElementById('toggle-text');
+            
+            title.innerText = isLogin ? "Identificación de Usuario" : "Crear Nueva Credencial";
+            btn.innerText = isLogin ? "Entrar" : "Registrar Usuario";
+            toggle.innerHTML = isLogin ? 
                 "¿Sin acceso al sistema? <span>Registrar</span>" : 
                 "¿Ya tienes cuenta? <span>Regresar</span>";
-        }
+            
+            // Limpiar mensaje al cambiar modo
+            document.getElementById('auth-msg').classList.add('hidden');
+        };
 
         function showMsg(t, isSuccess = false) {
             const msg = document.getElementById('auth-msg');
             msg.innerText = t;
             msg.style.color = isSuccess ? '#D4AF37' : '#ef4444';
             msg.classList.remove('hidden');
-            setTimeout(() => msg.classList.add('hidden'), 3000);
+            // No ocultar si es éxito para que lean el mensaje antes de redirigir
+            if(!isSuccess) setTimeout(() => msg.classList.add('hidden'), 4000);
         }
+
+        window.handleAuth = async function() {
+            const email = document.getElementById('email-input').value.trim();
+            const pass = document.getElementById('pass-input').value.trim();
+            const loader = document.getElementById('loading-overlay');
+            
+            if (!email || !pass) return showMsg("Complete los campos requeridos");
+            if (pass.length < 6) return showMsg("La contraseña debe tener 6+ caracteres");
+
+            loader.style.display = 'flex';
+
+            try {
+                if (isLogin) {
+                    // LOGIN
+                    await signInWithEmailAndPassword(auth, email, pass);
+                    showMsg("Acceso Autorizado", true);
+                    setTimeout(() => { window.location.href = 'index.html'; }, 800);
+                } else {
+                    // REGISTRO
+                    await createUserWithEmailAndPassword(auth, email, pass);
+                    showMsg("Usuario registrado con éxito", true);
+                    // Esperar un momento y volver al login
+                    setTimeout(() => { window.toggleAuthMode(); }, 1500);
+                }
+            } catch (error) {
+                console.error("Error Firebase:", error.code);
+                let errorMsg = "Error en la operación";
+                
+                switch (error.code) {
+                    case 'auth/user-not-found': errorMsg = "Usuario no registrado"; break;
+                    case 'auth/wrong-password': errorMsg = "Credenciales incorrectas"; break;
+                    case 'auth/email-already-in-use': errorMsg = "El correo ya está en uso"; break;
+                    case 'auth/invalid-email': errorMsg = "Formato de correo inválido"; break;
+                    case 'auth/weak-password': errorMsg = "Contraseña demasiado débil"; break;
+                    case 'auth/network-request-failed': errorMsg = "Sin conexión a internet"; break;
+                }
+                showMsg(errorMsg);
+            } finally {
+                loader.style.display = 'none';
+            }
+        };
+
+        // Redirigir si ya está logueado (opcional)
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                console.log("Sesión detectada para:", user.email);
+            }
+        });
     </script>
 </body>
 </html>
