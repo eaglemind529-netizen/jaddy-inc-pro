@@ -1,4 +1,4 @@
-
+```html
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -52,9 +52,15 @@
             <div class="w-7 h-7 gold-box rounded flex items-center justify-center text-black text-[10px] font-bold">JI</div>
             <h1 class="texto-dorado uppercase tracking-widest text-sm font-black">JADDY INC</h1>
         </div>
-        <div class="flex items-center gap-2">
-            <div class="w-2 h-2 bg-green-600 rounded-full animate-pulse"></div>
-            <span class="text-[8px] text-gray-500 font-bold uppercase tracking-widest">SISTEMA ONLINE</span>
+        <div class="flex items-center gap-4">
+            <div class="flex items-center gap-2">
+                <div class="w-2 h-2 bg-green-600 rounded-full animate-pulse"></div>
+                <span class="text-[8px] text-gray-500 font-bold uppercase tracking-widest">ONLINE</span>
+            </div>
+            <!-- Botón de Cerrar Sesión -->
+            <button onclick="cerrarSesion()" class="flex items-center justify-center w-8 h-8 rounded-full bg-white/5 border border-white/10 text-white/50 active:text-oro active:border-oro transition-all">
+                <i class="fas fa-power-off text-xs"></i>
+            </button>
         </div>
     </header>
 
@@ -72,19 +78,19 @@
                 <div class="w-8 h-[1px] bg-oro/30 mx-auto"></div>
             </div>
             <div class="grid-menu">
-                <a href="ventas.html" class="box-item">
+                <a href="#" onclick="event.preventDefault()" class="box-item">
                     <div class="icon-circle gold-box text-black"><i class="fas fa-shopping-cart"></i></div>
                     <span class="text-white font-black text-[11px] uppercase">Ventas</span>
                 </a>
-                <a href="deudores.html" class="box-item">
+                <a href="#" onclick="event.preventDefault()" class="box-item">
                     <div class="icon-circle bg-white/5 border border-white/10 text-white"><i class="fas fa-hand-holding-dollar opacity-70"></i></div>
                     <span class="text-white font-black text-[11px] uppercase">Cartera</span>
                 </a>
-                <a href="egresos.html" class="box-item">
+                <a href="#" onclick="event.preventDefault()" class="box-item">
                     <div class="icon-circle bg-oro/10 text-oro"><i class="fas fa-file-invoice-dollar"></i></div>
                     <span class="texto-dorado font-black text-[11px] uppercase">Finanzas</span>
                 </a>
-                <a href="clientes.html" class="box-item">
+                <a href="#" onclick="event.preventDefault()" class="box-item">
                     <div class="icon-circle bg-white/5 border border-white/10 text-white"><i class="fas fa-address-card opacity-70"></i></div>
                     <span class="text-white font-black text-[11px] uppercase">Clientes</span>
                 </a>
@@ -97,11 +103,11 @@
                 <div class="w-8 h-[1px] bg-oro/30 mx-auto"></div>
             </div>
             <div class="grid-menu">
-                <a href="inventario.html" class="box-item">
+                <a href="#" onclick="event.preventDefault()" class="box-item">
                     <div class="icon-circle bg-white/5 border border-white/10 text-white"><i class="fas fa-list-ul opacity-70"></i></div>
                     <span class="text-white font-black text-[11px] uppercase">Inventario</span>
                 </a>
-                <a href="productos.html" class="box-item">
+                <a href="#" onclick="event.preventDefault()" class="box-item">
                     <div class="icon-circle bg-white/5 border border-white/10 text-white"><i class="fas fa-box opacity-70"></i></div>
                     <span class="text-white font-black text-[11px] uppercase">Productos</span>
                 </a>
@@ -114,11 +120,11 @@
                 <div class="w-8 h-[1px] bg-oro/30 mx-auto"></div>
             </div>
             <div class="grid-menu">
-                <a href="vendedores.html" class="box-item">
+                <a href="#" onclick="event.preventDefault()" class="box-item">
                     <div class="icon-circle bg-white/5 border border-white/10 text-white"><i class="fas fa-users opacity-70"></i></div>
                     <span class="text-white font-black text-[11px] uppercase">Vendedores</span>
                 </a>
-                <a href="reportes.html" class="box-item">
+                <a href="#" onclick="event.preventDefault()" class="box-item">
                     <div class="icon-circle border border-oro/20 text-oro"><i class="fas fa-chart-line"></i></div>
                     <span class="texto-dorado font-black text-[11px] uppercase">Reportes</span>
                 </a>
@@ -126,12 +132,16 @@
         </div>
     </main>
 
-    <nav class="fixed bottom-0 left-0 right-0 h-14 bg-black/90 backdrop-blur-xl border-t border-gray-900 flex items-center justify-between px-8 z-50">
+    <footer class="fixed bottom-0 left-0 right-0 h-14 bg-black/90 backdrop-blur-xl border-t border-gray-900 flex items-center justify-between px-8 z-50">
         <div class="text-[7px] text-oro tracking-[0.4em] uppercase opacity-30 font-black">Luxury System Master v1.5</div>
-    </nav>
+    </footer>
 
     <script>
-        document.getElementById('safety-overlay').style.display = 'none';
+        window.onload = function() {
+            setTimeout(() => {
+                document.getElementById('safety-overlay').style.display = 'none';
+            }, 500);
+        };
 
         const tabs = ['comercial', 'stock', 'analisis'];
         let currentIdx = 0;
@@ -142,6 +152,17 @@
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
             document.getElementById('tab-' + tabId).classList.add('active');
             document.getElementById('btn-' + tabId).classList.add('active');
+        };
+
+        // Lógica para cerrar sesión
+        window.cerrarSesion = function() {
+            // Muestra el overlay de carga antes de redirigir (simulación)
+            document.getElementById('safety-overlay').style.display = 'flex';
+            // Aquí iría la redirección a login o index de acceso
+            console.log("Cerrando sesión...");
+            setTimeout(() => {
+                window.location.href = 'index.html'; 
+            }, 800);
         };
 
         let touchstartX = 0;
@@ -158,4 +179,4 @@
 </body>
 </html>
 
-
+```
