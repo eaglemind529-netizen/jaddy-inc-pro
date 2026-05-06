@@ -55,7 +55,8 @@
         <div class="flex items-center gap-4">
             <div class="flex items-center gap-2">
                 <div class="w-2 h-2 bg-green-600 rounded-full animate-pulse"></div>
-                <span id="user-name-display" class="text-[8px] text-gray-500 font-bold uppercase tracking-widest">ONLINE</span>
+                <!-- Aquí se muestra el nombre del usuario logueado -->
+                <span id="user-name-display" class="text-[8px] text-gray-500 font-bold uppercase tracking-widest">CARGANDO...</span>
             </div>
             <button onclick="cerrarSesion()" class="flex items-center justify-center w-8 h-8 rounded-full bg-white/5 border border-white/10 text-white/50 active:text-oro active:border-oro transition-all">
                 <i class="fas fa-power-off text-xs"></i>
@@ -153,11 +154,18 @@
 
         onAuthStateChanged(auth, (user) => {
             if (user) {
+                // El usuario está identificado
                 document.getElementById('safety-overlay').style.display = 'none';
-                if (user.email) {
-                    document.getElementById('user-name-display').innerText = user.email.split('@')[0].toUpperCase();
-                }
+                
+                // Mostramos su nombre en el header (ejemplo: juan@gmail.com -> JUAN)
+                const userName = user.email ? user.email.split('@')[0].toUpperCase() : "USUARIO";
+                document.getElementById('user-name-display').innerText = userName;
+
+                // IMPORTANTE: Guardamos el userId para que las otras páginas sepan qué datos cargar
+                sessionStorage.setItem('currentUserId', user.uid);
+                console.log("Sesión activa para ID:", user.uid);
             } else {
+                // Si no hay sesión, mandamos al login
                 window.location.replace('login.html');
             }
         });
@@ -165,6 +173,7 @@
         window.cerrarSesion = async function() {
             document.getElementById('safety-overlay').style.display = 'flex';
             try {
+                sessionStorage.removeItem('currentUserId');
                 await signOut(auth);
             } catch (error) {
                 window.location.replace('login.html');
