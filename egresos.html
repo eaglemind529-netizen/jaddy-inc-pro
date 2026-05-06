@@ -17,6 +17,9 @@
         
         .fade-in { animation: fadeIn 0.5s ease-in; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        /* Estado de carga en botones */
+        .loading { opacity: 0.5; pointer-events: none; }
     </style>
 </head>
 <body class="select-none">
@@ -28,13 +31,12 @@
                     <div class="w-8 h-8 bg-amber-500 rounded-lg flex items-center justify-center font-black text-black italic">JI</div>
                     <h1 class="text-xs font-black text-white italic tracking-tight uppercase">Mis Registros Privados</h1>
                 </div>
-                <!-- Aquí aparecerá el nombre o correo del usuario -->
-                <p id="user-display-name" class="text-[8px] text-amber-500 font-black mt-1 uppercase tracking-widest italic">Cargando perfil...</p>
-                <p id="user-id-display" class="text-[6px] text-zinc-700 font-mono uppercase tracking-tighter">Sincronizando ID...</p>
+                <p id="user-display-name" class="text-[8px] text-amber-500 font-black mt-1 uppercase tracking-widest italic">Iniciando sistema...</p>
+                <p id="user-id-display" class="text-[6px] text-zinc-700 font-mono uppercase tracking-tighter italic">Cifrando conexión...</p>
             </div>
             <div class="flex items-center gap-2">
-                <div class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
-                <span class="text-[8px] font-black text-zinc-500 uppercase tracking-widest">Seguro</span>
+                <div id="status-dot" class="w-2 h-2 rounded-full bg-zinc-800"></div>
+                <span id="status-text" class="text-[8px] font-black text-zinc-500 uppercase tracking-widest italic">Offline</span>
             </div>
         </header>
 
@@ -65,8 +67,8 @@
                         <span class="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500 font-black italic">$</span>
                         <input type="number" step="0.01" required placeholder="0.00" id="egreso-monto" class="w-full bg-black border border-zinc-800 p-5 rounded-2xl text-white font-black text-2xl focus:border-amber-500 outline-none text-center">
                     </div>
-                    <input type="text" placeholder="DESCRIPCIÓN DEL GASTO" id="egreso-detalle" class="w-full bg-black border border-zinc-800 p-4 rounded-2xl text-[10px] outline-none text-zinc-400 text-center uppercase font-bold">
-                    <button type="submit" class="w-full py-5 rounded-2xl bg-white text-black font-black italic text-[10px] tracking-[0.2em] uppercase hover:bg-amber-500 transition-all">Registrar en mi Cuenta</button>
+                    <input type="text" placeholder="¿EN QUÉ GASTASTE?" id="egreso-detalle" class="w-full bg-black border border-zinc-800 p-4 rounded-2xl text-[10px] outline-none text-zinc-400 text-center uppercase font-bold tracking-widest">
+                    <button type="submit" id="btn-submit-egreso" class="w-full py-5 rounded-2xl bg-white text-black font-black italic text-[10px] tracking-[0.2em] uppercase hover:bg-amber-500 transition-all">Guardar Gasto</button>
                 </form>
                 <div id="list-egresos" class="space-y-3"></div>
             </div>
@@ -74,21 +76,21 @@
             <!-- VISTA: DEUDAS -->
             <div id="content-deudas" class="hidden space-y-6">
                 <form id="deuda-form" class="space-y-4 bg-zinc-900/40 p-6 rounded-[2.5rem] border border-zinc-800/50">
-                    <input type="text" required placeholder="NOMBRE DEL DEUDOR / EMPRESA" id="deuda-acreedor" class="w-full bg-black border border-zinc-800 p-4 rounded-2xl text-white font-black text-[10px] outline-none text-center uppercase">
+                    <input type="text" required placeholder="NOMBRE DEL DEUDOR / EMPRESA" id="deuda-acreedor" class="w-full bg-black border border-zinc-800 p-4 rounded-2xl text-white font-black text-[10px] outline-none text-center uppercase tracking-widest">
                     <input type="number" required placeholder="MONTO PRESTADO $" id="deuda-monto" class="w-full bg-black border border-zinc-800 p-5 rounded-2xl text-white font-black text-xl outline-none text-center">
                     
                     <div class="grid grid-cols-2 gap-2">
                         <div class="bg-black p-3 rounded-2xl border border-zinc-800">
-                            <label class="text-[7px] font-black text-zinc-600 uppercase mb-1 block italic">Fecha Inicio</label>
+                            <label class="text-[7px] font-black text-zinc-600 uppercase mb-1 block italic tracking-widest">Fecha Inicio</label>
                             <input type="date" id="deuda-fecha-init" class="w-full bg-transparent text-white font-black text-[10px] outline-none">
                         </div>
                         <div class="bg-black p-3 rounded-2xl border border-zinc-800">
-                            <label class="text-[7px] font-black text-zinc-600 uppercase mb-1 block italic">Vencimiento</label>
+                            <label class="text-[7px] font-black text-zinc-600 uppercase mb-1 block italic tracking-widest">Vencimiento</label>
                             <input type="date" id="deuda-fecha-end" class="w-full bg-transparent text-white font-black text-[10px] outline-none">
                         </div>
                     </div>
                     
-                    <button type="submit" id="btn-submit-deuda" class="w-full py-5 rounded-2xl bg-amber-500 text-black font-black italic text-[10px] tracking-[0.2em] uppercase">Registrar Nuevo Préstamo</button>
+                    <button type="submit" id="btn-submit-deuda" class="w-full py-5 rounded-2xl bg-amber-500 text-black font-black italic text-[10px] tracking-[0.2em] uppercase">Registrar Préstamo</button>
                 </form>
                 <div id="list-deudas" class="space-y-4"></div>
             </div>
@@ -99,7 +101,7 @@
             <div class="p-8 border-b border-zinc-900 flex justify-between items-center">
                 <div>
                     <h2 id="det-name" class="text-white font-black uppercase italic text-lg tracking-tighter">Cargando...</h2>
-                    <p id="det-id" class="text-[7px] text-zinc-600 font-mono uppercase mt-1 italic tracking-widest">Base de datos cifrada</p>
+                    <p id="det-id" class="text-[7px] text-zinc-600 font-mono uppercase mt-1 italic tracking-widest">Base de datos protegida</p>
                 </div>
                 <button onclick="closeModal('modal-detalle')" class="w-12 h-12 rounded-full bg-zinc-900 flex items-center justify-center text-white text-xl"><i class="fas fa-times"></i></button>
             </div>
@@ -107,7 +109,7 @@
             <div class="p-8 bg-zinc-900 border-t border-zinc-800 space-y-4">
                 <div class="flex gap-2">
                     <input type="number" id="det-amount" placeholder="Registrar Abono $" class="flex-1 bg-black border border-zinc-800 rounded-2xl p-5 text-xl font-black text-white outline-none">
-                    <button id="det-pay-btn" class="bg-white text-black font-black px-8 rounded-2xl uppercase italic text-[10px] tracking-widest">Abonar</button>
+                    <button id="det-pay-btn" class="bg-white text-black font-black px-8 rounded-2xl uppercase italic text-[10px] tracking-widest transition-all">Abonar</button>
                 </div>
             </div>
         </div>
@@ -116,9 +118,9 @@
         <div id="modal-confirm" class="fixed inset-0 z-[200] hidden flex items-center justify-center p-6 modal-backdrop">
             <div class="bg-zinc-900 border border-zinc-800 w-full max-w-xs rounded-[2.5rem] p-8 space-y-6 text-center">
                 <i class="fas fa-user-shield text-amber-500 text-3xl"></i>
-                <h3 class="text-white font-black uppercase italic text-xs tracking-tight">¿Deseas eliminar este registro personal?</h3>
+                <h3 class="text-white font-black uppercase italic text-xs tracking-tight">¿Eliminar este registro de tu nube privada?</h3>
                 <div class="flex flex-col gap-3">
-                    <button id="btn-confirm-delete" class="w-full py-4 rounded-2xl bg-red-600 text-white font-black text-[10px] uppercase italic">Eliminar Ahora</button>
+                    <button id="btn-confirm-delete" class="w-full py-4 rounded-2xl bg-red-600 text-white font-black text-[10px] uppercase italic">Confirmar Borrado</button>
                     <button onclick="closeModal('modal-confirm')" class="w-full py-4 rounded-2xl bg-zinc-800 text-zinc-400 font-black text-[10px] uppercase italic">Cancelar</button>
                 </div>
             </div>
@@ -129,16 +131,17 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { 
-            getFirestore, collection, doc, addDoc, updateDoc, deleteDoc, onSnapshot, getDoc
+            getFirestore, collection, doc, addDoc, updateDoc, deleteDoc, onSnapshot, getDoc, query
         } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
+        // CONFIGURACIÓN
         const firebaseConfig = JSON.parse(__firebase_config);
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'jaddy-finance-module';
 
-        let user = null;
+        let currentUser = null;
         let activeCat = 'otros';
         let selectedDebtId = null;
         let debtsData = [];
@@ -153,7 +156,7 @@
             { id: 'otros', label: 'Otros', icon: '📦' }
         ];
 
-        // --- AUTH: VINCULACIÓN CON LA APP PRINCIPAL ---
+        // --- AUTENTICACIÓN ---
         const initAuth = async () => {
             try {
                 if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
@@ -161,43 +164,137 @@
                 } else {
                     await signInAnonymously(auth);
                 }
-            } catch (e) { console.error("Error de sesión:", e); }
+            } catch (e) {
+                console.error("Error crítico de autenticación:", e);
+                document.getElementById('user-display-name').innerText = "ERROR DE CONEXIÓN";
+            }
         };
-        initAuth();
 
-        onAuthStateChanged(auth, (u) => {
-            user = u;
+        onAuthStateChanged(auth, (user) => {
             if (user) {
-                // VERIFICACIÓN VISUAL DEL USUARIO
-                const nameLabel = user.displayName || user.email || "Usuario Identificado";
-                document.getElementById('user-display-name').innerText = `HOLA, ${nameLabel.split('@')[0]}`;
-                document.getElementById('user-id-display').innerText = `ID SESIÓN: ${user.uid.substring(0,12)}...`;
+                currentUser = user;
+                const nameLabel = user.displayName || user.email || "Usuario Jaddy";
+                document.getElementById('user-display-name').innerText = `HOLA, ${nameLabel.split('@')[0].toUpperCase()}`;
+                document.getElementById('user-id-display').innerText = `ID PRIVADO: ${user.uid.substring(0,12)}...`;
+                
+                // Indicador de estado conectado
+                document.getElementById('status-dot').className = "w-2 h-2 rounded-full bg-emerald-500 animate-pulse";
+                document.getElementById('status-text').innerText = "En Línea";
+                document.getElementById('status-text').className = "text-[8px] font-black text-emerald-500 uppercase tracking-widest italic";
+                
                 setupListeners();
             } else {
-                document.getElementById('user-display-name').innerText = "SIN IDENTIFICAR";
+                document.getElementById('user-display-name').innerText = "SESIÓN REQUERIDA";
             }
         });
 
-        // --- LISTENERS PRIVADOS POR USUARIO ---
+        initAuth();
+
+        // --- CARGA DE DATOS ---
         function setupListeners() {
-            if (!user) return;
+            if (!currentUser) return;
+            
+            // Limpiar suscripciones previas
             if (unsubEgresos) unsubEgresos();
             if (unsubDeudas) unsubDeudas();
 
-            unsubEgresos = onSnapshot(collection(db, 'artifacts', appId, 'users', user.uid, 'egresos'), (snap) => {
-                renderEgresos(snap.docs.map(d => ({ ...d.data(), id: d.id })));
-            });
+            // Escuchar Egresos
+            const egresosRef = collection(db, 'artifacts', appId, 'users', currentUser.uid, 'egresos');
+            unsubEgresos = onSnapshot(egresosRef, (snap) => {
+                const data = snap.docs.map(d => ({ ...d.data(), id: d.id }));
+                renderEgresos(data);
+            }, (err) => console.error("Error cargando egresos:", err));
 
-            unsubDeudas = onSnapshot(collection(db, 'artifacts', appId, 'users', user.uid, 'prestamos'), (snap) => {
+            // Escuchar Deudas
+            const deudasRef = collection(db, 'artifacts', appId, 'users', currentUser.uid, 'prestamos');
+            unsubDeudas = onSnapshot(deudasRef, (snap) => {
                 debtsData = snap.docs.map(d => ({ ...d.data(), id: d.id }));
                 renderDeudas(debtsData);
                 if (selectedDebtId) {
                     const active = debtsData.find(d => d.id === selectedDebtId);
                     if (active) renderHistory(active);
                 }
-            });
+            }, (err) => console.error("Error cargando préstamos:", err));
         }
 
+        // --- FUNCIONES DE GUARDADO (EL CORAZÓN DEL PROBLEMA) ---
+        document.getElementById('egreso-form').onsubmit = async (e) => {
+            e.preventDefault();
+            if (!currentUser) return;
+
+            const btn = document.getElementById('btn-submit-egreso');
+            const montoInput = document.getElementById('egreso-monto');
+            const detalleInput = document.getElementById('egreso-detalle');
+            
+            const monto = parseFloat(montoInput.value);
+            if (isNaN(monto) || monto <= 0) return;
+
+            try {
+                btn.classList.add('loading');
+                btn.innerText = "REGISTRANDO...";
+
+                await addDoc(collection(db, 'artifacts', appId, 'users', currentUser.uid, 'egresos'), {
+                    categoria: activeCat,
+                    monto: monto,
+                    detalle: detalleInput.value || "Sin descripción",
+                    createdAt: Date.now()
+                });
+
+                // Limpieza y feedback
+                e.target.reset();
+                selectCat('otros');
+                btn.innerText = "¡REGISTRADO CON ÉXITO!";
+                btn.classList.replace('bg-white', 'bg-emerald-500');
+                
+                setTimeout(() => {
+                    btn.classList.remove('loading');
+                    btn.innerText = "Guardar Gasto";
+                    btn.classList.replace('bg-emerald-500', 'bg-white');
+                }, 2000);
+
+            } catch (err) {
+                console.error("Error al guardar egreso:", err);
+                btn.innerText = "ERROR AL GUARDAR";
+                btn.classList.remove('loading');
+            }
+        };
+
+        document.getElementById('deuda-form').onsubmit = async (e) => {
+            e.preventDefault();
+            if (!currentUser) return;
+
+            const btn = document.getElementById('btn-submit-deuda');
+            const acreedorInput = document.getElementById('deuda-acreedor');
+            const montoInput = document.getElementById('deuda-monto');
+            
+            try {
+                btn.classList.add('loading');
+                btn.innerText = "GUARDANDO PRÉSTAMO...";
+
+                await addDoc(collection(db, 'artifacts', appId, 'users', currentUser.uid, 'prestamos'), {
+                    acreedor: acreedorInput.value.toUpperCase(),
+                    montoBase: parseFloat(montoInput.value),
+                    fechaInicio: document.getElementById('deuda-fecha-init').value,
+                    fechaVencimiento: document.getElementById('deuda-fecha-end').value,
+                    abonos: [],
+                    createdAt: Date.now()
+                });
+
+                e.target.reset();
+                btn.innerText = "¡PRÉSTAMO GUARDADO!";
+                setTimeout(() => {
+                    btn.classList.remove('loading');
+                    btn.innerText = "Registrar Préstamo";
+                }, 2000);
+
+            } catch (err) {
+                console.error("Error al guardar préstamo:", err);
+                btn.innerText = "ERROR AL GUARDAR";
+                btn.classList.remove('loading');
+            }
+        };
+
+        // --- RENDERIZADO Y UI ---
         function renderEgresos(data) {
             const container = document.getElementById('list-egresos');
             const now = new Date();
@@ -210,7 +307,9 @@
                 return `
                     <div class="bg-zinc-900/40 p-5 rounded-3xl flex justify-between items-center border border-zinc-800/30 fade-in">
                         <div class="flex items-center gap-4">
-                            <div class="w-12 h-12 rounded-2xl bg-black flex items-center justify-center text-xl shadow-inner border border-zinc-800/50">${CATS.find(c => c.id === e.categoria)?.icon || '📦'}</div>
+                            <div class="w-12 h-12 rounded-2xl bg-black flex items-center justify-center text-xl shadow-inner border border-zinc-800/50">
+                                ${CATS.find(c => c.id === e.categoria)?.icon || '📦'}
+                            </div>
                             <div>
                                 <p class="text-white font-black text-[10px] uppercase italic tracking-tighter">${e.categoria}</p>
                                 <p class="text-[9px] text-zinc-500 font-bold uppercase truncate max-w-[120px]">${e.detalle || 'Gasto registrado'}</p>
@@ -218,7 +317,9 @@
                         </div>
                         <div class="text-right">
                             <p class="text-white font-black italic text-sm">-$${parseFloat(e.monto).toFixed(2)}</p>
-                            <button onclick="askToDelete('egresos', '${e.id}')" class="text-zinc-800 mt-2 hover:text-red-500"><i class="fas fa-trash-alt text-[9px]"></i></button>
+                            <button onclick="askToDelete('egresos', '${e.id}')" class="text-zinc-800 mt-2 hover:text-red-500 transition-colors">
+                                <i class="fas fa-trash-alt text-[9px]"></i>
+                            </button>
                         </div>
                     </div>`;
             }).join('');
@@ -247,76 +348,20 @@
                             </div>
                         </div>
                         <div class="w-full bg-black h-1.5 rounded-full overflow-hidden mb-3">
-                            <div class="bg-amber-500 h-full" style="width: ${Math.min((pagado/p.montoBase)*100, 100)}%"></div>
+                            <div class="bg-amber-500 h-full transition-all duration-700" style="width: ${Math.min((pagado/p.montoBase)*100, 100)}%"></div>
                         </div>
                         <div class="flex justify-between items-center text-[7px] font-black text-zinc-500 uppercase italic">
-                            <span>Vencimiento: ${p.fechaVencimiento || 'No definida'}</span>
-                            <button onclick="event.stopPropagation(); askToDelete('prestamos', '${p.id}')" class="text-zinc-800 hover:text-red-500"><i class="fas fa-trash"></i></button>
+                            <span>Vence: ${p.fechaVencimiento || 'Indefinido'}</span>
+                            <button onclick="event.stopPropagation(); askToDelete('prestamos', '${p.id}')" class="text-zinc-800 hover:text-red-500">
+                                <i class="fas fa-trash"></i>
+                            </button>
                         </div>
                     </div>`;
             }).join('');
             document.getElementById('total-deuda').innerText = `$${grandTotal.toFixed(2)}`;
         }
 
-        // --- ACCIONES ---
-        document.getElementById('egreso-form').onsubmit = async (e) => {
-            e.preventDefault();
-            if (!user) return;
-            await addDoc(collection(db, 'artifacts', appId, 'users', user.uid, 'egresos'), {
-                categoria: activeCat,
-                monto: parseFloat(document.getElementById('egreso-monto').value),
-                detalle: document.getElementById('egreso-detalle').value,
-                createdAt: Date.now()
-            });
-            e.target.reset();
-            selectCat('otros');
-        };
-
-        document.getElementById('deuda-form').onsubmit = async (e) => {
-            e.preventDefault();
-            if (!user) return;
-            await addDoc(collection(db, 'artifacts', appId, 'users', user.uid, 'prestamos'), {
-                acreedor: document.getElementById('deuda-acreedor').value,
-                montoBase: parseFloat(document.getElementById('deuda-monto').value),
-                fechaInicio: document.getElementById('deuda-fecha-init').value,
-                fechaVencimiento: document.getElementById('deuda-fecha-end').value,
-                abonos: [],
-                createdAt: Date.now()
-            });
-            e.target.reset();
-        };
-
-        document.getElementById('det-pay-btn').onclick = async () => {
-            if (!user || !selectedDebtId) return;
-            const monto = parseFloat(document.getElementById('det-amount').value);
-            if (!monto || monto <= 0) return;
-
-            const pRef = doc(db, 'artifacts', appId, 'users', user.uid, 'prestamos', selectedDebtId);
-            const pSnap = await getDoc(pRef);
-            if (!pSnap.exists()) return;
-
-            const data = pSnap.data();
-            const nuevoAbono = {
-                id: "ABO_" + Date.now(),
-                monto,
-                fecha: new Date().toLocaleDateString('es-ES') + " " + new Date().toLocaleTimeString('es-ES'),
-                createdAt: Date.now()
-            };
-
-            await updateDoc(pRef, { abonos: [...(data.abonos || []), nuevoAbono] });
-            
-            await addDoc(collection(db, 'artifacts', appId, 'users', user.uid, 'egresos'), {
-                categoria: 'otros',
-                monto,
-                detalle: `ABONO RECIBIDO DE: ${data.acreedor}`,
-                relacionId: selectedDebtId,
-                createdAt: Date.now()
-            });
-
-            document.getElementById('det-amount').value = '';
-        };
-
-        // --- UTILIDADES UI ---
+        // --- UTILIDADES ---
         window.switchTab = (tab) => {
             document.getElementById('content-egresos').classList.toggle('hidden', tab !== 'egresos');
             document.getElementById('content-deudas').classList.toggle('hidden', tab !== 'deudas');
@@ -345,21 +390,64 @@
             document.getElementById('det-name').innerText = p.acreedor;
             const history = p.abonos || [];
             document.getElementById('det-list').innerHTML = history.sort((a,b) => b.createdAt - a.createdAt).map(h => `
-                <div class="bg-black border border-zinc-800 p-5 rounded-2xl flex justify-between items-center">
+                <div class="bg-black border border-zinc-800 p-5 rounded-2xl flex justify-between items-center fade-in">
                     <div>
-                        <p class="text-[8px] font-black text-emerald-500 uppercase italic">Abono Registrado</p>
+                        <p class="text-[8px] font-black text-emerald-500 uppercase italic">Abono Recibido</p>
                         <p class="text-[10px] text-zinc-500 font-mono">${h.fecha}</p>
                     </div>
                     <p class="text-white font-black italic text-lg">$${h.monto.toFixed(2)}</p>
                 </div>
-            `).join('') || `<p class="text-center text-zinc-800 text-[8px] font-black italic py-16">Sin movimientos registrados</p>`;
+            `).join('') || `<p class="text-center text-zinc-800 text-[8px] font-black italic py-16">Sin historial de abonos</p>`;
+        };
+
+        document.getElementById('det-pay-btn').onclick = async () => {
+            if (!currentUser || !selectedDebtId) return;
+            const btn = document.getElementById('det-pay-btn');
+            const monto = parseFloat(document.getElementById('det-amount').value);
+            if (isNaN(monto) || monto <= 0) return;
+
+            try {
+                btn.innerText = "...";
+                btn.classList.add('loading');
+                const pRef = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'prestamos', selectedDebtId);
+                const pSnap = await getDoc(pRef);
+                const data = pSnap.data();
+
+                const nuevoAbono = {
+                    id: "ABO_" + Date.now(),
+                    monto,
+                    fecha: new Date().toLocaleDateString() + " " + new Date().toLocaleTimeString(),
+                    createdAt: Date.now()
+                };
+
+                await updateDoc(pRef, { abonos: [...(data.abonos || []), nuevoAbono] });
+                
+                // Registrar abono como nota en egresos para visualización rápida
+                await addDoc(collection(db, 'artifacts', appId, 'users', currentUser.uid, 'egresos'), {
+                    categoria: 'otros',
+                    monto: monto,
+                    detalle: `ABONO DE: ${data.acreedor}`,
+                    createdAt: Date.now()
+                });
+
+                document.getElementById('det-amount').value = '';
+                btn.innerText = "OK";
+                setTimeout(() => {
+                    btn.innerText = "Abonar";
+                    btn.classList.remove('loading');
+                }, 1000);
+            } catch (err) {
+                console.error("Error al abonar:", err);
+                btn.innerText = "ERR";
+                btn.classList.remove('loading');
+            }
         };
 
         window.askToDelete = (coll, id) => {
             document.getElementById('modal-confirm').classList.remove('hidden');
             document.getElementById('btn-confirm-delete').onclick = async () => {
-                if (!user) return;
-                await deleteDoc(doc(db, 'artifacts', appId, 'users', user.uid, coll, id));
+                if (!currentUser) return;
+                await deleteDoc(doc(db, 'artifacts', appId, 'users', currentUser.uid, coll, id));
                 closeModal('modal-confirm');
                 closeModal('modal-detalle');
             };
