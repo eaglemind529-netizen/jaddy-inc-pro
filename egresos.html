@@ -16,7 +16,10 @@
         input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); }
         .fade-in { animation: fadeIn 0.5s ease-in; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        .loading { opacity: 0.5; pointer-events: none; }
+        .debt-card { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .debt-card:active { transform: scale(0.98); }
+        .btn-pay-active { background-color: #10b981 !important; color: white !important; }
+        .glass-btn { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.05); backdrop-filter: blur(10px); }
     </style>
 </head>
 <body class="select-none">
@@ -28,12 +31,19 @@
                     <div class="w-8 h-8 bg-amber-500 rounded-lg flex items-center justify-center font-black text-black italic">JI</div>
                     <h1 class="text-xs font-black text-white italic tracking-tight uppercase">Bóveda Privada Jaddy</h1>
                 </div>
-                <p id="user-display-name" class="text-[8px] text-amber-500 font-black mt-1 uppercase tracking-widest italic">Conectando...</p>
-                <p id="user-id-display" class="text-[6px] text-zinc-700 font-mono uppercase tracking-tighter italic">Verificando Credenciales...</p>
+                <div class="flex items-center gap-2 mt-1">
+                    <p id="user-display-name" class="text-[8px] text-amber-500 font-black uppercase tracking-widest italic">Conectando...</p>
+                    <span id="sync-text" class="text-[7px] text-zinc-500 font-bold uppercase italic tracking-widest">En Línea</span>
+                </div>
             </div>
-            <div class="flex items-center gap-2">
-                <div id="status-dot" class="w-2 h-2 rounded-full bg-red-500"></div>
-                <span id="status-text" class="text-[8px] font-black text-zinc-500 uppercase tracking-widest italic">Desconectado</span>
+            <div class="flex items-center gap-3">
+                <button onclick="logout()" class="w-10 h-10 rounded-full glass-btn flex items-center justify-center text-zinc-500 hover:text-red-500 transition-colors">
+                    <i class="fas fa-power-off text-sm"></i>
+                </button>
+                <button onclick="openHistoryModal()" class="w-10 h-10 rounded-full glass-btn flex items-center justify-center text-zinc-500 hover:text-amber-500 transition-colors">
+                    <i class="fas fa-clock-rotate-left text-sm"></i>
+                </button>
+                <div id="status-dot" class="w-3 h-3 rounded-full bg-emerald-500 shadow-[0_0_12px_#10b981] animate-pulse"></div>
             </div>
         </header>
 
@@ -41,19 +51,19 @@
             <!-- Totales -->
             <div class="grid grid-cols-2 gap-4">
                 <div class="bg-zinc-900 border border-zinc-800 p-5 rounded-[2rem] shadow-xl">
-                    <p class="text-[8px] uppercase font-black text-zinc-500 mb-1 italic">Mis Gastos</p>
+                    <p class="text-[8px] uppercase font-black text-zinc-500 mb-1 italic tracking-widest">Mis Gastos</p>
                     <p id="total-egresos" class="text-2xl font-black text-white italic">$0.00</p>
                 </div>
                 <div class="bg-zinc-900 border border-zinc-800 p-5 rounded-[2rem] shadow-xl">
-                    <p class="text-[8px] uppercase font-black text-zinc-500 mb-1 italic">Mis Préstamos</p>
-                    <p id="total-deuda" class="text-2xl font-black text-amber-500 italic">$0.00</p>
+                    <p class="text-[8px] uppercase font-black text-zinc-500 mb-1 italic tracking-widest">Deuda Pendiente</p>
+                    <p id="total-deuda" class="text-2xl font-black text-red-500 italic">$0.00</p>
                 </div>
             </div>
 
             <!-- Tabs -->
             <div class="flex bg-zinc-900 p-1.5 rounded-2xl border border-zinc-800">
                 <button onclick="switchTab('egresos')" id="tab-egresos" class="flex-1 py-3 rounded-xl text-[10px] font-black transition-all active-tab uppercase italic">Diario</button>
-                <button onclick="switchTab('deudas')" id="tab-deudas" class="flex-1 py-3 rounded-xl text-[10px] font-black transition-all text-zinc-500 uppercase italic">Préstamos</button>
+                <button onclick="switchTab('deudas')" id="tab-deudas" class="flex-1 py-3 rounded-xl text-[10px] font-black transition-all text-zinc-500 uppercase italic">Mis Préstamos</button>
             </div>
 
             <!-- VISTA: EGRESOS -->
@@ -64,8 +74,8 @@
                         <span class="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500 font-black italic">$</span>
                         <input type="number" step="0.01" required placeholder="0.00" id="egreso-monto" class="w-full bg-black border border-zinc-800 p-5 rounded-2xl text-white font-black text-2xl focus:border-amber-500 outline-none text-center">
                     </div>
-                    <input type="text" placeholder="DETALLE" id="egreso-detalle" class="w-full bg-black border border-zinc-800 p-4 rounded-2xl text-[10px] outline-none text-zinc-400 text-center uppercase font-bold tracking-widest">
-                    <button type="submit" id="btn-submit-egreso" class="w-full py-5 rounded-2xl bg-white text-black font-black italic text-[10px] tracking-[0.2em] uppercase hover:bg-amber-500 transition-all">Guardar Registro</button>
+                    <input type="text" placeholder="¿EN QUÉ GASTASTE?" id="egreso-detalle" class="w-full bg-black border border-zinc-800 p-4 rounded-2xl text-[10px] outline-none text-zinc-400 text-center uppercase font-bold tracking-widest">
+                    <button type="submit" class="w-full py-5 rounded-2xl bg-white text-black font-black italic text-[10px] tracking-[0.2em] uppercase hover:bg-amber-500 transition-all">Guardar Gasto</button>
                 </form>
                 <div id="list-egresos" class="space-y-3"></div>
             </div>
@@ -73,21 +83,36 @@
             <!-- VISTA: DEUDAS -->
             <div id="content-deudas" class="hidden space-y-6">
                 <form id="deuda-form" class="space-y-4 bg-zinc-900/40 p-6 rounded-[2.5rem] border border-zinc-800/50">
-                    <input type="text" required placeholder="CLIENTE / DEUDOR" id="deuda-acreedor" class="w-full bg-black border border-zinc-800 p-4 rounded-2xl text-white font-black text-[10px] outline-none text-center uppercase tracking-widest">
-                    <input type="number" required placeholder="MONTO $" id="deuda-monto" class="w-full bg-black border border-zinc-800 p-5 rounded-2xl text-white font-black text-xl outline-none text-center">
+                    <input type="text" required placeholder="¿QUIÉN ME PRESTÓ?" id="deuda-acreedor" class="w-full bg-black border border-zinc-800 p-4 rounded-2xl text-white font-black text-[10px] outline-none text-center uppercase tracking-widest">
+                    
+                    <div class="grid grid-cols-2 gap-2">
+                        <div class="relative">
+                            <span class="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500 font-black italic">$</span>
+                            <input type="number" step="0.01" required placeholder="RECIBÍ" id="deuda-monto" class="w-full bg-black border border-zinc-800 p-5 rounded-2xl text-white font-black text-xl outline-none text-center pl-8">
+                        </div>
+                        <div class="relative">
+                            <span class="absolute right-4 top-1/2 -translate-y-1/2 text-red-500 font-black italic">%</span>
+                            <input type="number" step="0.1" required placeholder="INTERÉS" id="deuda-interes" class="w-full bg-black border border-zinc-800 p-5 rounded-2xl text-red-500 font-black text-xl outline-none text-center pr-8">
+                        </div>
+                    </div>
+
                     <div class="grid grid-cols-2 gap-2">
                         <div class="bg-black p-3 rounded-2xl border border-zinc-800">
-                            <label class="text-[7px] font-black text-zinc-600 uppercase mb-1 block italic tracking-widest">Inicio</label>
+                            <label class="text-[7px] font-black text-zinc-600 uppercase mb-1 block italic tracking-widest">Recibido</label>
                             <input type="date" id="deuda-fecha-init" class="w-full bg-transparent text-white font-black text-[10px] outline-none">
                         </div>
                         <div class="bg-black p-3 rounded-2xl border border-zinc-800">
-                            <label class="text-[7px] font-black text-zinc-600 uppercase mb-1 block italic tracking-widest">Vence</label>
+                            <label class="text-[7px] font-black text-zinc-600 uppercase mb-1 block italic tracking-widest">Debo Pagar</label>
                             <input type="date" id="deuda-fecha-end" class="w-full bg-transparent text-white font-black text-[10px] outline-none">
                         </div>
                     </div>
-                    <button type="submit" id="btn-submit-deuda" class="w-full py-5 rounded-2xl bg-amber-500 text-black font-black italic text-[10px] tracking-[0.2em] uppercase">Registrar Deuda</button>
+                    <button type="submit" class="w-full py-5 rounded-2xl bg-red-600 text-white font-black italic text-[10px] tracking-[0.2em] uppercase">Registrar Compromiso</button>
                 </form>
-                <div id="list-deudas" class="space-y-4"></div>
+
+                <div class="space-y-4">
+                    <h2 class="text-[9px] font-black text-zinc-500 uppercase italic tracking-[0.3em] px-2">Mis Deudas Actuales</h2>
+                    <div id="list-deudas-activas" class="space-y-4"></div>
+                </div>
             </div>
         </main>
 
@@ -96,236 +121,278 @@
             <div class="p-8 border-b border-zinc-900 flex justify-between items-center">
                 <div>
                     <h2 id="det-name" class="text-white font-black uppercase italic text-lg tracking-tighter">Detalle</h2>
-                    <p class="text-[7px] text-zinc-600 font-mono uppercase mt-1 italic">Nube Privada Activa</p>
+                    <p id="det-resumen" class="text-[7px] text-zinc-600 font-mono uppercase mt-1 italic tracking-widest">Acreedor</p>
                 </div>
-                <button onclick="closeModal('modal-detalle')" class="w-12 h-12 rounded-full bg-zinc-900 flex items-center justify-center text-white text-xl"><i class="fas fa-times"></i></button>
-            </div>
-            <div class="flex-1 overflow-y-auto p-6 space-y-4" id="det-list"></div>
-            <div class="p-8 bg-zinc-900 border-t border-zinc-800 space-y-4">
                 <div class="flex gap-2">
-                    <input type="number" id="det-amount" placeholder="Abono $" class="flex-1 bg-black border border-zinc-800 rounded-2xl p-5 text-xl font-black text-white outline-none">
-                    <button id="det-pay-btn" class="bg-white text-black font-black px-8 rounded-2xl uppercase italic text-[10px] tracking-widest">OK</button>
+                    <button id="btn-toggle-pro" onclick="toggleProrroga()" class="w-12 h-12 rounded-full bg-red-500/20 border border-red-500/50 flex items-center justify-center text-red-500 text-xl"><i class="fas fa-calendar-plus"></i></button>
+                    <button onclick="closeModal('modal-detalle')" class="w-12 h-12 rounded-full bg-zinc-900 flex items-center justify-center text-white text-xl"><i class="fas fa-times"></i></button>
                 </div>
+            </div>
+            <div class="flex-1 overflow-y-auto p-6 space-y-4">
+                <div id="det-saldo-card" class="bg-zinc-900 border border-zinc-800 p-6 rounded-[2rem] text-center">
+                    <p class="text-[8px] text-zinc-500 font-black uppercase italic tracking-widest mb-2">Total por Pagar</p>
+                    <p id="det-saldo-valor" class="text-4xl font-black text-red-500 italic">$0.00</p>
+                </div>
+                <div id="prorroga-form" class="hidden bg-red-600 p-6 rounded-[2rem] space-y-4 shadow-2xl">
+                    <h4 class="text-white font-black text-[10px] uppercase italic tracking-widest">Nueva Extensión / Recargo</h4>
+                    <div class="grid grid-cols-2 gap-2">
+                        <input type="number" id="pro-dias" placeholder="DÍAS +" class="w-full bg-white/20 border border-white/10 p-4 rounded-xl text-white font-black text-[11px] placeholder-white/50 outline-none">
+                        <input type="number" id="pro-recargo" placeholder="RECARGO $" class="w-full bg-white/20 border border-white/10 p-4 rounded-xl text-white font-black text-[11px] placeholder-white/50 outline-none">
+                    </div>
+                    <button onclick="aplicarProrroga()" class="w-full py-4 bg-black text-white font-black text-[10px] uppercase rounded-xl">Actualizar Deuda</button>
+                </div>
+                <div id="det-list" class="space-y-3 pb-20"></div>
+            </div>
+            <div id="det-pay-section" class="p-6 bg-zinc-900 border-t border-zinc-800 flex flex-col gap-3">
+                <div class="relative">
+                    <span class="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500 font-black italic">$</span>
+                    <input type="number" id="det-amount" placeholder="PAGARÉ..." oninput="updatePayPreview()" class="w-full bg-black border border-zinc-800 rounded-2xl p-5 text-2xl font-black text-white outline-none pl-10 text-center">
+                </div>
+                <button id="det-pay-btn" onclick="confirmPayment()" class="w-full bg-white text-black font-black py-5 rounded-2xl uppercase italic text-[10px] tracking-[0.2em] transition-all">Registrar Pago</button>
             </div>
         </div>
 
-        <div id="modal-confirm" class="fixed inset-0 z-[200] hidden flex items-center justify-center p-6 modal-backdrop">
-            <div class="bg-zinc-900 border border-zinc-800 w-full max-w-xs rounded-[2.5rem] p-8 space-y-6 text-center">
-                <i class="fas fa-trash text-red-500 text-3xl"></i>
-                <h3 class="text-white font-black uppercase italic text-xs tracking-tight">¿Eliminar registro?</h3>
-                <div class="flex flex-col gap-3">
-                    <button id="btn-confirm-delete" class="w-full py-4 rounded-2xl bg-red-600 text-white font-black text-[10px] uppercase italic">Eliminar</button>
-                    <button onclick="closeModal('modal-confirm')" class="w-full py-4 rounded-2xl bg-zinc-800 text-zinc-400 font-black text-[10px] uppercase italic">Cancelar</button>
+        <div id="modal-historial" class="fixed inset-0 z-[110] hidden flex flex-col bg-black modal-backdrop">
+            <div class="p-8 border-b border-zinc-900 flex justify-between items-center bg-black/50 backdrop-blur-md">
+                <div>
+                    <h2 class="text-amber-500 font-black uppercase italic text-lg tracking-tighter">Libro de Préstamos</h2>
+                    <p class="text-[7px] text-zinc-600 font-mono uppercase mt-1 italic tracking-widest">Lo que he recibido y pagado</p>
                 </div>
+                <button onclick="closeModal('modal-historial')" class="w-12 h-12 rounded-full bg-zinc-900 flex items-center justify-center text-white text-xl"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="flex-1 overflow-y-auto p-6 space-y-6 pb-10">
+                <div id="historial-stats" class="grid grid-cols-2 gap-3">
+                    <div class="bg-zinc-900 p-4 rounded-3xl border border-zinc-800">
+                        <p class="text-[7px] font-black text-zinc-500 uppercase italic tracking-widest mb-1">Capital Recibido</p>
+                        <p id="stats-capital" class="text-xl font-black text-white italic">$0.00</p>
+                    </div>
+                    <div class="bg-zinc-900 p-4 rounded-3xl border border-zinc-800">
+                        <p class="text-[7px] font-black text-zinc-500 uppercase italic tracking-widest mb-1">Gastado en Interés</p>
+                        <p id="stats-ganancia" class="text-xl font-black text-red-500 italic">$0.00</p>
+                    </div>
+                </div>
+                <div id="list-historial-completo" class="space-y-4"></div>
             </div>
         </div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, doc, addDoc, updateDoc, deleteDoc, onSnapshot, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, doc, addDoc, updateDoc, onSnapshot, getDoc, enableIndexedDbPersistence } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // TUS CREDENCIALES REALES
+        // CONFIGURACIÓN EXACTA PROPORCIONADA
         const firebaseConfig = {
-            apiKey: "AIzaSyCrjjeOoXPOtJDXDfrHLOA4Ny0QW2zfVWk",
-            authDomain: "apps-d45d6.firebaseapp.com",
-            projectId: "apps-d45d6",
-            storageBucket: "apps-d45d6.firebasestorage.app",
-            messagingSenderId: "502648373937",
-            appId: "1:502648373937:web:8c3beaa2a6c9289a4d9890",
-            measurementId: "G-7VCRCRSCRQ"
+          apiKey: "AIzaSyCrjjeOoXPOtJDXDfrHLOA4Ny0QW2zfVWk",
+          authDomain: "apps-d45d6.firebaseapp.com",
+          projectId: "apps-d45d6",
+          storageBucket: "apps-d45d6.firebasestorage.app",
+          messagingSenderId: "502648373937",
+          appId: "1:502648373937:web:8c3beaa2a6c9289a4d9890",
+          measurementId: "G-7VCRCRSCRQ"
         };
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
 
+        // Habilitar persistencia para cuando no hay señal
+        enableIndexedDbPersistence(db).catch(console.error);
+
         let user = null;
         let activeCat = 'otros';
         let debtsData = [];
         let selectedDebtId = null;
-        let unsubscribes = [];
 
-        // Inicializar Sesión
-        const init = async () => {
-            try {
-                await setPersistence(auth, browserLocalPersistence);
-                await signInAnonymously(auth);
-            } catch (e) {
-                console.error("Error Auth:", e);
+        // Gestión de estado visual de sincronización
+        const updateStatus = () => {
+            const dot = document.getElementById('status-dot');
+            const syncText = document.getElementById('sync-text');
+            if (navigator.onLine) {
+                dot.className = "w-3 h-3 rounded-full bg-emerald-500 shadow-[0_0_12px_#10b981] animate-pulse";
+                syncText.innerText = "En Línea";
+                syncText.className = "text-[7px] text-emerald-500 font-bold uppercase italic tracking-widest";
+            } else {
+                dot.className = "w-3 h-3 rounded-full bg-amber-500 shadow-[0_0_12px_#f59e0b]";
+                syncText.innerText = "Sin Señal (Local)";
+                syncText.className = "text-[7px] text-amber-500 font-bold uppercase italic tracking-widest";
             }
         };
+
+        window.addEventListener('online', updateStatus);
+        window.addEventListener('offline', updateStatus);
 
         onAuthStateChanged(auth, (u) => {
             if (u) {
                 user = u;
-                document.getElementById('user-display-name').innerText = `USUARIO: ${user.uid.substring(0,8).toUpperCase()}`;
-                document.getElementById('user-id-display').innerText = `SESIÓN PRIVADA ACTIVA`;
-                document.getElementById('status-dot').className = "w-2 h-2 rounded-full bg-emerald-500 animate-pulse";
-                document.getElementById('status-text').innerText = "EN LÍNEA";
-                document.getElementById('status-text').className = "text-[8px] font-black text-emerald-500 italic";
+                document.getElementById('user-display-name').innerText = user.email.split('@')[0].toUpperCase();
+                updateStatus();
                 startListeners();
             } else {
-                init();
+                window.location.replace('login.html');
             }
         });
 
         function startListeners() {
             if (!user) return;
-            unsubscribes.forEach(un => un());
-            
-            // Colección bajo TU usuario
-            const eRef = collection(db, 'users', user.uid, 'egresos');
-            unsubscribes.push(onSnapshot(eRef, (snap) => {
+            onSnapshot(collection(db, 'users', user.uid, 'egresos'), (snap) => {
                 renderEgresos(snap.docs.map(d => ({ ...d.data(), id: d.id })));
-            }));
+            });
 
-            const dRef = collection(db, 'users', user.uid, 'prestamos');
-            unsubscribes.push(onSnapshot(dRef, (snap) => {
+            onSnapshot(collection(db, 'users', user.uid, 'prestamos'), (snap) => {
                 debtsData = snap.docs.map(d => ({ ...d.data(), id: d.id }));
                 renderDeudas(debtsData);
                 if (selectedDebtId) {
                     const active = debtsData.find(d => d.id === selectedDebtId);
                     if (active) renderHistory(active);
                 }
-            }));
+            });
         }
 
-        // --- ACCIONES ---
+        window.logout = () => signOut(auth).then(() => window.location.replace('login.html'));
+
         document.getElementById('egreso-form').onsubmit = async (e) => {
             e.preventDefault();
-            if (!user) return;
-            const monto = parseFloat(document.getElementById('egreso-monto').value);
+            const m = parseFloat(document.getElementById('egreso-monto').value);
+            if(!m || !user) return;
             await addDoc(collection(db, 'users', user.uid, 'egresos'), {
-                categoria: activeCat,
-                monto: monto,
-                detalle: document.getElementById('egreso-detalle').value || "S/D",
-                createdAt: Date.now()
+                categoria: activeCat, monto: m, detalle: document.getElementById('egreso-detalle').value.toUpperCase() || "S/D", createdAt: Date.now()
             });
             e.target.reset();
         };
 
         document.getElementById('deuda-form').onsubmit = async (e) => {
             e.preventDefault();
-            if (!user) return;
+            const m = parseFloat(document.getElementById('deuda-monto').value);
+            const i = parseFloat(document.getElementById('deuda-interes').value || 0);
+            const total = m + (m * (i / 100));
+            if(!m || !user) return;
             await addDoc(collection(db, 'users', user.uid, 'prestamos'), {
                 acreedor: document.getElementById('deuda-acreedor').value.toUpperCase(),
-                montoBase: parseFloat(document.getElementById('deuda-monto').value),
+                montoBase: m, porcentajeInteres: i, totalConInteres: total,
                 fechaInicio: document.getElementById('deuda-fecha-init').value,
                 fechaVencimiento: document.getElementById('deuda-fecha-end').value,
-                abonos: [],
-                createdAt: Date.now()
+                abonos: [], createdAt: Date.now()
             });
             e.target.reset();
         };
 
-        // --- UI ---
-        function renderEgresos(data) {
-            const container = document.getElementById('list-egresos');
-            let total = 0;
-            container.innerHTML = data.sort((a,b) => b.createdAt - a.createdAt).map(e => {
-                total += parseFloat(e.monto || 0);
-                return `
-                    <div class="bg-zinc-900/60 p-4 rounded-2xl flex justify-between items-center border border-zinc-800">
-                        <div class="flex items-center gap-3">
-                            <span class="text-xl">${CATS.find(c => c.id === e.categoria)?.icon || '📦'}</span>
-                            <div>
-                                <p class="text-white font-black text-[9px] uppercase">${e.categoria}</p>
-                                <p class="text-[8px] text-zinc-500 uppercase">${e.detalle}</p>
-                            </div>
-                        </div>
-                        <div class="text-right">
-                            <p class="text-white font-black italic text-sm">-$${parseFloat(e.monto).toFixed(2)}</p>
-                            <button onclick="askToDelete('egresos', '${e.id}')" class="text-zinc-700 text-[9px] mt-1"><i class="fas fa-trash"></i></button>
-                        </div>
-                    </div>`;
-            }).join('');
-            document.getElementById('total-egresos').innerText = `$${total.toFixed(2)}`;
-        }
+        window.confirmPayment = async () => {
+            const input = document.getElementById('det-amount');
+            const v = parseFloat(input.value);
+            if (!v || !selectedDebtId || !user) return;
+            const ref = doc(db, 'users', user.uid, 'prestamos', selectedDebtId);
+            const snap = await getDoc(ref);
+            const d = snap.data();
+            await updateDoc(ref, { abonos: [...(d.abonos || []), { monto: v, fecha: new Date().toLocaleDateString(), createdAt: Date.now() }] });
+            input.value = '';
+            updatePayPreview();
+        };
+
+        window.aplicarProrroga = async () => {
+            const recargo = parseFloat(document.getElementById('pro-recargo').value) || 0;
+            if(!selectedDebtId || !user) return;
+            const ref = doc(db, 'users', user.uid, 'prestamos', selectedDebtId);
+            const snap = await getDoc(ref);
+            const d = snap.data();
+            await updateDoc(ref, { 
+                totalConInteres: (d.totalConInteres || d.montoBase) + recargo,
+                abonos: [...(d.abonos || []), { esProrroga: true, detalle: `RECARGO +$${recargo}`, fecha: new Date().toLocaleDateString(), createdAt: Date.now() }]
+            });
+            toggleProrroga();
+        };
+
+        window.updatePayPreview = () => {
+            const input = document.getElementById('det-amount');
+            const btn = document.getElementById('det-pay-btn');
+            const abono = parseFloat(input.value) || 0;
+            const d = debtsData.find(x => x.id === selectedDebtId);
+            if (!d) return;
+            const pagado = (d.abonos || []).reduce((acc, curr) => acc + (curr.monto || 0), 0);
+            const saldo = (d.totalConInteres || d.montoBase) - pagado;
+            btn.classList.toggle('btn-pay-active', abono > 0);
+            btn.innerText = abono > 0 ? (saldo - abono <= 0 ? `LIQUIDAR ($${abono.toFixed(2)})` : `PAGAR $${abono.toFixed(2)}`) : "REGISTRAR PAGO";
+        };
 
         function renderDeudas(data) {
-            let total = 0;
-            const container = document.getElementById('list-deudas');
-            container.innerHTML = data.sort((a,b) => b.createdAt - a.createdAt).map(p => {
-                const pagado = (p.abonos || []).reduce((acc, curr) => acc + curr.monto, 0);
-                const saldo = parseFloat(p.montoBase) - pagado;
-                total += saldo;
-                return `
-                    <div onclick="openDebtDetail('${p.id}')" class="bg-zinc-900 border border-zinc-800 rounded-3xl p-5 cursor-pointer">
-                        <div class="flex justify-between mb-3">
-                            <h3 class="text-white font-black italic uppercase text-xs">${p.acreedor}</h3>
-                            <p class="text-amber-500 font-black text-lg italic">$${saldo.toFixed(2)}</p>
-                        </div>
-                        <div class="w-full bg-black h-1 rounded-full overflow-hidden">
-                            <div class="bg-amber-500 h-full" style="width: ${(pagado/p.montoBase)*100}%"></div>
-                        </div>
-                    </div>`;
-            }).join('');
-            document.getElementById('total-deuda').innerText = `$${total.toFixed(2)}`;
+            let totalDebo = 0;
+            let capitalRecibidoTotal = 0;
+            let interesesPagadosTotal = 0;
+            const containerActivas = document.getElementById('list-deudas-activas');
+            const containerHistorial = document.getElementById('list-historial-completo');
+            let htmlActivas = "", htmlHistorial = "";
+
+            data.sort((a,b) => b.createdAt - a.createdAt).forEach(p => {
+                const pagado = (p.abonos || []).reduce((acc, curr) => acc + (curr.monto || 0), 0);
+                const total = p.totalConInteres || p.montoBase;
+                const saldo = total - pagado;
+                const esFin = saldo < 0.01;
+
+                const card = `<div onclick="openDebtDetail('${p.id}')" class="debt-card bg-zinc-900 border ${esFin ? 'border-zinc-950 opacity-40' : 'border-zinc-800'} rounded-3xl p-5 shadow-lg">
+                    <div class="flex justify-between mb-2"><div><h3 class="text-white font-black italic uppercase text-[10px]">${p.acreedor}</h3><p class="text-[7px] text-zinc-600 uppercase font-black tracking-widest">${esFin ? 'Saldado' : 'Vence: ' + (p.fechaVencimiento || 'S/D')}</p></div>
+                    <p class="${esFin ? 'text-zinc-600' : 'text-red-500'} font-black text-lg italic tracking-tighter">$${saldo.toFixed(2)}</p></div>
+                    <div class="w-full bg-black h-1.5 rounded-full overflow-hidden"><div class="${esFin ? 'bg-zinc-700' : 'bg-red-500'} h-full" style="width: ${Math.min((pagado/total)*100, 100)}%"></div></div>
+                </div>`;
+
+                if (esFin) { htmlHistorial += card; capitalRecibidoTotal += p.montoBase; interesesPagadosTotal += (total - p.montoBase); }
+                else { htmlActivas += card; totalDebo += saldo; }
+            });
+
+            containerActivas.innerHTML = htmlActivas || `<p class="text-center py-10 text-zinc-800 text-[8px] font-black uppercase tracking-[0.4em]">Libre de deudas</p>`;
+            containerHistorial.innerHTML = htmlHistorial || `<p class="text-center py-10 text-zinc-800 text-[8px] font-black uppercase tracking-[0.4em]">Historial vacío</p>`;
+            document.getElementById('stats-capital').innerText = `$${capitalRecibidoTotal.toFixed(2)}`;
+            document.getElementById('stats-ganancia').innerText = `$${interesesPagadosTotal.toFixed(2)}`;
+            document.getElementById('total-deuda').innerText = `$${totalDebo.toFixed(2)}`;
         }
 
-        const CATS = [
-            { id: 'alquiler', label: 'Alquiler', icon: '🏠' },
-            { id: 'servicios', label: 'Servicios', icon: '⚡' },
-            { id: 'personal', label: 'Personal', icon: '👥' },
-            { id: 'inversion', label: 'Inversión', icon: '💎' },
-            { id: 'otros', label: 'Otros', icon: '📦' }
-        ];
+        window.openHistoryModal = () => document.getElementById('modal-historial').classList.remove('hidden');
+        window.openDebtDetail = (id) => { selectedDebtId = id; const d = debtsData.find(x => x.id === id); if(d) { renderHistory(d); document.getElementById('modal-detalle').classList.remove('hidden'); }};
+        window.renderHistory = (p) => {
+            const total = p.totalConInteres || p.montoBase;
+            const pagado = (p.abonos || []).reduce((acc, curr) => acc + (curr.monto || 0), 0);
+            const saldo = total - pagado;
+            const esFin = saldo < 0.01;
+            document.getElementById('det-name').innerText = p.acreedor;
+            document.getElementById('det-resumen').innerText = esFin ? "LIQUIDADO" : `Total: $${total.toFixed(2)}`;
+            document.getElementById('det-saldo-valor').innerText = `$${saldo.toFixed(2)}`;
+            document.getElementById('det-pay-section').classList.toggle('hidden', esFin);
+            document.getElementById('btn-toggle-pro').classList.toggle('hidden', esFin);
+            document.getElementById('det-list').innerHTML = (p.abonos || []).sort((a,b) => b.createdAt - a.createdAt).map(h => `
+                <div class="bg-zinc-900 border-zinc-800 p-4 rounded-xl flex justify-between items-center border">
+                    <div><p class="text-[7px] text-zinc-500 font-black">${h.fecha}</p><p class="text-[9px] text-white font-bold uppercase">${h.esProrroga ? h.detalle : 'MI PAGO'}</p></div>
+                    ${!h.esProrroga ? `<p class="text-white font-black italic">$${h.monto.toFixed(2)}</p>` : '<i class="fas fa-calendar-plus text-red-500"></i>'}
+                </div>`).join('');
+        };
 
+        const CATS = [{ id: 'alquiler', label: 'Alquiler', icon: '🏠' }, { id: 'servicios', label: 'Servicios', icon: '⚡' }, { id: 'personal', label: 'Personal', icon: '👥' }, { id: 'inversion', label: 'Inversión', icon: '💎' }, { id: 'otros', label: 'Otros', icon: '📦' }];
+        window.selectCat = (id) => { activeCat = id; renderCats(); };
         window.switchTab = (t) => {
             document.getElementById('content-egresos').classList.toggle('hidden', t !== 'egresos');
             document.getElementById('content-deudas').classList.toggle('hidden', t !== 'deudas');
             document.getElementById('tab-egresos').className = `flex-1 py-3 rounded-xl text-[10px] font-black ${t === 'egresos' ? 'active-tab' : 'text-zinc-500'}`;
             document.getElementById('tab-deudas').className = `flex-1 py-3 rounded-xl text-[10px] font-black ${t === 'deudas' ? 'active-tab' : 'text-zinc-500'}`;
         };
+        window.closeModal = (id) => document.getElementById(id).classList.add('hidden');
+        window.toggleProrroga = () => document.getElementById('prorroga-form').classList.toggle('hidden');
 
-        window.selectCat = (id) => { activeCat = id; renderCats(); };
         function renderCats() {
             document.getElementById('categories-grid').innerHTML = CATS.map(c => `
                 <button type="button" onclick="selectCat('${c.id}')" class="p-2 rounded-xl border text-[6px] font-black flex flex-col items-center gap-1 ${activeCat === c.id ? 'category-selected' : 'border-zinc-800 text-zinc-600'}">
                     <span class="text-lg">${c.icon}</span>${c.label.toUpperCase()}
                 </button>`).join('');
         }
-
-        window.openDebtDetail = (id) => {
-            selectedDebtId = id;
-            const d = debtsData.find(x => x.id === id);
-            if(d) { renderHistory(d); document.getElementById('modal-detalle').classList.remove('hidden'); }
-        };
-
-        window.renderHistory = (p) => {
-            document.getElementById('det-name').innerText = p.acreedor;
-            document.getElementById('det-list').innerHTML = (p.abonos || []).map(h => `
-                <div class="bg-zinc-900 p-4 rounded-xl flex justify-between items-center border border-zinc-800">
-                    <p class="text-[8px] text-zinc-500 font-black uppercase">${h.fecha}</p>
-                    <p class="text-white font-black italic">$${h.monto.toFixed(2)}</p>
-                </div>`).join('');
-        };
-
-        document.getElementById('det-pay-btn').onclick = async () => {
-            if (!user || !selectedDebtId) return;
-            const val = parseFloat(document.getElementById('det-amount').value);
-            if (!val) return;
-            const ref = doc(db, 'users', user.uid, 'prestamos', selectedDebtId);
-            const snap = await getDoc(ref);
-            await updateDoc(ref, { abonos: [...(snap.data().abonos || []), { monto: val, fecha: new Date().toLocaleDateString(), createdAt: Date.now() }] });
-            document.getElementById('det-amount').value = '';
-        };
-
-        window.askToDelete = (coll, id) => {
-            document.getElementById('modal-confirm').classList.remove('hidden');
-            document.getElementById('btn-confirm-delete').onclick = async () => {
-                await deleteDoc(doc(db, 'users', user.uid, coll, id));
-                closeModal('modal-confirm');
-                closeModal('modal-detalle');
-            };
-        };
-
-        window.closeModal = (i) => document.getElementById(i).classList.add('hidden');
-
+        function renderEgresos(data) {
+            let total = 0;
+            document.getElementById('list-egresos').innerHTML = data.sort((a,b) => b.createdAt - a.createdAt).map(e => {
+                total += parseFloat(e.monto || 0);
+                return `<div class="bg-zinc-900/40 p-4 rounded-2xl flex justify-between items-center border border-zinc-800/50">
+                        <div class="flex items-center gap-3"><span class="text-xl">${CATS.find(c => c.id === e.categoria)?.icon || '📦'}</span><div><p class="text-white font-black text-[9px] uppercase">${e.categoria}</p><p class="text-[8px] text-zinc-500 uppercase">${e.detalle}</p></div></div>
+                        <p class="text-white font-black italic text-sm">-$${parseFloat(e.monto).toFixed(2)}</p></div>`;
+            }).join('');
+            document.getElementById('total-egresos').innerText = `$${total.toFixed(2)}`;
+        }
         renderCats();
-        init();
+        updateStatus();
     </script>
 </body>
 </html>
