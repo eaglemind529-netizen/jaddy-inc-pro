@@ -4,281 +4,149 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Módulo de Finanzas - Jaddy INC</title>
+    <title>Egresos y Deudas - Jaddy INC</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
-        body { font-family: 'Inter', sans-serif; background-color: black; color: #d4d4d8; overflow-x: hidden; }
-        .active-tab { background-color: #f59e0b; color: black; box-shadow: 0 4px 15px rgba(245, 158, 11, 0.2); }
+        body { font-family: 'Inter', sans-serif; background-color: black; color: #d4d4d8; }
+        input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+        .active-tab { background-color: #f59e0b; color: black; box-shadow: 0 4px 158px rgba(245, 158, 11, 0.2); }
         .category-selected { border-color: #f59e0b; background-color: rgba(245, 158, 11, 0.1); color: #f59e0b; }
-        .modal-backdrop { background-color: rgba(0,0,0,0.95); backdrop-filter: blur(12px); }
-        input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); }
         
-        .fade-in { animation: fadeIn 0.5s ease-in; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-
-        .loading { opacity: 0.5; pointer-events: none; }
-        
-        /* Botón Volver Estilo Luxury */
-        .btn-back {
-            background: rgba(24, 24, 27, 0.8);
-            border: 1px solid rgba(63, 63, 70, 0.4);
-            backdrop-filter: blur(10px);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        /* Animación para el punto de conexión */
+        .dot-online {
+            background-color: #10b981;
+            box-shadow: 0 0 10px #10b981, 0 0 20px rgba(16, 185, 129, 0.4);
         }
-        .btn-back:active { transform: scale(0.9); background: #f59e0b; color: black; }
     </style>
 </head>
 <body class="select-none">
     <div id="app">
-        <!-- Header con Navegación al Index -->
         <header class="p-6 flex justify-between items-center border-b border-zinc-900 sticky top-0 bg-black/90 backdrop-blur-md z-50">
             <div class="flex items-center gap-4">
-                <!-- BOTÓN VOLVER (Redirige al Dashboard Principal) -->
-                <a href="index.html" class="btn-back w-12 h-12 rounded-2xl flex items-center justify-center text-zinc-400">
-                    <i class="fas fa-chevron-left"></i>
+                <a href="index.html" class="w-10 h-10 rounded-xl bg-zinc-900 flex items-center justify-center text-amber-500">
+                    <i class="fas fa-arrow-left"></i>
                 </a>
-                <div class="flex flex-col">
-                    <div class="flex items-center gap-2">
-                        <div class="w-6 h-6 bg-amber-500 rounded-md flex items-center justify-center font-black text-black italic text-[10px]">JI</div>
-                        <h1 class="text-[10px] font-black text-white italic tracking-widest uppercase">Finanzas Vault</h1>
-                    </div>
-                    <p id="user-display-name" class="text-[8px] text-amber-500 font-black mt-0.5 uppercase tracking-tighter italic">Cargando...</p>
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 bg-amber-500 rounded-lg flex items-center justify-center font-black text-black italic">JI</div>
+                    <h1 class="text-sm font-black text-white italic tracking-tight">FINANZAS</h1>
                 </div>
             </div>
-            <div class="flex items-center gap-2">
-                <div id="status-dot" class="w-2 h-2 rounded-full bg-red-500"></div>
-                <span id="status-text" class="text-[7px] font-black text-zinc-700 uppercase tracking-widest italic">Offline</span>
+            <div class="flex items-center gap-3">
+                <div id="connection-badge" class="flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-[8px] font-black uppercase transition-all border-zinc-800 text-zinc-500">
+                    <div id="connection-dot" class="w-1.5 h-1.5 rounded-full bg-zinc-700 transition-all duration-500"></div>
+                    <span id="connection-text">Offline</span>
+                </div>
+                <button class="w-9 h-9 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center text-amber-500">
+                    <i class="fas fa-user"></i>
+                </button>
             </div>
         </header>
 
-        <main class="p-5 max-w-lg mx-auto pb-24 space-y-6 fade-in">
-            <!-- Totales -->
+        <main class="p-5 max-w-lg mx-auto pb-10 space-y-6">
             <div class="grid grid-cols-2 gap-4">
-                <div class="bg-zinc-900 border border-zinc-800 p-5 rounded-[2rem] shadow-xl">
-                    <p class="text-[8px] uppercase font-black text-zinc-500 mb-1 italic">Gastos Mensuales</p>
-                    <p id="total-egresos" class="text-2xl font-black text-white italic">$0.00</p>
+                <div class="bg-zinc-900 border border-zinc-800 p-4 rounded-2xl shadow-xl">
+                    <i class="fas fa-arrow-trend-down text-red-500 mb-2"></i>
+                    <p class="text-[9px] uppercase font-black text-zinc-500">Gastos Mensuales</p>
+                    <p id="total-egresos" class="text-xl font-black text-white italic">$0.00</p>
                 </div>
-                <div class="bg-zinc-900 border border-zinc-800 p-5 rounded-[2rem] shadow-xl">
-                    <p class="text-[8px] uppercase font-black text-zinc-500 mb-1 italic">Cuentas por Cobrar</p>
-                    <p id="total-deuda" class="text-2xl font-black text-amber-500 italic">$0.00</p>
+                <div class="bg-zinc-900 border border-zinc-800 p-4 rounded-2xl shadow-xl">
+                    <i class="fas fa-wallet text-amber-500 mb-2"></i>
+                    <p class="text-[9px] uppercase font-black text-zinc-500">Saldo en Deuda</p>
+                    <p id="total-deuda" class="text-xl font-black text-white italic">$0.00</p>
                 </div>
             </div>
 
-            <!-- Selector de Secciones -->
-            <div class="flex bg-zinc-900 p-1.5 rounded-2xl border border-zinc-800">
-                <button onclick="switchTab('egresos')" id="tab-egresos" class="flex-1 py-3 rounded-xl text-[10px] font-black transition-all active-tab uppercase italic">Diario de Gastos</button>
-                <button onclick="switchTab('deudas')" id="tab-deudas" class="flex-1 py-3 rounded-xl text-[10px] font-black transition-all text-zinc-500 uppercase italic">Control Préstamos</button>
+            <div class="flex bg-zinc-900 p-1 rounded-2xl border border-zinc-800">
+                <button onclick="switchTab('egresos')" id="tab-egresos" class="flex-1 py-3 rounded-xl text-[10px] font-black transition-all active-tab">EGRESOS</button>
+                <button onclick="switchTab('deudas')" id="tab-deudas" class="flex-1 py-3 rounded-xl text-[10px] font-black transition-all text-zinc-500">DEUDAS</button>
             </div>
 
-            <!-- VISTA: EGRESOS -->
             <div id="content-egresos" class="space-y-6">
-                <form id="egreso-form" class="space-y-4 bg-zinc-900/40 p-6 rounded-[2.5rem] border border-zinc-800/50">
+                <form id="egreso-form" class="space-y-4 bg-zinc-900/40 p-5 rounded-3xl border border-zinc-800/50 relative shadow-2xl">
                     <div id="categories-grid" class="grid grid-cols-5 gap-2"></div>
-                    <div class="relative">
-                        <span class="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500 font-black italic">$</span>
-                        <input type="number" step="0.01" required placeholder="0.00" id="egreso-monto" class="w-full bg-black border border-zinc-800 p-5 rounded-2xl text-white font-black text-2xl focus:border-amber-500 outline-none text-center">
-                    </div>
-                    <input type="text" placeholder="¿EN QUÉ SE GASTÓ?" id="egreso-detalle" class="w-full bg-black border border-zinc-800 p-4 rounded-2xl text-[10px] outline-none text-zinc-400 text-center uppercase font-bold tracking-widest">
-                    <button type="submit" id="btn-submit-egreso" class="w-full py-5 rounded-2xl bg-white text-black font-black italic text-[10px] tracking-[0.2em] uppercase active:scale-95 transition-all">Guardar en Nube</button>
+                    <input type="number" step="0.01" required placeholder="0.00 $" id="egreso-monto" class="w-full bg-black border border-zinc-800 p-4 rounded-2xl text-white font-black text-lg focus:border-amber-500 outline-none">
+                    <input type="text" placeholder="Concepto o descripción" id="egreso-detalle" class="w-full bg-black border border-zinc-800 p-4 rounded-2xl text-xs outline-none">
+                    <button type="submit" id="btn-submit-egreso" class="w-full py-4 rounded-2xl bg-white text-black font-black italic text-xs tracking-widest hover:bg-amber-500 transition-colors uppercase">Registrar Egreso</button>
                 </form>
                 <div id="list-egresos" class="space-y-3"></div>
             </div>
 
-            <!-- VISTA: DEUDAS -->
             <div id="content-deudas" class="hidden space-y-6">
-                <form id="deuda-form" class="space-y-4 bg-zinc-900/40 p-6 rounded-[2.5rem] border border-zinc-800/50">
-                    <input type="text" required placeholder="NOMBRE DE LA PERSONA / EMPRESA" id="deuda-acreedor" class="w-full bg-black border border-zinc-800 p-4 rounded-2xl text-white font-black text-[10px] outline-none text-center uppercase tracking-widest">
-                    <input type="number" required placeholder="MONTO PRESTADO $" id="deuda-monto" class="w-full bg-black border border-zinc-800 p-5 rounded-2xl text-white font-black text-xl outline-none text-center">
-                    
-                    <div class="grid grid-cols-2 gap-2">
-                        <div class="bg-black p-3 rounded-2xl border border-zinc-800">
-                            <label class="text-[7px] font-black text-zinc-600 uppercase mb-1 block italic tracking-widest text-center">Fecha Inicio</label>
-                            <input type="date" id="deuda-fecha-init" class="w-full bg-transparent text-white font-black text-center text-[10px] outline-none">
-                        </div>
-                        <div class="bg-black p-3 rounded-2xl border border-zinc-800">
-                            <label class="text-[7px] font-black text-zinc-600 uppercase mb-1 block italic tracking-widest text-center">Vencimiento</label>
-                            <input type="date" id="deuda-fecha-end" class="w-full bg-transparent text-white font-black text-center text-[10px] outline-none">
-                        </div>
+                <form id="deuda-form" class="space-y-4 bg-zinc-900/40 p-5 rounded-3xl border border-zinc-800/50 shadow-2xl">
+                    <input type="text" required placeholder="Nombre del acreedor" id="deuda-acreedor" class="w-full bg-black border border-zinc-800 p-4 rounded-2xl text-white font-black text-xs outline-none">
+                    <input type="number" required placeholder="Monto del préstamo $" id="deuda-monto" class="w-full bg-black border border-zinc-800 p-4 rounded-2xl text-white font-black text-lg outline-none">
+                    <div class="flex items-center justify-between p-4 bg-black/40 rounded-2xl border border-zinc-800">
+                        <span class="text-[9px] font-black uppercase text-zinc-500 italic">Interés mensual (%)</span>
+                        <button type="button" id="toggle-interes" class="w-10 h-5 rounded-full relative transition-all bg-zinc-800">
+                            <div id="toggle-circle" class="absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white transition-all"></div>
+                        </button>
                     </div>
-                    
-                    <button type="submit" id="btn-submit-deuda" class="w-full py-5 rounded-2xl bg-amber-500 text-black font-black italic text-[10px] tracking-[0.2em] uppercase active:scale-95 transition-all">Registrar Préstamo</button>
+                    <input type="number" placeholder="Ej: 5" id="deuda-interes-valor" class="hidden w-full bg-black border border-amber-500/40 p-4 rounded-2xl text-amber-500 font-black text-xs outline-none">
+                    <button type="submit" class="w-full py-4 rounded-2xl bg-amber-500 text-black font-black italic text-xs tracking-widest uppercase shadow-lg shadow-amber-500/10 hover:bg-white transition-colors">Crear Deuda</button>
                 </form>
                 <div id="list-deudas" class="space-y-4"></div>
             </div>
         </main>
-
-        <!-- MODALES (Detalle y Confirmación) -->
-        <div id="modal-detalle" class="fixed inset-0 z-[100] hidden flex flex-col bg-black modal-backdrop">
-            <div class="p-8 border-b border-zinc-900 flex justify-between items-center">
-                <h2 id="det-name" class="text-white font-black uppercase italic text-lg tracking-tighter">Detalle</h2>
-                <button onclick="closeModal('modal-detalle')" class="w-12 h-12 rounded-full bg-zinc-900 flex items-center justify-center text-white"><i class="fas fa-times"></i></button>
-            </div>
-            <div class="flex-1 overflow-y-auto p-6 space-y-4" id="det-list"></div>
-            <div class="p-8 bg-zinc-900 border-t border-zinc-800 space-y-4">
-                <div class="flex gap-2">
-                    <input type="number" id="det-amount" placeholder="Registrar Abono $" class="flex-1 bg-black border border-zinc-800 rounded-2xl p-5 text-xl font-black text-white outline-none">
-                    <button id="det-pay-btn" class="bg-white text-black font-black px-8 rounded-2xl uppercase italic text-[10px] tracking-widest">Abonar</button>
-                </div>
-            </div>
-        </div>
-
-        <div id="modal-confirm" class="fixed inset-0 z-[200] hidden flex items-center justify-center p-6 modal-backdrop">
-            <div class="bg-zinc-900 border border-zinc-800 w-full max-w-xs rounded-[2.5rem] p-8 space-y-6 text-center">
-                <h3 class="text-white font-black uppercase italic text-xs">¿Eliminar registro?</h3>
-                <div class="flex flex-col gap-3">
-                    <button id="btn-confirm-delete" class="w-full py-4 rounded-2xl bg-red-600 text-white font-black text-[10px] uppercase italic">Confirmar</button>
-                    <button onclick="closeModal('modal-confirm')" class="w-full py-4 rounded-2xl bg-zinc-800 text-zinc-400 font-black text-[10px] uppercase italic">Cancelar</button>
-                </div>
-            </div>
-        </div>
     </div>
 
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
         import { 
-            getFirestore, collection, doc, addDoc, updateDoc, deleteDoc, onSnapshot, getDoc
-        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+            getFirestore, 
+            collection, 
+            doc, 
+            addDoc, 
+            updateDoc, 
+            deleteDoc, 
+            onSnapshot, 
+            query,
+            enableNetwork
+        } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-        const firebaseConfig = JSON.parse(__firebase_config);
+        const firebaseConfig = {
+            apiKey: "AIzaSyCrjjeOoXPOtJDXDfrHLOA4Ny0QW2zfVWk",
+            authDomain: "apps-d45d6.firebaseapp.com",
+            projectId: "apps-d45d6",
+            storageBucket: "apps-d45d6.firebasestorage.app",
+            messagingSenderId: "502648373937",
+            appId: "1:502648373937:web:8c3beaa2a6c9289a4d9890",
+            measurementId: "G-7VCRCRSCRQ"
+        };
+
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'jaddy-finance-module';
+        const appId = "jaddy-inc-finanzas";
 
-        let currentUser = null;
-        let activeCat = 'otros';
-        let debtsData = [];
-        let unsubEgresos = null;
-        let unsubDeudas = null;
-        let selectedDebtId = null;
+        let activeCategory = 'otros';
+        let hasInterest = false;
 
-        const CATS = [
+        const categories = [
             { id: 'alquiler', label: 'Alquiler', icon: '🏠' },
             { id: 'servicios', label: 'Servicios', icon: '⚡' },
             { id: 'personal', label: 'Personal', icon: '👥' },
-            { id: 'inversion', label: 'Inversión', icon: '💎' },
-            { id: 'otros', label: 'Otros', icon: '📦' }
+            { id: 'otros', label: 'Otros', icon: '📦' },
+            { id: 'inversion', label: 'Inversión', icon: '💎' }
         ];
 
-        const startSession = async () => {
-            try {
-                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                    await signInWithCustomToken(auth, __initial_auth_token);
-                } else {
-                    await signInAnonymously(auth);
-                }
-            } catch (e) { console.error(e); }
-        };
-
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-                currentUser = user;
-                document.getElementById('user-display-name').innerText = `BOVEDA: ${user.uid.substring(0,10).toUpperCase()}`;
-                document.getElementById('status-dot').className = "w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_10px_#10b981]";
-                document.getElementById('status-text').innerText = "ONLINE";
-                document.getElementById('status-text').classList.replace('text-zinc-700', 'text-emerald-500');
-                setupListeners();
-            } else { startSession(); }
-        });
-
-        startSession();
-
-        function setupListeners() {
-            if (!currentUser) return;
-            if (unsubEgresos) unsubEgresos();
-            if (unsubDeudas) unsubDeudas();
-
-            unsubEgresos = onSnapshot(collection(db, 'artifacts', appId, 'users', currentUser.uid, 'egresos'), (snap) => {
-                renderEgresos(snap.docs.map(d => ({ ...d.data(), id: d.id })));
-            });
-
-            unsubDeudas = onSnapshot(collection(db, 'artifacts', appId, 'users', currentUser.uid, 'prestamos'), (snap) => {
-                debtsData = snap.docs.map(d => ({ ...d.data(), id: d.id }));
-                renderDeudas(debtsData);
-                if (selectedDebtId) {
-                    const active = debtsData.find(d => d.id === selectedDebtId);
-                    if (active) renderHistory(active);
-                }
-            });
-        }
-
-        document.getElementById('egreso-form').onsubmit = async (e) => {
-            e.preventDefault();
-            const btn = document.getElementById('btn-submit-egreso');
-            const monto = parseFloat(document.getElementById('egreso-monto').value);
-            if (!monto || !currentUser) return;
-
-            btn.classList.add('loading');
-            await addDoc(collection(db, 'artifacts', appId, 'users', currentUser.uid, 'egresos'), {
-                categoria: activeCat, monto, detalle: document.getElementById('egreso-detalle').value.toUpperCase() || "SIN DETALLE", createdAt: Date.now()
-            });
-            e.target.reset();
-            btn.classList.remove('loading');
-        };
-
-        document.getElementById('deuda-form').onsubmit = async (e) => {
-            e.preventDefault();
-            const btn = document.getElementById('btn-submit-deuda');
-            if (!currentUser) return;
-
-            btn.classList.add('loading');
-            await addDoc(collection(db, 'artifacts', appId, 'users', currentUser.uid, 'prestamos'), {
-                acreedor: document.getElementById('deuda-acreedor').value.toUpperCase(),
-                montoBase: parseFloat(document.getElementById('deuda-monto').value),
-                fechaInicio: document.getElementById('deuda-fecha-init').value,
-                fechaVencimiento: document.getElementById('deuda-fecha-end').value,
-                abonos: [], createdAt: Date.now()
-            });
-            e.target.reset();
-            btn.classList.remove('loading');
-        };
-
-        function renderEgresos(data) {
-            const container = document.getElementById('list-egresos');
-            let total = 0;
-            container.innerHTML = data.sort((a,b) => b.createdAt - a.createdAt).map(e => {
-                total += parseFloat(e.monto || 0);
-                return `<div class="bg-zinc-900/40 p-4 rounded-3xl flex justify-between items-center border border-zinc-800/30">
-                    <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 bg-black rounded-xl flex items-center justify-center text-lg">${CATS.find(c => c.id === e.categoria)?.icon || '📦'}</div>
-                        <div>
-                            <p class="text-white font-black text-[9px] uppercase italic">${e.categoria}</p>
-                            <p class="text-[8px] text-zinc-600 font-bold uppercase truncate max-w-[100px]">${e.detalle}</p>
-                        </div>
-                    </div>
-                    <div class="text-right flex items-center gap-4">
-                        <span class="text-white font-black italic text-sm">-$${parseFloat(e.monto).toFixed(2)}</span>
-                        <button onclick="askToDelete('egresos', '${e.id}')" class="text-zinc-800 hover:text-red-500"><i class="fas fa-trash"></i></button>
-                    </div>
-                </div>`;
-            }).join('');
-            document.getElementById('total-egresos').innerText = `$${total.toFixed(2)}`;
-        }
-
-        function renderDeudas(data) {
-            let total = 0;
-            const container = document.getElementById('list-deudas');
-            container.innerHTML = data.sort((a,b) => b.createdAt - a.createdAt).map(p => {
-                const pagado = (p.abonos || []).reduce((acc, curr) => acc + curr.monto, 0);
-                const saldo = p.montoBase - pagado;
-                total += saldo;
-                return `<div onclick="openDebtDetail('${p.id}')" class="bg-zinc-900 border border-zinc-800 rounded-[2.5rem] p-6 cursor-pointer active:scale-95 transition-all">
-                    <div class="flex justify-between items-start">
-                        <div>
-                            <p class="text-[7px] font-black text-zinc-600 uppercase italic">Préstamo</p>
-                            <h3 class="text-white font-black italic uppercase text-[10px]">${p.acreedor}</h3>
-                        </div>
-                        <p class="text-amber-500 font-black text-xl italic">$${saldo.toFixed(2)}</p>
-                    </div>
-                    <div class="w-full bg-black h-1 rounded-full mt-4 overflow-hidden">
-                        <div class="bg-amber-500 h-full" style="width: ${Math.min((pagado/p.montoBase)*100, 100)}%"></div>
-                    </div>
-                </div>`;
-            }).join('');
-            document.getElementById('total-deuda').innerText = `$${total.toFixed(2)}`;
+        // Función para actualizar el estado visual de conexión
+        function updateConnectionUI(online) {
+            const badge = document.getElementById('connection-badge');
+            const dot = document.getElementById('connection-dot');
+            const text = document.getElementById('connection-text');
+            
+            if (online) {
+                badge.className = "flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-[8px] font-black uppercase transition-all border-emerald-500/30 text-emerald-500";
+                dot.className = "w-1.5 h-1.5 rounded-full dot-online animate-pulse";
+                text.innerText = "Online";
+            } else {
+                badge.className = "flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-[8px] font-black uppercase transition-all border-zinc-700 text-zinc-500";
+                dot.className = "w-1.5 h-1.5 rounded-full bg-zinc-700";
+                text.innerText = "Offline";
+            }
         }
 
         window.switchTab = (tab) => {
@@ -288,53 +156,232 @@
             document.getElementById('tab-deudas').className = `flex-1 py-3 rounded-xl text-[10px] font-black transition-all ${tab === 'deudas' ? 'active-tab' : 'text-zinc-500'}`;
         };
 
-        window.selectCat = (id) => { activeCat = id; renderCats(); };
-        function renderCats() {
-            document.getElementById('categories-grid').innerHTML = CATS.map(cat => `
-                <button type="button" onclick="selectCat('${cat.id}')" class="p-2.5 rounded-2xl border text-[6px] font-black flex flex-col items-center gap-1.5 transition-all ${activeCat === cat.id ? 'category-selected' : 'border-zinc-800 text-zinc-600'}">
+        function renderCategories() {
+            const grid = document.getElementById('categories-grid');
+            grid.innerHTML = categories.map(cat => `
+                <button type="button" onclick="window.selectCategory('${cat.id}')" id="cat-${cat.id}" class="p-2 rounded-xl border text-[8px] font-black flex flex-col items-center gap-1 transition-all ${activeCategory === cat.id ? 'category-selected' : 'border-zinc-800 text-zinc-600'}">
                     <span class="text-lg">${cat.icon}</span>${cat.label.toUpperCase()}
-                </button>`).join('');
+                </button>
+            `).join('');
         }
 
-        window.openDebtDetail = (id) => {
-            selectedDebtId = id;
-            const d = debtsData.find(x => x.id === id);
-            if(d) { renderHistory(d); document.getElementById('modal-detalle').classList.remove('hidden'); }
+        window.selectCategory = (id) => {
+            activeCategory = id;
+            renderCategories();
         };
 
-        window.renderHistory = (p) => {
-            document.getElementById('det-name').innerText = p.acreedor;
-            document.getElementById('det-list').innerHTML = (p.abonos || []).sort((a,b) => b.createdAt - a.createdAt).map(h => `
-                <div class="bg-black border border-zinc-800 p-4 rounded-2xl flex justify-between items-center">
-                    <p class="text-[10px] text-zinc-500 font-mono">${h.fecha}</p>
-                    <p class="text-white font-black italic text-md">$${h.monto.toFixed(2)}</p>
-                </div>
-            `).join('') || `<p class="text-center text-zinc-800 italic py-10 text-[8px]">SIN ABONOS</p>`;
+        document.getElementById('toggle-interes').onclick = () => {
+            hasInterest = !hasInterest;
+            const btn = document.getElementById('toggle-interes');
+            const circle = document.getElementById('toggle-circle');
+            const input = document.getElementById('deuda-interes-valor');
+            btn.className = `w-10 h-5 rounded-full relative transition-all ${hasInterest ? 'bg-amber-500 shadow-[0_0_10px_#f59e0b]' : 'bg-zinc-800'}`;
+            circle.style.left = hasInterest ? '1.375rem' : '0.125rem';
+            input.classList.toggle('hidden', !hasInterest);
         };
 
-        document.getElementById('det-pay-btn').onclick = async () => {
-            if (!currentUser || !selectedDebtId) return;
-            const monto = parseFloat(document.getElementById('det-amount').value);
-            if (!monto) return;
-            const pRef = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'prestamos', selectedDebtId);
-            const pSnap = await getDoc(pRef);
-            await updateDoc(pRef, { abonos: [...(pSnap.data().abonos || []), { monto, fecha: new Date().toLocaleDateString(), createdAt: Date.now() }] });
-            await addDoc(collection(db, 'artifacts', appId, 'users', currentUser.uid, 'egresos'), { categoria: 'otros', monto, detalle: `ABONO: ${pSnap.data().acreedor}`, createdAt: Date.now() });
-            document.getElementById('det-amount').value = '';
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                // Forzar reconexión si fuera necesario
+                enableNetwork(db).then(() => {
+                    updateConnectionUI(true);
+                    startListening(user.uid);
+                });
+            } else {
+                updateConnectionUI(false);
+                window.location.replace('login.html');
+            }
+        });
+
+        function startListening(uid) {
+            // Escuchar Egresos
+            const qE = query(collection(db, 'artifacts', appId, 'users', uid, 'egresos'));
+            onSnapshot(qE, (snap) => {
+                const list = snap.docs.map(d => ({ ...d.data(), id: d.id }));
+                renderEgresos(list.sort((a,b) => (b.createdAt || 0) - (a.createdAt || 0)));
+            }, (error) => {
+                console.error("Firestore Error:", error);
+                updateConnectionUI(false);
+            });
+
+            // Escuchar Préstamos/Deudas
+            const qP = query(collection(db, 'artifacts', appId, 'users', uid, 'prestamos'));
+            onSnapshot(qP, (snap) => {
+                const list = snap.docs.map(d => ({ ...d.data(), id: d.id }));
+                renderDeudas(list.sort((a,b) => (b.createdAt || 0) - (a.createdAt || 0)));
+            });
+        }
+
+        function renderEgresos(data) {
+            let total = 0;
+            const container = document.getElementById('list-egresos');
+            container.innerHTML = data.map(e => {
+                total += parseFloat(e.monto || 0);
+                const cat = categories.find(c => c.id === e.categoria);
+                return `
+                    <div class="bg-zinc-900/60 p-4 rounded-2xl flex justify-between items-center border border-zinc-800/40 group">
+                        <div class="flex items-center gap-4">
+                            <div class="w-10 h-10 rounded-xl bg-black flex items-center justify-center text-lg">${cat?.icon || '📦'}</div>
+                            <div>
+                                <p class="text-white font-black text-xs uppercase italic">${e.categoria}</p>
+                                <p class="text-[10px] text-zinc-500">${e.detalle || ''}</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-4">
+                            <div class="text-right">
+                                <p class="text-red-500 font-black italic text-sm">-$${parseFloat(e.monto).toFixed(2)}</p>
+                                <p class="text-[8px] text-zinc-700 font-bold uppercase">${e.fecha}</p>
+                            </div>
+                            <button onclick="window.deleteItem('egresos', '${e.id}')" class="text-zinc-600 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity p-2">
+                                <i class="fas fa-trash-can text-[10px]"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            document.getElementById('total-egresos').innerText = `$${total.toFixed(2)}`;
+        }
+
+        function renderDeudas(data) {
+            let totalD = 0;
+            const container = document.getElementById('list-deudas');
+            container.innerHTML = data.map(p => {
+                const pagado = (p.abonos || []).reduce((acc, curr) => acc + curr.monto, 0);
+                const saldo = parseFloat(p.montoTotalConInteres || 0) - pagado;
+                totalD += saldo;
+                return `
+                    <div class="bg-zinc-900 border border-zinc-800 rounded-3xl overflow-hidden group">
+                        <div class="p-5 bg-zinc-800/10 relative">
+                            <p class="text-white font-black text-sm uppercase italic">${p.acreedor}</p>
+                            <p class="text-amber-500 font-black text-3xl italic mt-1">$${saldo.toFixed(2)}</p>
+                            <button onclick="window.deleteItem('prestamos', '${p.id}')" class="absolute top-4 right-4 text-zinc-600 hover:text-red-500 opacity-0 group-hover:opacity-100 p-2">
+                                <i class="fas fa-trash-can text-[10px]"></i>
+                            </button>
+                        </div>
+                        <div class="p-4 bg-black/40 space-y-3">
+                            ${(p.abonos || []).map(ab => `<div class="flex justify-between items-center text-[10px] text-zinc-500 font-black bg-zinc-900/40 p-2 rounded-lg"><span>${ab.fecha}</span><span class="text-white">-$${ab.monto.toFixed(2)}</span></div>`).join('')}
+                            <div class="flex gap-2">
+                                <input type="number" placeholder="Abonar $" id="abono-${p.id}" class="flex-1 bg-black border border-zinc-800 rounded-xl p-3 text-[11px] font-black text-white outline-none">
+                                <button onclick="window.handleAbono('${p.id}')" class="bg-white text-black text-[9px] font-black px-4 rounded-xl italic uppercase">Abonar</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            document.getElementById('total-deuda').innerText = `$${totalD.toFixed(2)}`;
+        }
+
+        // ACCIÓN: REGISTRAR EGRESO
+        document.getElementById('egreso-form').onsubmit = async (e) => {
+            e.preventDefault();
+            const user = auth.currentUser;
+            if (!user) return;
+
+            const mInput = document.getElementById('egreso-monto');
+            const dInput = document.getElementById('egreso-detalle');
+            const btn = document.getElementById('btn-submit-egreso');
+
+            const monto = parseFloat(mInput.value);
+            if (isNaN(monto) || monto <= 0) return;
+
+            try {
+                btn.disabled = true;
+                btn.innerText = "PROCESANDO...";
+                
+                await addDoc(collection(db, 'artifacts', appId, 'users', user.uid, 'egresos'), {
+                    categoria: activeCategory,
+                    monto: monto,
+                    detalle: dInput.value || "Sin descripción",
+                    createdAt: Date.now(),
+                    fecha: new Date().toLocaleDateString('es-ES')
+                });
+
+                mInput.value = ''; 
+                dInput.value = '';
+                activeCategory = 'otros';
+                renderCategories();
+            } catch (err) {
+                console.error("Error al registrar egreso:", err);
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "REGISTRAR EGRESO";
+            }
         };
 
-        window.askToDelete = (coll, id) => {
-            document.getElementById('modal-confirm').classList.remove('hidden');
-            document.getElementById('btn-confirm-delete').onclick = async () => {
-                await deleteDoc(doc(db, 'artifacts', appId, 'users', currentUser.uid, coll, id));
-                closeModal('modal-confirm');
-                closeModal('modal-detalle');
-            };
+        // ACCIÓN: CREAR DEUDA
+        document.getElementById('deuda-form').onsubmit = async (e) => {
+            e.preventDefault();
+            const user = auth.currentUser;
+            if (!user) return;
+
+            const ac = document.getElementById('deuda-acreedor').value;
+            const mo = document.getElementById('deuda-monto').value;
+            const int = document.getElementById('deuda-interes-valor').value || 0;
+
+            if (!ac || !mo) return;
+
+            try {
+                const mBase = parseFloat(mo);
+                const mTotal = mBase + (mBase * (parseFloat(int) / 100));
+
+                await addDoc(collection(db, 'artifacts', appId, 'users', user.uid, 'prestamos'), {
+                    acreedor: ac,
+                    montoBase: mBase,
+                    montoTotalConInteres: mTotal,
+                    porcentajeAplicado: parseFloat(int),
+                    abonos: [],
+                    createdAt: Date.now(),
+                    fecha: new Date().toLocaleDateString('es-ES')
+                });
+
+                document.getElementById('deuda-form').reset();
+                hasInterest = false;
+                document.getElementById('deuda-interes-valor').classList.add('hidden');
+                document.getElementById('toggle-interes').className = "w-10 h-5 rounded-full relative transition-all bg-zinc-800";
+            } catch (err) {
+                console.error("Error al registrar deuda:", err);
+            }
         };
 
-        window.closeModal = (id) => document.getElementById(id).classList.add('hidden');
+        window.handleAbono = async (id) => {
+            const user = auth.currentUser;
+            if (!user) return;
+            const input = document.getElementById(`abono-${id}`);
+            const monto = parseFloat(input.value);
+            if (!monto || isNaN(monto)) return;
 
-        renderCats();
+            try {
+                const docRef = doc(db, 'artifacts', appId, 'users', user.uid, 'prestamos', id);
+                onSnapshot(docRef, async (snap) => {
+                    const data = snap.data();
+                    if (data) {
+                        const nuevosAbonos = [...(data.abonos || []), { 
+                            id: Date.now(), 
+                            monto: monto, 
+                            fecha: new Date().toLocaleDateString('es-ES') 
+                        }];
+                        await updateDoc(docRef, { abonos: nuevosAbonos });
+                    }
+                }, { onlyOnce: true });
+                input.value = '';
+            } catch (err) {
+                console.error("Error en abono:", err);
+            }
+        };
+
+        window.deleteItem = async (col, id) => {
+            const user = auth.currentUser;
+            if (!user) return;
+            if (confirm('¿Eliminar este registro permanentemente?')) {
+                try {
+                    await deleteDoc(doc(db, 'artifacts', appId, 'users', user.uid, col, id));
+                } catch (err) {
+                    console.error("Error al eliminar:", err);
+                }
+            }
+        };
+
+        renderCategories();
     </script>
 </body>
 </html>
