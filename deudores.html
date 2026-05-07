@@ -1,5 +1,4 @@
-
-
+```html
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -13,21 +12,22 @@
         body { background: var(--bg); color: white; font-family: 'Inter', sans-serif; margin: 0; }
         .texto-dorado { background: linear-gradient(to bottom, #CF9E1D 22%, #F1D37E 45%, #CF9E1D 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         .card-deudores { background: #0A0A0A; border: 1px solid #1A1A1A; border-left: 4px solid var(--gold); border-radius: 20px; padding: 18px; margin-bottom: 12px; }
-        .input-abono { background: #151515; border: 1px solid #333; border-radius: 12px; padding: 14px; color: white; font-size: 16px; width: 100%; text-align: center; outline: none; }
         .btn-abonar { background: white; color: black; font-weight: 900; border-radius: 12px; padding: 12px; font-size: 10px; text-transform: uppercase; width: 100%; }
         .modal-abono { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 100; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(5px); }
+        .input-abono { background: #151515; border: 1px solid #333; border-radius: 12px; padding: 14px; color: white; font-size: 16px; width: 100%; text-align: center; outline: none; }
     </style>
 </head>
 <body class="p-4 pb-24 max-w-md mx-auto">
 
     <header class="flex justify-between items-center mb-6">
+        <!-- SOLUCIÓN: Usamos window.history.back() para regresar sin errores de ruta -->
         <button onclick="window.history.back()" class="text-[10px] font-black border border-gold/30 px-4 py-2 rounded-full text-gold uppercase">← Volver</button>
-        <div id="statusDot" class="w-2 h-2 rounded-full bg-zinc-800 transition-all duration-500"></div>
+        <div id="statusDot" class="w-2 h-2 rounded-full bg-red-500"></div>
     </header>
 
     <div class="mb-8">
         <h1 class="texto-dorado text-3xl font-black uppercase italic tracking-tighter">Deudores</h1>
-        <p class="text-gray-500 text-[10px] font-bold uppercase tracking-[4px]">Control de Abonos Reales</p>
+        <p class="text-gray-500 text-[10px] font-bold uppercase tracking-[4px]">Control de Abonos</p>
     </div>
 
     <div class="mb-6">
@@ -35,14 +35,14 @@
     </div>
 
     <div id="listaDeudores" class="space-y-4">
-        <div class="text-center py-20 opacity-30 text-[10px] font-black uppercase tracking-widest">Sincronizando con Ventas...</div>
+        <div class="text-center py-20 opacity-30 text-[10px] font-black uppercase tracking-widest">Cargando base de datos...</div>
     </div>
 
+    <!-- Modal de Abonos -->
     <div id="modalAbono" class="modal-abono">
         <div class="bg-[#0A0A0A] border border-gray-800 p-8 rounded-[32px] w-full max-w-sm">
             <h2 class="text-gold font-black uppercase text-[10px] mb-1 tracking-widest">Registrar Abono</h2>
             <p id="modal-nombre" class="text-xl font-black text-white mb-6 uppercase italic"></p>
-            
             <div class="space-y-4">
                 <input type="number" id="input-monto" class="input-abono" placeholder="0.00">
                 <div class="flex gap-2">
@@ -55,9 +55,10 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getFirestore, collection, onSnapshot, doc, updateDoc, query } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getFirestore, collection, onSnapshot, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
+        // MANTENEMOS TU CONFIGURACIÓN ORIGINAL
         const firebaseConfig = {
             apiKey: "AIzaSyCrjjeOoXPOtJDXDfrHLOA4Ny0QW2zfVWk",
             authDomain: "apps-d45d6.firebaseapp.com",
@@ -76,114 +77,82 @@
         let deudorActivo = null;
         let userId = null;
 
-        const initAuth = async () => {
-            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                await signInWithCustomToken(auth, __initial_auth_token);
-            } else {
-                await signInAnonymously(auth);
-            }
-        };
-        initAuth();
+        // Autenticación Anónima para mantener la sesión
+        signInAnonymously(auth).catch(console.error);
 
         onAuthStateChanged(auth, (user) => {
             if(user) {
                 userId = user.uid;
-                document.getElementById('statusDot').className = "w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_#00ff00]";
-                conectarVentas(user.uid);
+                document.getElementById('statusDot').className = "w-2 h-2 rounded-full bg-green-500";
+                conectarBaseDeDatos(user.uid);
             }
         });
 
-        function conectarVentas(uid) {
-            // RUTA PRIVADA PARA VENTAS_REALIZADAS
+        function conectarBaseDeDatos(uid) {
+            // MANTENEMOS LA RUTA ORIGINAL DE TUS VENTAS
             const colRef = collection(db, 'artifacts', appId, 'users', uid, 'ventas_realizadas');
             
             onSnapshot(colRef, (snapshot) => {
                 todasLasVentas = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
                 renderizar();
-            }, (error) => console.error("Error en conexión:", error));
+            });
         }
 
         window.renderizar = () => {
             const container = document.getElementById('listaDeudores');
-            const buscarInput = document.getElementById('busqueda').value;
-            const buscar = buscarInput ? buscarInput.toUpperCase() : "";
+            const buscar = document.getElementById('busqueda').value.toUpperCase();
             
             const deudores = todasLasVentas.filter(v => 
-                v.tipo === 'CREDITO' && 
-                v.total > 0 &&
+                v.tipo === 'CREDITO' && v.total > 0 &&
                 (v.cliente && v.cliente.toUpperCase().includes(buscar))
             );
-
-            if(deudores.length === 0) {
-                container.innerHTML = '<p class="text-center py-20 opacity-20 text-[10px] font-black uppercase">No hay deudas pendientes</p>';
-                return;
-            }
 
             container.innerHTML = deudores.map(v => `
                 <div class="card-deudores">
                     <div class="flex justify-between items-start mb-4">
                         <div>
                             <h3 class="text-sm font-black uppercase">${v.cliente}</h3>
-                            <p class="text-[8px] text-gray-500 font-bold uppercase">${v.fecha_legible || 'S/F'} - ${v.vendedor || 'S/V'}</p>
+                            <p class="text-[8px] text-gray-500 font-bold uppercase">${v.fecha_legible || 'Sin Fecha'}</p>
                         </div>
                         <div class="text-right">
-                            <p class="text-[7px] text-gold font-black uppercase mb-1">Saldo Deuda</p>
+                            <p class="text-[7px] text-gold font-black uppercase">Saldo</p>
                             <p class="text-lg font-black text-white">$${parseFloat(v.total).toLocaleString()}</p>
                         </div>
                     </div>
-                    <div class="text-[9px] text-gray-500 mb-4 border-b border-white/5 pb-2 uppercase italic">
-                        ${v.producto || 'Genérico'} / ${v.variante || 'Normal'}
-                    </div>
-                    <button onclick="abrirModal('${v.id}', '${v.cliente}', ${v.total})" class="btn-abonar">Registrar Abono</button>
+                    <button onclick="abrirModal('${v.id}', '${v.cliente}', ${v.total})" class="btn-abonar">Abonar</button>
                 </div>
             `).join('');
+
+            if(deudores.length === 0) {
+                container.innerHTML = '<p class="text-center py-20 opacity-20 text-[10px] font-black uppercase">Sin deudas pendientes</p>';
+            }
         };
 
         window.abrirModal = (id, nombre, saldo) => {
             deudorActivo = { id, nombre, saldo };
             document.getElementById('modal-nombre').innerText = nombre;
-            document.getElementById('input-monto').value = "";
             document.getElementById('modalAbono').style.display = 'flex';
         };
 
         window.cerrarModal = () => document.getElementById('modalAbono').style.display = 'none';
 
         window.ejecutarAbono = async () => {
-            if(!userId || !deudorActivo) return;
             const abono = parseFloat(document.getElementById('input-monto').value);
-            if(!abono || abono <= 0) {
-                alert("Monto no válido");
-                return;
-            }
+            if(!abono || abono <= 0) return;
             
             const nuevoTotal = deudorActivo.saldo - abono;
-            if(nuevoTotal < 0) {
-                alert("El abono supera la deuda");
-                return;
-            }
+            if(nuevoTotal < 0) return;
 
-            const btn = document.getElementById('btnEjecutar');
             try {
-                btn.disabled = true;
-                btn.innerText = "PROCESANDO...";
-                
                 const docRef = doc(db, 'artifacts', appId, 'users', userId, 'ventas_realizadas', deudorActivo.id);
-                
                 await updateDoc(docRef, {
                     total: nuevoTotal,
-                    tipo: nuevoTotal === 0 ? 'CONTADO' : 'CREDITO',
-                    ultimo_abono: abono,
-                    fecha_pago: new Date().toISOString()
+                    tipo: nuevoTotal === 0 ? 'CONTADO' : 'CREDITO'
                 });
-                
                 cerrarModal();
-                alert("Abono guardado correctamente");
+                document.getElementById('input-monto').value = '';
             } catch (e) {
-                console.error(e);
-                alert("Error al actualizar la cobranza");
-            } finally {
-                btn.disabled = false;
-                btn.innerText = "Guardar Pago";
+                console.error("Error al abonar:", e);
             }
         };
     </script>
