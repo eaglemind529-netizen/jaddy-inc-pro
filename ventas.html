@@ -40,7 +40,7 @@
             <div class="relative">
                 <p class="text-[7px] text-gold font-black absolute -top-2 left-3 bg-[#0A0A0A] px-2 uppercase z-10">Despachado por:</p>
                 <select id="sel-vendedor" class="input-field border-gold/30 text-gold">
-                    <option value="">-- CARGANDO VENDEDORES --</option>
+                    <option value="">-- SELECCIONAR VENDEDOR --</option>
                 </select>
             </div>
 
@@ -156,24 +156,33 @@
         });
 
         function cargarDatos(uid) {
+            // Cargar Vendedores - Conexión directa a tu base de datos
+            const colVendedores = collection(db, 'artifacts', appId, 'users', uid, 'vendedores');
+            onSnapshot(colVendedores, (snap) => {
+                const selVendedor = document.getElementById('sel-vendedor');
+                const vendedores = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+                
+                let options = '<option value="">-- SELECCIONAR VENDEDOR --</option>';
+                vendedores.forEach(v => {
+                    // Usamos v.nombre asumiendo que es el campo en tu base de datos
+                    if (v.nombre) {
+                        options += `<option value="${v.nombre}">${v.nombre.toUpperCase()}</option>`;
+                    }
+                });
+                selVendedor.innerHTML = options;
+            }, (error) => console.error("Error cargando vendedores:", error));
+
             // Productos
             onSnapshot(collection(db, 'artifacts', appId, 'users', uid, 'productos'), (snap) => {
                 productosGlobal = snap.docs.map(d => ({id: d.id, ...d.data()}));
-                document.getElementById('sel-producto').innerHTML = '<option value="">-- SELECCIONAR --</option>' + 
+                document.getElementById('sel-producto').innerHTML = '<option value="">-- SELECCIONAR PRODUCTO --</option>' + 
                     productosGlobal.map(p => `<option value="${p.id}">${p.nombre}</option>`).join('');
-            });
-
-            // Vendedores
-            onSnapshot(collection(db, 'artifacts', appId, 'users', uid, "vendedores"), (snap) => {
-                const data = snap.docs.map(d => d.data());
-                document.getElementById('sel-vendedor').innerHTML = '<option value="">-- SELECCIONAR --</option>' + 
-                    data.map(v => `<option value="${v.nombre}">${v.nombre.toUpperCase()}</option>`).join('');
             });
 
             // Clientes
             onSnapshot(collection(db, 'artifacts', appId, 'users', uid, "clientes"), (snap) => {
                 const data = snap.docs.map(d => d.data());
-                document.getElementById('sel-cliente').innerHTML = '<option value="">-- SELECCIONAR --</option>' + 
+                document.getElementById('sel-cliente').innerHTML = '<option value="">-- CLIENTES --</option>' + 
                     data.map(c => `<option value="${c.nombre}">${c.nombre.toUpperCase()}</option>`).join('');
             });
 
@@ -235,7 +244,7 @@
                 vendedor: vendedor,
                 cliente: document.getElementById('btn-cli-reg').classList.contains('active') ? document.getElementById('sel-cliente').value : document.getElementById('inp-cliente-nom').value,
                 producto: pSeleccionado.nombre,
-                productoId: pSeleccionado.id, // Guardamos ID para facilitar edición
+                productoId: pSeleccionado.id, 
                 variante: document.getElementById('sel-variante').value,
                 cantidad: parseInt(document.getElementById('inp-cantidad').value),
                 total: parseFloat(document.getElementById('inp-precio').value.replace(/,/g, '')),
@@ -272,10 +281,8 @@
             document.getElementById('btn-venta').innerText = "ACTUALIZAR VENTA";
             document.getElementById('btn-cancelar-edit').classList.remove('hidden');
             
-            // Llenar datos
             document.getElementById('sel-vendedor').value = v.vendedor;
             
-            // Determinar si el cliente era registrado o manual
             const selCli = document.getElementById('sel-cliente');
             const esRegistrado = Array.from(selCli.options).some(opt => opt.value === v.cliente);
             
@@ -283,7 +290,6 @@
             if(esRegistrado) selCli.value = v.cliente;
             else document.getElementById('inp-cliente-nom').value = v.cliente;
 
-            // Producto y Variante
             document.getElementById('sel-producto').value = v.productoId || "";
             pSeleccionado = productosGlobal.find(p => p.id === v.productoId);
             actualizarVariantes(v.variante);
