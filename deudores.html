@@ -20,8 +20,8 @@
 <body class="p-4 pb-24 max-w-md mx-auto">
 
     <header class="flex justify-between items-center mb-6">
-        <a href="Ventas.html" class="text-[10px] font-black border border-gold/30 px-4 py-2 rounded-full text-gold uppercase">← Volver a Ventas</a>
-        <div id="statusDot" class="w-2 h-2 rounded-full bg-red-500"></div>
+        <button onclick="window.history.back()" class="text-[10px] font-black border border-gold/30 px-4 py-2 rounded-full text-gold uppercase">← Volver</button>
+        <div id="statusDot" class="w-2 h-2 rounded-full bg-zinc-800 transition-all duration-500"></div>
     </header>
 
     <div class="mb-8">
@@ -46,7 +46,7 @@
                 <input type="number" id="input-monto" class="input-abono" placeholder="0.00">
                 <div class="flex gap-2">
                     <button onclick="cerrarModal()" class="flex-1 py-4 text-[10px] font-black text-gray-500 uppercase">Cancelar</button>
-                    <button onclick="ejecutarAbono()" class="flex-2 btn-abonar">Guardar Pago</button>
+                    <button id="btnEjecutar" onclick="ejecutarAbono()" class="flex-2 btn-abonar">Guardar Pago</button>
                 </div>
             </div>
         </div>
@@ -54,8 +54,8 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getFirestore, collection, onSnapshot, doc, updateDoc, query, where } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getFirestore, collection, onSnapshot, doc, updateDoc, query } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCrjjeOoXPOtJDXDfrHLOA4Ny0QW2zfVWk",
@@ -69,44 +69,61 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
+        const appId = "jaddy-inc-finanzas";
 
         let todasLasVentas = [];
         let deudorActivo = null;
+        let userId = null;
+
+        const initAuth = async () => {
+            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                await signInWithCustomToken(auth, __initial_auth_token);
+            } else {
+                await signInAnonymously(auth);
+            }
+        };
+        initAuth();
 
         onAuthStateChanged(auth, (user) => {
             if(user) {
+                userId = user.uid;
                 document.getElementById('statusDot').className = "w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_#00ff00]";
-                conectarVentas();
+                conectarVentas(user.uid);
             }
         });
 
-        function conectarVentas() {
-            // USAMOS LA MISMA RUTA QUE TU VENTAS.HTML
-            const colRef = collection(db, "ventas_realizadas");
+        function conectarVentas(uid) {
+            // RUTA PRIVADA PARA VENTAS_REALIZADAS
+            const colRef = collection(db, 'artifacts', appId, 'users', uid, 'ventas_realizadas');
             
             onSnapshot(colRef, (snapshot) => {
                 todasLasVentas = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
                 renderizar();
-            });
+            }, (error) => console.error("Error en conexión:", error));
         }
 
         window.renderizar = () => {
             const container = document.getElementById('listaDeudores');
-            const buscar = document.getElementById('busqueda').value.toUpperCase();
+            const buscarInput = document.getElementById('busqueda').value;
+            const buscar = buscarInput ? buscarInput.toUpperCase() : "";
             
-            // FILTRO: Solo tipo CREDITO y que el total sea mayor a 0
             const deudores = todasLasVentas.filter(v => 
                 v.tipo === 'CREDITO' && 
                 v.total > 0 &&
                 (v.cliente && v.cliente.toUpperCase().includes(buscar))
             );
 
+            if(deudores.length === 0) {
+                container.innerHTML = '<p class="text-center py-20 opacity-20 text-[10px] font-black uppercase">No hay deudas pendientes</p>';
+                return;
+            }
+
             container.innerHTML = deudores.map(v => `
                 <div class="card-deudores">
                     <div class="flex justify-between items-start mb-4">
                         <div>
                             <h3 class="text-sm font-black uppercase">${v.cliente}</h3>
-                            <p class="text-[8px] text-gray-500 font-bold uppercase">${v.fecha_legible} - ${v.vendedor}</p>
+                            <p class="text-[8px] text-gray-500 font-bold uppercase">${v.fecha_legible || 'S/F'} - ${v.vendedor || 'S/V'}</p>
                         </div>
                         <div class="text-right">
                             <p class="text-[7px] text-gold font-black uppercase mb-1">Saldo Deuda</p>
@@ -114,50 +131,62 @@
                         </div>
                     </div>
                     <div class="text-[9px] text-gray-500 mb-4 border-b border-white/5 pb-2 uppercase italic">
-                        ${v.producto} / ${v.variante}
+                        ${v.producto || 'Genérico'} / ${v.variante || 'Normal'}
                     </div>
                     <button onclick="abrirModal('${v.id}', '${v.cliente}', ${v.total})" class="btn-abonar">Registrar Abono</button>
                 </div>
             `).join('');
-
-            if(deudores.length === 0) {
-                container.innerHTML = '<p class="text-center py-20 opacity-20 text-[10px] font-black uppercase">No hay deudas pendientes</p>';
-            }
         };
 
         window.abrirModal = (id, nombre, saldo) => {
             deudorActivo = { id, nombre, saldo };
             document.getElementById('modal-nombre').innerText = nombre;
+            document.getElementById('input-monto').value = "";
             document.getElementById('modalAbono').style.display = 'flex';
         };
 
         window.cerrarModal = () => document.getElementById('modalAbono').style.display = 'none';
 
         window.ejecutarAbono = async () => {
+            if(!userId || !deudorActivo) return;
             const abono = parseFloat(document.getElementById('input-monto').value);
-            if(!abono || abono <= 0) return alert("Monto no válido");
+            if(!abono || abono <= 0) {
+                alert("Monto no válido");
+                return;
+            }
             
             const nuevoTotal = deudorActivo.saldo - abono;
-            if(nuevoTotal < 0) return alert("El abono supera la deuda");
+            if(nuevoTotal < 0) {
+                alert("El abono supera la deuda");
+                return;
+            }
 
+            const btn = document.getElementById('btnEjecutar');
             try {
-                const docRef = doc(db, "ventas_realizadas", deudorActivo.id);
+                btn.disabled = true;
+                btn.innerText = "PROCESANDO...";
+                
+                const docRef = doc(db, 'artifacts', appId, 'users', userId, 'ventas_realizadas', deudorActivo.id);
+                
                 await updateDoc(docRef, {
                     total: nuevoTotal,
-                    // Si llega a 0, podrías cambiar el tipo a CONTADO para que desaparezca
-                    tipo: nuevoTotal === 0 ? 'CONTADO' : 'CREDITO'
+                    tipo: nuevoTotal === 0 ? 'CONTADO' : 'CREDITO',
+                    ultimo_abono: abono,
+                    fecha_pago: new Date().toISOString()
                 });
+                
                 cerrarModal();
                 alert("Abono guardado correctamente");
             } catch (e) {
-                alert("Error al actualizar");
+                console.error(e);
+                alert("Error al actualizar la cobranza");
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "Guardar Pago";
             }
         };
-
-        signInAnonymously(auth);
     </script>
 </body>
 </html>
-
 
 ```
