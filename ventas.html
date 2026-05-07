@@ -16,7 +16,7 @@
         .tab-btn.active { background: white; color: black; border-color: white; }
         .sale-card { background: #0F0F0F; border: 1px solid #1A1A1A; border-radius: 20px; padding: 15px; margin-bottom: 12px; animation: fadeIn 0.4s ease; position: relative; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        #statusDot { width: 10px; height: 10px; border-radius: 50%; }
+        #statusDot { width: 12px; height: 12px; border-radius: 50%; }
         input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); }
         .modal-overlay { background: rgba(0,0,0,0.8); backdrop-filter: blur(4px); display: none; position: fixed; inset: 0; z-index: 50; align-items: center; justify-content: center; padding: 20px; }
         .modal-content { background: #0A0A0A; border: 1px solid #333; border-radius: 24px; padding: 24px; width: 100%; max-width: 320px; text-align: center; }
@@ -26,11 +26,11 @@
 
     <header class="flex justify-between items-center mb-6">
         <button onclick="window.history.back()" class="text-[10px] font-black border border-gold/30 px-4 py-2 rounded-full text-gold uppercase">← Volver</button>
-        <div id="statusDot" class="bg-red-500"></div>
+        <div id="statusDot" class="bg-zinc-800"></div>
     </header>
 
     <section id="form-container" class="bg-[#0A0A0A] p-5 rounded-[28px] gold-border mb-8 shadow-2xl">
-        <h2 id="form-title" class="text-center text-gold font-black uppercase text-[10px] tracking-[4px] mb-6 italic italic">Panel de Despacho</h2>
+        <h2 id="form-title" class="text-center text-gold font-black uppercase text-[10px] tracking-[4px] mb-6 italic">Panel de Despacho</h2>
         
         <div class="space-y-4">
             <input type="hidden" id="edit-id" value="">
@@ -38,7 +38,7 @@
             <div class="relative">
                 <p class="text-[7px] text-gold font-black absolute -top-2 left-3 bg-[#0A0A0A] px-2 uppercase z-10">Despachado por:</p>
                 <select id="sel-vendedor" class="input-field border-gold/30 text-gold">
-                    <option value="">-- CARGANDO... --</option>
+                    <option value="">-- SELECCIONAR --</option>
                 </select>
             </div>
 
@@ -49,71 +49,58 @@
             
             <div id="area-cliente-reg">
                 <select id="sel-cliente" class="input-field">
-                    <option value="">-- CARGANDO CLIENTES --</option>
+                    <option value="">-- CLIENTES --</option>
                 </select>
             </div>
             
             <div id="area-cliente-ocu" class="hidden">
-                <input type="text" id="inp-cliente-nom" placeholder="ESCRIBE EL NOMBRE" class="input-field">
+                <input type="text" id="inp-cliente-nom" placeholder="NOMBRE DEL CLIENTE" class="input-field">
             </div>
 
             <div class="grid grid-cols-1 gap-3">
-                <select id="sel-producto" class="input-field">
-                    <option value="">-- SELECCIONAR PRODUCTO --</option>
-                </select>
-                <select id="sel-variante" class="input-field border-gold/20 text-gold">
-                    <option value="">-- ELIGE FRAGANCIA --</option>
-                </select>
+                <div class="relative">
+                    <p class="text-[7px] text-gray-500 absolute -top-2 left-3 bg-[#0A0A0A] px-2 uppercase z-10">Producto:</p>
+                    <select id="sel-producto" class="input-field">
+                        <option value="">-- SELECCIONAR PRODUCTO --</option>
+                    </select>
+                </div>
+                <div class="relative">
+                    <p class="text-[7px] text-gray-500 absolute -top-2 left-3 bg-[#0A0A0A] px-2 uppercase z-10">Variante Elegida:</p>
+                    <select id="sel-variante" class="input-field border-gold/20 text-gold">
+                        <option value="">-- ELIGE VARIANTE --</option>
+                    </select>
+                </div>
             </div>
 
             <div class="grid grid-cols-3 gap-2">
-                <button onclick="setTipo('CONTADO')" id="t-contado" class="tab-btn active">Contado</button>
+                <button onclick="setTipo('CONTADO')" id="t-contado" class="tab-btn active">Detal</button>
                 <button onclick="setTipo('CREDITO')" id="t-credito" class="tab-btn">Crédito</button>
                 <button onclick="setTipo('MAYOR')" id="t-mayor" class="tab-btn">Mayor</button>
             </div>
 
-            <div id="panel-credito" class="hidden space-y-3 p-4 bg-[#111] rounded-xl border border-gold/10">
-                <div class="grid grid-cols-2 gap-2">
-                    <div>
-                        <p class="text-[7px] mb-1 text-gray-500 uppercase">F. Entrega</p>
-                        <input type="date" id="fecha-entrega" class="input-field py-2 text-xs">
-                    </div>
-                    <div>
-                        <p class="text-[7px] mb-1 text-gray-500 uppercase">F. Cobro</p>
-                        <input type="date" id="fecha-pago" class="input-field py-2 text-xs">
-                    </div>
+            <div class="grid grid-cols-2 gap-3">
+                <div class="relative">
+                    <p class="text-[7px] text-gray-500 absolute -top-2 left-3 bg-[#0A0A0A] px-2 uppercase z-10">Cant:</p>
+                    <input type="number" id="inp-cantidad" value="1" min="1" oninput="calcularTotal()" class="input-field text-center text-xl">
+                </div>
+                <div class="relative">
+                    <p class="text-[7px] text-gray-500 absolute -top-2 left-3 bg-[#0A0A0A] px-2 uppercase z-10">Total:</p>
+                    <input type="text" id="inp-precio" value="0.00" readonly class="input-field text-center text-xl text-green-400">
                 </div>
             </div>
 
-            <div class="grid grid-cols-2 gap-3">
-                <input type="number" id="inp-cantidad" value="1" min="1" oninput="calcularTotal()" class="input-field text-center text-xl">
-                <input type="text" id="inp-precio" value="0.00" readonly class="input-field text-center text-xl text-green-400">
-            </div>
-
-            <div class="flex gap-2">
-                <button id="btn-cancel-edit" onclick="cancelarEdicion()" class="hidden flex-1 bg-red-900/30 text-red-500 border border-red-500/30 font-black py-4 rounded-xl uppercase text-xs">Cancelar</button>
-                <button id="btn-venta" onclick="registrarVenta()" class="flex-[2] bg-white text-black font-black py-5 rounded-xl uppercase text-sm">Procesar Venta</button>
-            </div>
+            <button id="btn-venta" onclick="registrarVenta()" class="w-full bg-white text-black font-black py-5 rounded-xl uppercase text-sm">Procesar Venta</button>
         </div>
     </section>
 
     <div id="listaVentas" class="space-y-3 pb-10"></div>
 
-    <div id="confirmModal" class="modal-overlay">
-        <div class="modal-content">
-            <h3 class="text-white font-black uppercase text-sm mb-4">¿Eliminar Venta?</h3>
-            <div class="flex gap-2">
-                <button onclick="closeConfirm()" class="flex-1 py-3 rounded-xl border border-gray-700 text-gray-400 text-[10px] font-black uppercase">No</button>
-                <button id="confirmDeleteBtn" class="flex-1 py-3 rounded-xl bg-red-600 text-white text-[10px] font-black uppercase">Sí, eliminar</button>
-            </div>
-        </div>
-    </div>
-
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getFirestore, collection, onSnapshot, addDoc, updateDoc, deleteDoc, query, orderBy, doc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getFirestore, collection, onSnapshot, addDoc, updateDoc, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
+        // MANTENIENDO TU CONFIGURACIÓN ORIGINAL TAL CUAL ME LA PASASTE
         const firebaseConfig = {
             apiKey: "AIzaSyCrjjeOoXPOtJDXDfrHLOA4Ny0QW2zfVWk",
             authDomain: "apps-d45d6.firebaseapp.com",
@@ -126,65 +113,72 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
+        const appId = "jaddy-inc-finanzas"; // Tu ID de App
 
         let productosGlobal = [];
         let pSeleccionado = null;
         let tipoVenta = 'CONTADO';
-        let ventasActuales = [];
+        let userId = null;
+
+        const initAuth = async () => {
+            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                await signInWithCustomToken(auth, __initial_auth_token);
+            } else {
+                await signInAnonymously(auth);
+            }
+        };
+        initAuth();
 
         onAuthStateChanged(auth, (user) => {
             if(user) {
-                document.getElementById('statusDot').className = "bg-green-500 w-3 h-3 rounded-full shadow-[0_0_10px_#00ff00]";
-                cargarDatos();
+                userId = user.uid;
+                document.getElementById('statusDot').style.backgroundColor = "#22c55e";
+                document.getElementById('statusDot').style.boxShadow = "0 0 15px rgba(34, 197, 94, 0.6)";
+                cargarDatos(user.uid);
             }
         });
 
-        function cargarDatos() {
-            // Vendedores
-            onSnapshot(collection(db, "vendedores"), (snap) => {
-                const data = snap.docs.map(d => d.data());
-                document.getElementById('sel-vendedor').innerHTML = '<option value="">-- VENDEDOR --</option>' + 
-                    data.map(v => `<option value="${v.nombre}">${v.nombre}</option>`).join('');
-            });
-
-            // Clientes
-            onSnapshot(collection(db, "clientes"), (snap) => {
-                const data = snap.docs.map(d => d.data());
-                document.getElementById('sel-cliente').innerHTML = '<option value="">-- CLIENTE --</option>' + 
-                    data.map(c => `<option value="${c.nombre}">${c.nombre.toUpperCase()}</option>`).join('');
-            });
-
-            // Productos (Restaurado)
-            onSnapshot(collection(db, "productos"), (snap) => {
+        function cargarDatos(uid) {
+            // Cargar Productos desde tu colección privada (Sincronizado con productos.html)
+            const qProd = collection(db, 'artifacts', appId, 'users', uid, 'productos');
+            onSnapshot(qProd, (snap) => {
                 productosGlobal = snap.docs.map(d => ({id: d.id, ...d.data()}));
-                document.getElementById('sel-producto').innerHTML = '<option value="">-- PRODUCTO --</option>' + 
+                document.getElementById('sel-producto').innerHTML = '<option value="">-- SELECCIONAR --</option>' + 
                     productosGlobal.map(p => `<option value="${p.id}">${p.nombre}</option>`).join('');
             });
 
-            // Historial
-            onSnapshot(query(collection(db, "ventas_realizadas"), orderBy("timestamp", "desc")), (snap) => {
-                ventasActuales = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-                renderVentas(ventasActuales);
+            // Cargar Vendedores
+            onSnapshot(collection(db, 'artifacts', appId, 'users', uid, "vendedores"), (snap) => {
+                const data = snap.docs.map(d => d.data());
+                document.getElementById('sel-vendedor').innerHTML = '<option value="">-- SELECCIONAR --</option>' + 
+                    data.map(v => `<option value="${v.nombre}">${v.nombre}</option>`).join('');
+            });
+
+            // Cargar Clientes
+            onSnapshot(collection(db, 'artifacts', appId, 'users', uid, "clientes"), (snap) => {
+                const data = snap.docs.map(d => d.data());
+                document.getElementById('sel-cliente').innerHTML = '<option value="">-- SELECCIONAR --</option>' + 
+                    data.map(c => `<option value="${c.nombre}">${c.nombre}</option>`).join('');
+            });
+
+            // Cargar Ventas
+            onSnapshot(collection(db, 'artifacts', appId, 'users', uid, "ventas_realizadas"), (snap) => {
+                const ventas = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+                renderVentas(ventas.sort((a,b) => b.timestamp - a.timestamp));
             });
         }
 
         document.getElementById('sel-producto').onchange = (e) => {
             pSeleccionado = productosGlobal.find(x => x.id === e.target.value);
-            actualizarVariantes();
+            const selVar = document.getElementById('sel-variante');
+            
+            if (pSeleccionado && pSeleccionado.variantes && pSeleccionado.variantes.length > 0) {
+                selVar.innerHTML = pSeleccionado.variantes.map(v => `<option value="${v}">${v}</option>`).join('');
+            } else {
+                selVar.innerHTML = '<option value="ESTANDAR">ESTANDAR / UNICA</option>';
+            }
             calcularTotal();
         };
-
-        function actualizarVariantes(val = null) {
-            const selVar = document.getElementById('sel-variante');
-            if (pSeleccionado) {
-                const vars = pSeleccionado.variantes || pSeleccionado.fragancias || [];
-                const lista = Array.isArray(vars) ? vars : vars.split(',');
-                selVar.innerHTML = lista.map(v => `<option value="${v.trim()}">${v.trim().toUpperCase()}</option>`).join('');
-                if(val) selVar.value = val;
-            } else {
-                selVar.innerHTML = '<option value="">-- ELIGE FRAGANCIA --</option>';
-            }
-        }
 
         window.toggleCliente = (reg) => {
             document.getElementById('btn-cli-reg').classList.toggle('active', reg);
@@ -196,123 +190,52 @@
         window.setTipo = (t) => {
             tipoVenta = t;
             ['contado', 'credito', 'mayor'].forEach(id => document.getElementById('t-'+id).classList.toggle('active', id === t.toLowerCase()));
-            document.getElementById('panel-credito').classList.toggle('hidden', t !== 'CREDITO');
             calcularTotal();
         };
 
         window.calcularTotal = () => {
             const cant = parseInt(document.getElementById('inp-cantidad').value) || 0;
             if(!pSeleccionado) return;
-            let precio = pSeleccionado.precio_detal || pSeleccionado.precio || 0;
-            if(tipoVenta === 'CREDITO') precio = pSeleccionado.precio_credito || precio;
-            if(tipoVenta === 'MAYOR') precio = pSeleccionado.precio_mayor || precio;
+            
+            let precio = 0;
+            if(tipoVenta === 'CONTADO') precio = pSeleccionado.precio_detal || 0;
+            else if(tipoVenta === 'CREDITO') precio = pSeleccionado.precio_credito || 0;
+            else if(tipoVenta === 'MAYOR') precio = pSeleccionado.precio_mayor || 0;
+
             document.getElementById('inp-precio').value = (precio * cant).toLocaleString();
         };
 
         window.registrarVenta = async () => {
-            const editId = document.getElementById('edit-id').value;
-            const v = document.getElementById('sel-vendedor').value;
-            const c = document.getElementById('btn-cli-reg').classList.contains('active') ? document.getElementById('sel-cliente').value : document.getElementById('inp-cliente-nom').value;
-            const varElegida = document.getElementById('sel-variante').value;
-
-            if(!v || !pSeleccionado || !c || !varElegida) return alert("Faltan datos");
-
+            if(!userId || !pSeleccionado) return;
             const data = {
-                vendedor: v,
-                cliente: c.toUpperCase(),
+                vendedor: document.getElementById('sel-vendedor').value,
+                cliente: document.getElementById('btn-cli-reg').classList.contains('active') ? document.getElementById('sel-cliente').value : document.getElementById('inp-cliente-nom').value,
                 producto: pSeleccionado.nombre,
-                productoId: pSeleccionado.id,
-                variante: varElegida,
+                variante: document.getElementById('sel-variante').value,
                 cantidad: parseInt(document.getElementById('inp-cantidad').value),
                 total: parseFloat(document.getElementById('inp-precio').value.replace(/,/g, '')),
                 tipo: tipoVenta,
-                timestamp: Date.now(),
-                fecha_legible: new Date().toLocaleDateString(),
-                hora: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
+                timestamp: Date.now()
             };
 
-            if(tipoVenta === 'CREDITO') {
-                data.fecha_entrega = document.getElementById('fecha-entrega').value;
-                data.fecha_pago = document.getElementById('fecha-pago').value;
-            }
-
-            try {
-                if(editId) {
-                    await updateDoc(doc(db, "ventas_realizadas", editId), data);
-                    cancelarEdicion();
-                } else {
-                    await addDoc(collection(db, "ventas_realizadas"), data);
-                }
-                limpiar();
-                alert("Éxito");
-            } catch (e) { alert("Error"); }
+            await addDoc(collection(db, 'artifacts', appId, 'users', userId, "ventas_realizadas"), data);
+            alert("VENTA REGISTRADA");
         };
-
-        window.iniciarEdicion = (id) => {
-            const v = ventasActuales.find(x => x.id === id);
-            document.getElementById('edit-id').value = id;
-            document.getElementById('btn-venta').innerText = "ACTUALIZAR";
-            document.getElementById('btn-cancel-edit').classList.remove('hidden');
-            
-            document.getElementById('sel-vendedor').value = v.vendedor;
-            document.getElementById('sel-producto').value = v.productoId;
-            pSeleccionado = productosGlobal.find(p => p.id === v.productoId);
-            actualizarVariantes(v.variante);
-            setTipo(v.tipo);
-            document.getElementById('inp-cantidad').value = v.cantidad;
-            window.scrollTo(0,0);
-        };
-
-        window.cancelarEdicion = () => {
-            document.getElementById('edit-id').value = "";
-            document.getElementById('btn-venta').innerText = "PROCESAR VENTA";
-            document.getElementById('btn-cancel-edit').classList.add('hidden');
-            limpiar();
-        };
-
-        window.pedirEliminar = (id) => {
-            const modal = document.getElementById('confirmModal');
-            modal.style.display = 'flex';
-            document.getElementById('confirmDeleteBtn').onclick = async () => {
-                await deleteDoc(doc(db, "ventas_realizadas", id));
-                closeConfirm();
-            };
-        };
-
-        window.closeConfirm = () => document.getElementById('confirmModal').style.display = 'none';
-
-        function limpiar() {
-            document.getElementById('inp-cliente-nom').value = "";
-            document.getElementById('inp-cantidad').value = 1;
-            document.getElementById('inp-precio').value = "0.00";
-        }
 
         function renderVentas(ventas) {
             document.getElementById('listaVentas').innerHTML = ventas.map(v => `
                 <div class="sale-card">
-                    <div class="flex justify-between items-start">
-                        <div>
-                            <span class="text-[7px] text-gold uppercase font-black">${v.tipo}</span>
-                            <div class="text-[11px] font-black uppercase">${v.cliente}</div>
-                            <div class="text-[8px] text-gray-500">${v.fecha_legible}</div>
-                        </div>
-                        <div class="flex flex-col items-end">
-                            <div class="flex gap-2 mb-1">
-                                <button onclick="iniciarEdicion('${v.id}')" class="text-blue-500 text-xs"><i class="fa-solid fa-pen"></i></button>
-                                <button onclick="pedirEliminar('${v.id}')" class="text-red-500 text-xs"><i class="fa-solid fa-trash"></i></button>
-                            </div>
-                            <div class="text-green-400 font-black">$${v.total.toLocaleString()}</div>
-                        </div>
+                    <div class="flex justify-between">
+                        <span class="text-[10px] font-bold text-gold">${v.tipo}</span>
+                        <span class="text-green-400 font-black">$${v.total.toLocaleString()}</span>
                     </div>
-                    <div class="text-[9px] text-gray-400 mt-1 italic">${v.producto} / ${v.variante} (x${v.cantidad})</div>
+                    <div class="text-xs font-bold uppercase mt-1">${v.cliente}</div>
+                    <div class="text-[9px] text-gray-500">${v.producto} (${v.variante}) x${v.cantidad}</div>
                 </div>
             `).join('');
         }
-
-        signInAnonymously(auth);
     </script>
 </body>
 </html>
-
 
 ```
