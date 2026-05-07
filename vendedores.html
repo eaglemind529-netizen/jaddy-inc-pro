@@ -11,7 +11,8 @@
         :root { --gold: #D4AF37; --bg: #050505; }
         body { background: var(--bg); color: white; font-family: 'Inter', sans-serif; margin: 0; }
         .gold-border { border: 1px solid rgba(212, 175, 55, 0.2); }
-        .input-field { background: #111; border: 1px solid #222; border-radius: 12px; padding: 14px; width: 100%; color: white; font-size: 14px; font-weight: bold; text-transform: uppercase; }
+        .input-field { background: #111; border: 1px solid #222; border-radius: 12px; padding: 14px; width: 100%; color: white; font-size: 14px; font-weight: bold; text-transform: uppercase; outline: none; }
+        .input-field:focus { border-color: var(--gold); }
         .vendor-card { background: #0F0F0F; border: 1px solid #1A1A1A; border-radius: 24px; padding: 15px; margin-bottom: 12px; transition: all 0.3s ease; cursor: pointer; }
         .vendor-card:active { transform: scale(0.98); }
         .avatar { width: 48px; height: 48px; background: linear-gradient(135deg, #D4AF37 0%, #996515 100%); border-radius: 16px; display: flex; align-items: center; justify-content: center; color: black; font-weight: 900; font-size: 1.2rem; }
@@ -29,7 +30,6 @@
         <div id="statusDot" class="w-3 h-3 rounded-full bg-red-600 shadow-[0_0_10px_rgba(220,38,38,0.5)]"></div>
     </header>
 
-    <!-- Registro de Vendedores -->
     <section class="bg-[#0A0A0A] p-5 rounded-[28px] gold-border mb-8 shadow-2xl">
         <h2 class="text-center text-gold font-black uppercase text-[10px] tracking-[4px] mb-6 italic">Registro de Equipo</h2>
         <div class="space-y-3">
@@ -48,10 +48,9 @@
 
     <h2 class="text-[10px] font-black text-gray-500 uppercase tracking-[2px] mb-4 ml-2">Panel de Rendimiento</h2>
     <div id="listaVendedores" class="space-y-4">
-        <div class="text-center py-10 opacity-20 text-xs font-bold italic">Sincronizando datos bancarios...</div>
+        <div class="text-center py-10 opacity-20 text-xs font-bold italic">Esperando sesión...</div>
     </div>
 
-    <!-- CEREBRO FIREBASE INTEGRADO -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
@@ -70,34 +69,35 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
+        let userId = null;
         let todasLasVentas = [];
         let todosLosVendedores = [];
 
-        signInAnonymously(auth);
-
         onAuthStateChanged(auth, (user) => {
             if (user) {
+                userId = user.uid;
                 document.getElementById('statusDot').style.backgroundColor = "#22c55e";
-                escucharVentas();
-                escucharVendedores();
+                escucharDatosPrivados();
             }
         });
 
-        function escucharVentas() {
-            onSnapshot(collection(db, "ventas_realizadas"), (snap) => {
+        function escucharDatosPrivados() {
+            // Escuchar VENTAS del usuario
+            onSnapshot(collection(db, "users", userId, "ventas_realizadas"), (snap) => {
                 todasLasVentas = snap.docs.map(d => ({id: d.id, ...d.data()}));
                 renderizarTodo();
             });
-        }
 
-        function escucharVendedores() {
-            onSnapshot(query(collection(db, "vendedores"), orderBy("nombre", "asc")), (snap) => {
-                todosLosVendedores = snap.docs.map(d => d.data());
+            // Escuchar VENDEDORES del usuario
+            onSnapshot(query(collection(db, "users", userId, "vendedores"), orderBy("nombre", "asc")), (snap) => {
+                todosLosVendedores = snap.docs.map(d => ({id: d.id, ...d.data()}));
                 renderizarTodo();
             });
         }
 
         window.registrarVendedor = async () => {
+            if(!userId) return alert("Sesión no activa");
+            
             const codigo = document.getElementById('vendedor-codigo').value.trim().toUpperCase();
             const nombre = document.getElementById('vendedor-nombre').value.trim().toUpperCase();
             const ubicacion = document.getElementById('vendedor-ubicacion').value.trim().toUpperCase();
@@ -105,27 +105,35 @@
             
             if(!nombre || !codigo) return alert("Código y Nombre son obligatorios");
 
-            const id = "VEN-" + Date.now();
-            await setDoc(doc(db, "vendedores", id), {
-                id, codigo, nombre, ubicacion, telefono: tel, fechaRegistro: new Date().toISOString()
-            });
-            
-            // Limpiar campos
-            document.getElementById('vendedor-codigo').value = "";
-            document.getElementById('vendedor-nombre').value = "";
-            document.getElementById('vendedor-ubicacion').value = "";
-            document.getElementById('vendedor-telefono').value = "";
+            const vId = "VEN-" + Date.now();
+            try {
+                // GUARDAR EN RUTA PRIVADA DEL USUARIO
+                await setDoc(doc(db, "users", userId, "vendedores", vId), {
+                    id: vId, codigo, nombre, ubicacion, telefono: tel, fechaRegistro: new Date().toISOString()
+                });
+                
+                document.getElementById('vendedor-codigo').value = "";
+                document.getElementById('vendedor-nombre').value = "";
+                document.getElementById('vendedor-ubicacion').value = "";
+                document.getElementById('vendedor-telefono').value = "";
+            } catch (e) { alert("Error: " + e.message); }
         };
 
         window.toggleDetalle = (id) => {
             const el = document.getElementById('det-' + id);
-            el.classList.toggle('active');
+            if(el) el.classList.toggle('active');
+        };
+
+        window.eliminarVendedor = async (vId) => {
+            if(confirm("¿Eliminar vendedor de tu nómina personal?")) {
+                await deleteDoc(doc(db, "users", userId, "vendedores", vId));
+            }
         };
 
         function renderizarTodo() {
             const container = document.getElementById('listaVendedores');
             if (todosLosVendedores.length === 0) {
-                container.innerHTML = '<div class="text-center py-10 opacity-20 text-xs">Sin vendedores registrados</div>';
+                container.innerHTML = '<div class="text-center py-10 opacity-20 text-xs">No tienes vendedores registrados</div>';
                 return;
             }
 
@@ -134,15 +142,17 @@
             const anioActual = hoy.getFullYear();
 
             container.innerHTML = todosLosVendedores.map(v => {
-                const ventasVendedor = todasLasVentas.filter(sale => sale.vendedorId === v.id || sale.vendedorNombre === v.nombre || sale.vendedorCodigo === v.codigo);
+                // Filtrar ventas por vendedor dentro de los datos del usuario
+                const ventasVendedor = todasLasVentas.filter(sale => sale.vendedor === v.nombre);
                 
                 const ventasMes = ventasVendedor.filter(sale => {
-                    const f = new Date(sale.fecha);
+                    const f = new Date(sale.timestamp);
                     return f.getMonth() === mesActual && f.getFullYear() === anioActual;
                 });
-                const totalVendidoMes = ventasMes.reduce((acc, curr) => acc + parseFloat(curr.precio || 0), 0);
+                
+                const totalVendidoMes = ventasMes.reduce((acc, curr) => acc + parseFloat(curr.total || 0), 0);
                 const deudas = ventasVendedor.filter(sale => sale.tipo === 'CREDITO');
-                const totalDeuda = deudas.reduce((acc, curr) => acc + parseFloat(curr.precio || 0), 0);
+                const totalDeuda = deudas.reduce((acc, curr) => acc + parseFloat(curr.total || 0), 0);
 
                 return `
                 <div class="vendor-card" onclick="toggleDetalle('${v.id}')">
@@ -158,72 +168,54 @@
                             </p>
                         </div>
                         <div class="text-right">
-                            <div class="text-xs font-black text-green-400">$${totalVendidoMes.toFixed(0)}</div>
-                            <div class="text-[7px] text-gray-500 uppercase font-black italic">Venta Mes</div>
+                            <div class="text-xs font-black text-green-400">$${totalVendidoMes.toFixed(2)}</div>
+                            <div class="text-[7px] text-gray-500 uppercase font-black italic">Este Mes</div>
                         </div>
                     </div>
 
                     <div id="det-${v.id}" class="detalle-vendedor mt-6 pt-6 border-t border-white/5" onclick="event.stopPropagation()">
-                        <!-- Info Adicional -->
-                        <div class="mb-4 bg-white/5 p-4 rounded-2xl flex justify-between items-center">
-                            <div>
-                                <p class="text-[7px] text-gray-500 font-black uppercase">Contacto</p>
-                                <p class="text-[10px] font-bold text-white">${v.telefono || 'NO REGISTRADO'}</p>
-                            </div>
-                            <div class="text-right">
-                                <p class="text-[7px] text-gray-500 font-black uppercase">Zona</p>
-                                <p class="text-[10px] font-bold text-white">${v.ubicacion || '---'}</p>
-                            </div>
-                        </div>
-
                         <div class="grid grid-cols-2 gap-3 mb-6">
                             <div class="stat-box">
-                                <p class="text-[7px] text-gray-500 font-black uppercase mb-1 italic">Cuentas Pendientes</p>
+                                <p class="text-[7px] text-gray-500 font-black uppercase mb-1 italic">Pendiente de Cobro</p>
                                 <p class="text-lg font-black text-red-500">$${totalDeuda.toFixed(2)}</p>
                             </div>
                             <div class="stat-box">
-                                <p class="text-[7px] text-gray-500 font-black uppercase mb-1">Ventas Históricas</p>
+                                <p class="text-[7px] text-gray-500 font-black uppercase mb-1">Ventas Totales</p>
                                 <p class="text-lg font-black text-blue-400">${ventasVendedor.length}</p>
                             </div>
                         </div>
 
-                        <h4 class="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-3 ml-1 italic">Detalle de Cobros</h4>
-                        <div class="space-y-2">
-                            ${deudas.length === 0 ? '<p class="text-[9px] text-gray-600 italic ml-1">Sin deudas activas.</p>' : 
-                                deudas.map(d => {
-                                    const fechaPago = new Date(d.fecha);
-                                    fechaPago.setDate(fechaPago.getDate() + 15);
-                                    return `
-                                    <div class="bg-white/5 p-3 rounded-xl flex justify-between items-center border-l-2 border-red-500">
-                                        <div>
-                                            <p class="text-[10px] font-black text-white uppercase">${d.cliente}</p>
-                                            <p class="text-[7px] text-gray-500 font-bold uppercase">${d.nombre}</p>
-                                        </div>
-                                        <div class="text-right">
-                                            <p class="text-[10px] font-black text-red-400">$${d.precio}</p>
-                                            <p class="text-[7px] text-gray-500 font-black">VENCE: ${fechaPago.toLocaleDateString()}</p>
-                                        </div>
-                                    </div>
-                                    `;
-                                }).join('')
-                            }
+                        <div class="mb-4 bg-white/5 p-4 rounded-2xl flex justify-between items-center">
+                            <div>
+                                <p class="text-[7px] text-gray-500 font-black uppercase">Teléfono</p>
+                                <p class="text-[10px] font-bold text-white">${v.telefono || '---'}</p>
+                            </div>
+                            <button onclick="eliminarVendedor('${v.id}')" class="text-[8px] font-black text-red-900 uppercase border border-red-900/30 px-3 py-1 rounded-lg">Eliminar</button>
                         </div>
 
-                        <button onclick="eliminarVendedor('${v.id}')" class="w-full mt-6 py-3 border border-red-900/30 rounded-xl text-[8px] font-black text-red-900 uppercase tracking-widest hover:bg-red-900/10 transition-colors">
-                            Eliminar Vendedor
-                        </button>
+                        <h4 class="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-3 italic">Facturas a Crédito</h4>
+                        <div class="space-y-2">
+                            ${deudas.length === 0 ? '<p class="text-[9px] text-gray-600 italic">No hay facturas pendientes.</p>' : 
+                                deudas.slice(0, 5).map(d => `
+                                    <div class="bg-white/5 p-3 rounded-xl flex justify-between items-center border-l-2 border-red-500">
+                                        <div>
+                                            <p class="text-[9px] font-black text-white uppercase">${d.cliente}</p>
+                                            <p class="text-[7px] text-gray-500 font-bold uppercase">${d.producto}</p>
+                                        </div>
+                                        <div class="text-right">
+                                            <p class="text-[10px] font-black text-red-400">$${d.total}</p>
+                                        </div>
+                                    </div>
+                                `).join('')
+                            }
+                        </div>
                     </div>
                 </div>
                 `;
             }).join('');
         }
 
-        window.eliminarVendedor = async (id) => {
-            if(confirm("¿Eliminar vendedor de la nómina?")) {
-                await deleteDoc(doc(db, "vendedores", id));
-            }
-        };
-
+        signInAnonymously(auth);
     </script>
 </body>
 </html>
