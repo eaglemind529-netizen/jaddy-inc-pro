@@ -4,301 +4,189 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SISTEMA JADDY INC | CONTROL TOTAL</title>
+    <title>JADDY INC | ADMINISTRADOR</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        :root { --gold: #D4AF37; --bg: #000; }
-        body { background: var(--bg); color: white; font-family: 'Inter', sans-serif; }
+        :root { --gold: #D4AF37; --black: #000; }
+        body { background: var(--black); color: white; font-family: 'Inter', sans-serif; }
         .gold-border { border: 1px solid rgba(212, 175, 55, 0.4); }
-        .input-field { background: #0a0a0a; border: 1px solid #222; border-radius: 12px; padding: 14px; width: 100%; color: white; font-size: 14px; outline: none; transition: 0.3s; }
-        .input-field:focus { border-color: var(--gold); background: #111; }
-        .btn-tab { flex: 1; padding: 12px; font-size: 10px; font-weight: 800; text-transform: uppercase; border-radius: 10px; border: 1px solid #222; color: #666; transition: 0.3s; }
-        .btn-tab.active { background: var(--gold); color: black; border-color: var(--gold); box-shadow: 0 0 15px rgba(212, 175, 55, 0.3); }
-        .card-movimiento { background: #080808; border: 1px solid #111; border-radius: 18px; padding: 16px; margin-bottom: 12px; position: relative; }
-        .status-dot { width: 10px; height: 10px; border-radius: 50%; }
-        .online { background: #00ff00; box-shadow: 0 0 10px #00ff00; }
-        .offline { background: #ff0000; box-shadow: 0 0 10px #ff0000; }
+        .input-style { background: #0a0a0a; border: 1px solid #222; border-radius: 12px; padding: 12px; width: 100%; color: white; font-size: 14px; outline: none; }
+        .input-style:focus { border-color: var(--gold); }
+        .status-dot { width: 12px; height: 12px; border-radius: 50%; transition: 0.5s; }
+        .active-conn { background: #00ff00; box-shadow: 0 0 15px #00ff00; }
+        .inactive-conn { background: #ff0000; box-shadow: 0 0 15px #ff0000; }
     </style>
 </head>
-<body class="p-4 pb-24 max-w-xl mx-auto">
+<body class="p-4 max-w-lg mx-auto">
 
-    <!-- BARRA DE ESTADO REAL-TIME -->
-    <header class="flex justify-between items-center mb-6 bg-[#0a0a0a] p-4 rounded-2xl border border-white/5">
+    <header class="flex justify-between items-center mb-8 bg-zinc-950 p-4 rounded-2xl border border-white/5">
         <div class="flex items-center gap-3">
-            <div id="indicador" class="status-dot offline"></div>
+            <div id="status-indicator" class="status-dot inactive-conn"></div>
             <div>
-                <p id="txt-status" class="text-[10px] font-black uppercase text-red-500 tracking-tighter">Desconectado</p>
-                <p id="user-display" class="text-[8px] text-gray-600 font-mono">Esperando sesión segura...</p>
+                <p id="status-text" class="text-[10px] font-black uppercase text-red-500">Sin Sincronizar</p>
+                <p id="user-id-view" class="text-[7px] text-zinc-600 font-mono tracking-tighter italic">Esperando UID...</p>
             </div>
         </div>
         <div class="text-right">
-            <h1 class="text-gold font-black italic text-xs tracking-widest">JADDY INC</h1>
-            <p class="text-[7px] text-gray-500 uppercase font-bold">Data Synchronization Active</p>
+            <p class="text-gold font-black italic text-xs">JADDY INC</p>
+            <p class="text-[8px] text-zinc-500 font-bold uppercase">Higuerote - Control</p>
         </div>
     </header>
 
-    <!-- FORMULARIO DE OPERACIÓN -->
-    <div class="gold-border bg-[#050505] p-6 rounded-[28px] shadow-2xl mb-10">
+    <main class="gold-border bg-[#050505] p-6 rounded-[30px] shadow-2xl">
         <div class="space-y-5">
             
-            <!-- VENDEDOR (TU ESTRUCTURA) -->
             <div>
-                <label class="text-[9px] text-gold font-black uppercase ml-1 mb-2 block tracking-widest">Responsable de Venta</label>
-                <select id="vendedor" class="input-field"></select>
+                <label class="text-[9px] text-gold font-black uppercase mb-2 block tracking-widest">Vendedor / Despacho</label>
+                <select id="vendedor_select" class="input-style border-gold/20">
+                    <option value="">CARGANDO PERSONAL...</option>
+                </select>
             </div>
 
-            <!-- CLIENTE -->
-            <div class="flex gap-2">
-                <button onclick="toggleCliente(true)" id="tab-cli-reg" class="btn-tab active">Cliente Registrado</button>
-                <button onclick="toggleCliente(false)" id="tab-cli-ocu" class="btn-tab">Ocasional</button>
-            </div>
-            
-            <div id="cli-reg-box">
-                <select id="cliente" class="input-field"></select>
-            </div>
-            <div id="cli-ocu-box" class="hidden">
-                <input type="text" id="cliente_nombre" placeholder="NOMBRE DEL CLIENTE" class="input-field uppercase">
+            <div>
+                <label class="text-[9px] text-zinc-500 font-black uppercase mb-2 block tracking-widest">Cliente</label>
+                <input type="text" id="cliente_nombre" placeholder="ESCRIBE EL NOMBRE" class="input-style uppercase font-bold">
             </div>
 
-            <!-- PRODUCTO Y FRAGANCIA (TU LÓGICA) -->
             <div class="grid grid-cols-1 gap-4">
                 <div>
-                    <label class="text-[9px] text-gray-500 font-black uppercase ml-1 mb-2 block tracking-widest">Línea de Producto</label>
-                    <select id="producto" class="input-field"></select>
+                    <label class="text-[9px] text-zinc-500 font-black uppercase mb-2 block tracking-widest">Línea de Producto</label>
+                    <select id="producto_select" class="input-style"></select>
                 </div>
-                <div id="fragancia-container">
-                    <label class="text-[9px] text-gold font-black uppercase ml-1 mb-2 block tracking-widest">Fragancia / Variante</label>
-                    <select id="fragancia" class="input-field border-gold/20"></select>
-                </div>
-            </div>
-
-            <!-- MODO DE OPERACIÓN -->
-            <div class="flex gap-1">
-                <button onclick="setModo('CONTADO')" id="m-contado" class="btn-tab active">Contado</button>
-                <button onclick="setModo('CREDITO')" id="m-credito" class="btn-tab">Crédito</button>
-                <button onclick="setModo('PRESUPUESTO')" id="m-presupuesto" class="btn-tab">Presupuesto</button>
-            </div>
-
-            <!-- VALORES -->
-            <div class="grid grid-cols-2 gap-4">
-                <div class="bg-white/5 p-3 rounded-2xl border border-white/5 text-center">
-                    <p class="text-[8px] text-gray-500 font-bold uppercase mb-1">Cantidad</p>
-                    <input type="number" id="cantidad" value="1" min="1" class="bg-transparent w-full text-center text-2xl font-black outline-none">
-                </div>
-                <div class="bg-white/5 p-3 rounded-2xl border border-white/5 text-center">
-                    <p class="text-[8px] text-gray-500 font-bold uppercase mb-1">Total USD</p>
-                    <input type="text" id="total" value="0.00" readonly class="bg-transparent w-full text-center text-2xl font-black text-green-500 outline-none">
+                <div>
+                    <label class="text-[9px] text-gold font-black uppercase mb-2 block tracking-widest">Fragancia</label>
+                    <select id="fragancia_select" class="input-style border-gold/10"></select>
                 </div>
             </div>
 
-            <button onclick="procesarOperacion()" id="btn-main" class="w-full bg-white text-black font-black py-5 rounded-2xl uppercase text-xs tracking-[4px] active:scale-95 transition-all">
-                Registrar Movimiento
+            <div class="bg-zinc-900/50 p-4 rounded-2xl border border-white/5">
+                <div class="flex justify-between items-center">
+                    <div class="text-center">
+                        <p class="text-[8px] text-zinc-500 font-bold uppercase">Cant.</p>
+                        <input type="number" id="cantidad_val" value="1" min="1" class="bg-transparent text-xl font-black w-12 text-center outline-none">
+                    </div>
+                    <div class="text-right">
+                        <p class="text-[8px] text-zinc-500 font-bold uppercase italic">Monto Total</p>
+                        <input type="text" id="monto_total" value="0.00" readonly class="bg-transparent text-2xl font-black text-green-500 text-right outline-none w-32">
+                    </div>
+                </div>
+            </div>
+
+            <button onclick="enviarRegistro()" id="btn-final" class="w-full bg-white text-black font-black py-5 rounded-2xl uppercase text-[11px] tracking-[3px] active:scale-95 transition-all">
+                Guardar Operación
             </button>
         </div>
-    </div>
-
-    <!-- LISTADO DE MOVIMIENTOS -->
-    <div id="lista-movimientos" class="space-y-4">
-        <div class="text-center py-20 opacity-10 font-black text-xs tracking-[10px]">CARGANDO DATA...</div>
-    </div>
+    </main>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
         import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
-        import { getFirestore, collection, onSnapshot, addDoc, doc, serverTimestamp, query } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+        import { getFirestore, collection, onSnapshot, addDoc, serverTimestamp, doc } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
 
         const firebaseConfig = JSON.parse(__firebase_config);
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'jaddy-inc-main';
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'jaddy-inc-app';
 
         let uID = null;
-        let db_local = { productos: [], clientes: [], vendedores: [], movimientos: [] };
-        let selectedProd = null;
-        let modoActual = 'CONTADO';
+        let catalogo = [];
 
-        // AUTENTICACIÓN BLINDADA
-        async function startAuth() {
+        // 1. AUTENTICACIÓN INMEDIATA
+        const connect = async () => {
             if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
                 await signInWithCustomToken(auth, __initial_auth_token);
             } else {
                 await signInAnonymously(auth);
             }
-        }
+        };
 
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 uID = user.uid;
-                document.getElementById('indicador').className = 'status-dot online';
-                document.getElementById('txt-status').innerText = 'Conectado';
-                document.getElementById('txt-status').className = 'text-[10px] font-black uppercase text-green-500 tracking-tighter';
-                document.getElementById('user-display').innerText = `Sync ID: ${uID}`;
-                conectarBaseDeDatos();
+                document.getElementById('status-indicator').className = 'status-dot active-conn';
+                document.getElementById('status-text').innerText = 'SINCRONIZADO';
+                document.getElementById('status-text').className = 'text-[10px] font-black uppercase text-green-500';
+                document.getElementById('user-id-view').innerText = `ID: ${uID}`;
+                fetchData();
             }
         });
 
-        startAuth();
+        connect();
 
-        // CARGA FIEL DE TUS COLECCIONES
-        function conectarBaseDeDatos() {
-            // Vendedores
-            onSnapshot(collection(db, 'artifacts', appId, 'users', uID, 'vendedores'), (s) => {
-                db_local.vendedores = s.docs.map(d => d.data().nombre || d.data().vendedor);
-                llenarSelect('vendedor', db_local.vendedores, 'Vendedor');
+        // 2. CARGA DE DATOS SIN ERRORES DE CAMPO
+        function fetchData() {
+            // Vendedores (Path: artifacts/appId/users/uID/vendedores)
+            onSnapshot(collection(db, 'artifacts', appId, 'users', uID, 'vendedores'), (snap) => {
+                const list = snap.docs.map(d => d.data().nombre || d.data().vendedor || d.id);
+                const select = document.getElementById('vendedor_select');
+                select.innerHTML = '<option value="">-- SELECCIONAR --</option>' + 
+                    list.map(v => `<option value="${v}">${v.toUpperCase()}</option>`).join('');
             });
 
-            // Clientes
-            onSnapshot(collection(db, 'artifacts', appId, 'users', uID, 'clientes'), (s) => {
-                db_local.clientes = s.docs.map(d => d.data().nombre || d.data().cliente);
-                llenarSelect('cliente', db_local.clientes, 'Cliente');
-            });
-
-            // Productos (Respetando fragancia y precios)
-            onSnapshot(collection(db, 'artifacts', appId, 'users', uID, 'productos'), (s) => {
-                db_local.productos = s.docs.map(d => ({ id: d.id, ...d.data() }));
-                llenarSelect('producto', db_local.productos.map(p => ({v: p.id, t: p.nombre})), 'Producto');
-            });
-
-            // Movimientos (Ventas y Presupuestos)
-            onSnapshot(collection(db, 'artifacts', appId, 'users', uID, 'ventas_realizadas'), (s) => {
-                db_local.movimientos = s.docs.map(d => ({ id: d.id, ...d.data() }))
-                    .sort((a,b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
-                renderizarMovimientos();
+            // Productos (Path: artifacts/appId/users/uID/productos)
+            onSnapshot(collection(db, 'artifacts', appId, 'users', uID, 'productos'), (snap) => {
+                catalogo = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+                const pSelect = document.getElementById('producto_select');
+                pSelect.innerHTML = '<option value="">-- PRODUCTO --</option>' + 
+                    catalogo.map(p => `<option value="${p.id}">${p.nombre.toUpperCase()}</option>`).join('');
             });
         }
 
-        function llenarSelect(id, data, label) {
-            const el = document.getElementById(id);
-            let h = `<option value="">-- SELECCIONAR ${label} --</option>`;
-            data.forEach(item => {
-                if(typeof item === 'object') h += `<option value="${item.v}">${item.t}</option>`;
-                else h += `<option value="${item}">${item}</option>`;
-            });
-            el.innerHTML = h;
+        // 3. LÓGICA DE NEGOCIO (FRAGANCIAS Y TOTAL)
+        document.getElementById('producto_select').onchange = (e) => {
+            const prod = catalogo.find(x => x.id === e.target.value);
+            const fSelect = document.getElementById('fragancia_select');
+            if(prod) {
+                let frags = prod.fragancias || prod.variantes || [];
+                if(typeof frags === 'string') frags = frags.split(',');
+                fSelect.innerHTML = frags.map(f => `<option value="${f.trim()}">${f.trim().toUpperCase()}</option>`).join('');
+            }
+            calcular();
+        };
+
+        function calcular() {
+            const p = catalogo.find(x => x.id === document.getElementById('producto_select').value);
+            if(!p) return;
+            const cant = document.getElementById('cantidad_val').value;
+            const precio = p.precio_detal || p.precio || 0;
+            document.getElementById('monto_total').value = (precio * cant).toFixed(2);
         }
 
-        // LÓGICA DE PRODUCTOS Y PRECIOS
-        document.getElementById('producto').onchange = (e) => {
-            selectedProd = db_local.productos.find(p => p.id === e.target.value);
-            const fragSelect = document.getElementById('fragancia');
-            
-            if(selectedProd) {
-                // Cómo guardas la fragancia: puede ser array o string separado por comas
-                let frags = selectedProd.fragancias || selectedProd.variantes || [];
-                if(typeof frags === 'string') frags = frags.split(',').map(f => f.trim());
-                
-                fragSelect.innerHTML = frags.map(f => `<option value="${f}">${f.toUpperCase()}</option>`).join('');
-                document.getElementById('fragancia-container').style.opacity = "1";
-            } else {
-                fragSelect.innerHTML = "";
-            }
-            calcularTotal();
-        };
+        document.getElementById('cantidad_val').oninput = calcular;
 
-        window.setModo = (m) => {
-            modoActual = m;
-            ['contado', 'credito', 'presupuesto'].forEach(i => {
-                document.getElementById(`m-${i}`).className = (i === m.toLowerCase()) ? 'btn-tab active' : 'btn-tab';
-            });
-            calcularTotal();
-        };
+        // 4. GUARDADO EN LA RUTA CORRECTA
+        window.enviarRegistro = async () => {
+            const btn = document.getElementById('btn-final');
+            const data = {
+                vendedor: document.getElementById('vendedor_select').value,
+                cliente: document.getElementById('cliente_nombre').value.toUpperCase(),
+                producto: document.getElementById('producto_select').options[document.getElementById('producto_select').selectedIndex].text,
+                fragancia: document.getElementById('fragancia_select').value,
+                cantidad: Number(document.getElementById('cantidad_val').value),
+                total: Number(document.getElementById('monto_total').value),
+                createdAt: serverTimestamp()
+            };
 
-        window.toggleCliente = (isReg) => {
-            document.getElementById('tab-cli-reg').className = isReg ? 'btn-tab active' : 'btn-tab';
-            document.getElementById('tab-cli-ocu').className = !isReg ? 'btn-tab active' : 'btn-tab';
-            document.getElementById('cli-reg-box').classList.toggle('hidden', !isReg);
-            document.getElementById('cli-ocu-box').classList.toggle('hidden', isReg);
-        };
-
-        function calcularTotal() {
-            if(!selectedProd) return;
-            const cant = parseInt(document.getElementById('cantidad').value) || 0;
-            let precio = parseFloat(selectedProd.precio_detal || selectedProd.precio || 0);
-            
-            if(modoActual === 'CREDITO') {
-                precio = parseFloat(selectedProd.precio_credito || precio);
-            }
-            
-            document.getElementById('total').value = (precio * cant).toFixed(2);
-        }
-
-        document.getElementById('cantidad').oninput = calcularTotal;
-
-        window.procesarOperacion = async () => {
-            if(!uID || !selectedProd) return;
-            
-            const btn = document.getElementById('btn-main');
-            const vend = document.getElementById('vendedor').value;
-            const isReg = document.getElementById('tab-cli-reg').classList.contains('active');
-            const cli = isReg ? document.getElementById('cliente').value : document.getElementById('cliente_nombre').value;
-            const frag = document.getElementById('fragancia').value;
-
-            if(!vend || !cli) {
-                btn.style.background = "#400";
-                btn.innerText = "FALTAN DATOS";
-                setTimeout(() => { btn.style.background = "#fff"; btn.innerText = "Registrar Movimiento"; }, 1500);
-                return;
-            }
+            if(!data.vendedor || !data.cliente) return;
 
             btn.disabled = true;
-            btn.innerText = "GUARDANDO EN CLOUD...";
-
-            const data = {
-                vendedor: vend,
-                cliente: cli.toUpperCase(),
-                producto: selectedProd.nombre,
-                productoId: selectedProd.id,
-                fragancia: frag,
-                cantidad: parseInt(document.getElementById('cantidad').value),
-                total: parseFloat(document.getElementById('total').value),
-                tipo: modoActual,
-                createdAt: serverTimestamp(),
-                fecha: new Date().toLocaleDateString()
-            };
+            btn.innerText = "ENVIANDO...";
 
             try {
                 await addDoc(collection(db, 'artifacts', appId, 'users', uID, 'ventas_realizadas'), data);
-                // Reset simple
                 document.getElementById('cliente_nombre').value = "";
-                document.getElementById('cantidad').value = 1;
-                document.getElementById('total').value = "0.00";
-            } catch(e) { console.error(e); }
-
-            btn.disabled = false;
-            btn.innerText = "Registrar Movimiento";
-        };
-
-        function renderizarMovimientos() {
-            const container = document.getElementById('lista-movimientos');
-            if(db_local.movimientos.length === 0) {
-                container.innerHTML = '<div class="text-center py-20 opacity-20 font-bold text-[10px] tracking-widest">SIN ACTIVIDAD RECIENTE</div>';
-                return;
+                btn.innerText = "¡REGISTRADO!";
+                setTimeout(() => { btn.disabled = false; btn.innerText = "Guardar Operación"; }, 1500);
+            } catch (e) {
+                console.error(e);
+                btn.disabled = false;
             }
-
-            container.innerHTML = db_local.movimientos.map(m => `
-                <div class="card-movimiento gold-border">
-                    <div class="flex justify-between items-start">
-                        <div class="flex-1">
-                            <div class="flex items-center gap-2 mb-2">
-                                <span class="text-[7px] font-black px-2 py-0.5 rounded bg-white text-black">${m.tipo}</span>
-                                <span class="text-[7px] text-gray-500 font-bold uppercase">${m.fecha}</span>
-                            </div>
-                            <h4 class="text-xs font-black uppercase text-white">${m.cliente}</h4>
-                            <p class="text-[10px] text-gray-500 font-bold mt-1">${m.producto} <span class="text-gold">/ ${m.fragancia}</span></p>
-                            <p class="text-[8px] text-gray-700 mt-2 font-black uppercase tracking-tighter">Atendido por: ${m.vendedor}</p>
-                        </div>
-                        <div class="text-right">
-                            <p class="text-xl font-black text-white">$${m.total.toFixed(2)}</p>
-                            <p class="text-[8px] text-gray-600 font-bold">CANT: ${m.cantidad}</p>
-                        </div>
-                    </div>
-                </div>
-            `).join('');
-        }
+        };
     </script>
 </body>
 </html>
+
 
 ```
