@@ -1,4 +1,4 @@
-
+```html
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -14,7 +14,7 @@
         .input-field { background: #111; border: 1px solid #222; border-radius: 12px; padding: 14px; width: 100%; color: white; font-size: 14px; font-weight: bold; text-transform: uppercase; }
         .tab-btn { flex: 1; padding: 12px; font-size: 10px; font-weight: 900; text-transform: uppercase; border-radius: 10px; border: 1px solid #222; color: #555; transition: 0.3s; background: transparent; }
         .tab-btn.active { background: white; color: black; border-color: white; }
-        .sale-card { background: #0F0F0F; border: 1px solid #1A1A1A; border-radius: 20px; padding: 15px; margin-bottom: 12px; position: relative; }
+        .sale-card { background: #0F0F0F; border: 1px solid #1A1A1A; border-radius: 20px; padding: 15px; margin-bottom: 12px; }
         #statusDot { width: 10px; height: 10px; border-radius: 50%; }
     </style>
 </head>
@@ -22,60 +22,54 @@
 
     <header class="flex justify-between items-center mb-6">
         <div class="flex items-center gap-2">
-            <div id="statusDot" class="bg-gray-600"></div>
-            <span id="userBadge" class="text-[8px] font-mono text-gray-500 uppercase">Sincronizando...</span>
+            <div id="statusDot" class="bg-red-600"></div>
+            <span id="connLabel" class="text-[8px] font-mono text-gray-500 uppercase">Desconectado</span>
         </div>
-        <h1 class="text-gold font-black italic text-xs tracking-widest">JADDY INC</h1>
+        <h1 class="text-gold font-black italic text-xs tracking-widest">JADDY INC - GLOBAL</h1>
     </header>
 
     <!-- Formulario de Registro -->
-    <section id="form-container" class="bg-[#0A0A0A] p-5 rounded-[28px] gold-border mb-8">
-        <h2 class="text-center text-gold font-black uppercase text-[10px] tracking-[4px] mb-6 italic">Nuevo Registro</h2>
+    <section class="bg-[#0A0A0A] p-5 rounded-[28px] gold-border mb-8">
+        <h2 class="text-center text-gold font-black uppercase text-[10px] tracking-[4px] mb-6 italic text-shadow">Registro de Venta</h2>
         
         <div class="space-y-4">
-            <input type="hidden" id="edit-id" value="">
-            <input type="hidden" id="edit-source" value=""> <!-- Para saber si es pública o privada -->
-            
+            <!-- Vendedor (Conectado a la DB Global) -->
             <div class="relative">
                 <p class="text-[7px] text-gold font-black absolute -top-2 left-3 bg-[#0A0A0A] px-2 uppercase z-10">Vendedor:</p>
                 <select id="sel-vendedor" class="input-field border-gold/30 text-gold">
-                    <option value="">Cargando...</option>
+                    <option value="">Cargando vendedores...</option>
                 </select>
             </div>
 
-            <div class="flex gap-2">
-                <button id="btn-cli-reg" onclick="toggleCliente(true)" class="tab-btn active">Registrado</button>
-                <button id="btn-cli-ocu" onclick="toggleCliente(false)" class="tab-btn">Ocasional</button>
-            </div>
-            
-            <div id="area-cliente-reg">
+            <!-- Cliente -->
+            <div id="area-cliente">
+                <p class="text-[7px] text-gray-500 mb-1 ml-2 uppercase">Cliente:</p>
                 <select id="sel-cliente" class="input-field">
-                    <option value="">Cargando...</option>
+                    <option value="">Cargando clientes...</option>
                 </select>
             </div>
-            
-            <div id="area-cliente-ocu" class="hidden">
-                <input type="text" id="inp-cliente-nom" placeholder="Nombre del cliente" class="input-field">
-            </div>
 
+            <!-- Producto -->
             <div class="grid grid-cols-1 gap-3">
                 <select id="sel-producto" class="input-field">
                     <option value="">Seleccionar Producto</option>
                 </select>
                 <div class="relative">
-                    <p class="text-[7px] text-gold font-black absolute -top-2 left-3 bg-[#0A0A0A] px-2 uppercase z-10">Fragancia / Variedad:</p>
+                    <p class="text-[7px] text-gold font-black absolute -top-2 left-3 bg-[#0A0A0A] px-2 uppercase z-10">Variante / Fragancia:</p>
                     <select id="sel-variante" class="input-field border-gold/20 text-gold">
-                        <option value="">Elija opción</option>
+                        <option value="">Elija producto primero</option>
                     </select>
                 </div>
             </div>
 
+            <!-- Tipo de Venta -->
             <div class="grid grid-cols-3 gap-2">
                 <button onclick="setTipo('CONTADO')" id="t-contado" class="tab-btn active">Contado</button>
                 <button onclick="setTipo('CREDITO')" id="t-credito" class="tab-btn">Crédito</button>
                 <button onclick="setTipo('MAYOR')" id="t-mayor" class="tab-btn">Mayor</button>
             </div>
 
+            <!-- Cantidad y Total -->
             <div class="grid grid-cols-2 gap-3">
                 <div class="relative">
                     <p class="text-[7px] text-gray-500 absolute -top-2 left-3 bg-[#0A0A0A] px-1 uppercase">Cant.</p>
@@ -87,91 +81,66 @@
                 </div>
             </div>
 
-            <div class="flex gap-2">
-                <button id="btn-cancel-edit" onclick="cancelarEdicion()" class="hidden flex-1 bg-red-900/20 text-red-500 border border-red-500/20 font-black py-4 rounded-xl uppercase text-[10px]">Cancelar</button>
-                <button id="btn-venta" onclick="registrarVenta()" class="flex-[2] bg-white text-black font-black py-5 rounded-xl uppercase text-xs tracking-widest shadow-xl">Guardar Venta</button>
-            </div>
+            <button id="btn-venta" onclick="registrarVenta()" class="w-full bg-white text-black font-black py-5 rounded-xl uppercase text-xs tracking-widest shadow-xl">Guardar en Base de Datos</button>
         </div>
     </section>
 
-    <!-- Listado Combinado -->
-    <h3 class="text-[8px] text-gray-500 font-black uppercase tracking-[3px] mb-4 text-center italic">Historial de Ventas</h3>
-    <div id="listaVentas" class="space-y-3 pb-10"></div>
+    <h3 class="text-[8px] text-gray-500 font-black uppercase tracking-[3px] mb-4 text-center italic">Historial Completo</h3>
+    <div id="listaVentas" class="space-y-3 pb-10">
+        <p class="text-center text-[10px] text-gray-600">Cargando registros existentes...</p>
+    </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, onSnapshot, addDoc, updateDoc, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, onSnapshot, addDoc, query, orderBy, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         const firebaseConfig = JSON.parse(__firebase_config);
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'jaddy-inc-main';
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
 
-        let user = null;
         let productosGlobal = [];
         let pSeleccionado = null;
         let tipoVenta = 'CONTADO';
-        
-        let ventasPublicas = [];
-        let ventasPrivadas = [];
 
-        const initAuth = async () => {
-            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                await signInWithCustomToken(auth, __initial_auth_token);
-            } else {
-                await signInAnonymously(auth);
-            }
-        };
-
-        onAuthStateChanged(auth, (u) => {
-            if (u) {
-                user = u;
-                document.getElementById('statusDot').className = "w-2.5 h-2.5 rounded-full bg-green-500";
-                document.getElementById('userBadge').innerText = "Conectado";
-                conectarDatos();
-            }
+        // Autenticación mínima necesaria para Firestore
+        signInAnonymously(auth).then(() => {
+            document.getElementById('statusDot').className = "bg-green-500";
+            document.getElementById('connLabel').innerText = "Conectado a la Red";
+            conectarBaseDatos();
         });
 
-        function conectarDatos() {
-            if(!user) return;
-
-            // 1. Catálogos (Vendedores, Clientes, Productos)
+        function conectarBaseDatos() {
+            // RUTA GLOBAL: /artifacts/{appId}/public/data/{collection}
+            // Esto asegura que se conecte a los archivos de información que ya existen
+            
+            // 1. Cargar Vendedores
             onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'vendedores'), (s) => {
-                const d = s.docs.map(doc => doc.data());
-                document.getElementById('sel-vendedor').innerHTML = '<option value="">-- SELECCIONAR --</option>' + 
-                    d.map(v => `<option value="${v.nombre}">${v.nombre}</option>`).join('');
+                const html = s.docs.map(d => `<option value="${d.data().nombre}">${d.data().nombre}</option>`).join('');
+                document.getElementById('sel-vendedor').innerHTML = '<option value="">-- SELECCIONAR --</option>' + html;
             });
 
+            // 2. Cargar Clientes
             onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'clientes'), (s) => {
-                const d = s.docs.map(doc => doc.data());
-                document.getElementById('sel-cliente').innerHTML = '<option value="">-- SELECCIONAR --</option>' + 
-                    d.map(c => `<option value="${c.nombre}">${c.nombre.toUpperCase()}</option>`).join('');
+                const html = s.docs.map(d => `<option value="${d.data().nombre}">${d.data().nombre.toUpperCase()}</option>`).join('');
+                document.getElementById('sel-cliente').innerHTML = '<option value="">-- SELECCIONAR --</option>' + html;
             });
 
+            // 3. Cargar Productos
             onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'productos'), (s) => {
-                productosGlobal = s.docs.map(doc => ({id: doc.id, ...doc.data()}));
-                document.getElementById('sel-producto').innerHTML = '<option value="">-- SELECCIONAR --</option>' + 
-                    productosGlobal.map(p => `<option value="${p.id}">${p.nombre}</option>`).join('');
+                productosGlobal = s.docs.map(d => ({id: d.id, ...d.data()}));
+                const html = productosGlobal.map(p => `<option value="${p.id}">${p.nombre}</option>`).join('');
+                document.getElementById('sel-producto').innerHTML = '<option value="">-- SELECCIONAR --</option>' + html;
             });
 
-            // 2. VENTAS PÚBLICAS (Lo que ya estaba registrado antes)
+            // 4. Cargar Ventas Realizadas (HISTORIAL GLOBAL)
             onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'ventas_realizadas'), (s) => {
-                ventasPublicas = s.docs.map(doc => ({ id: doc.id, source: 'public', ...doc.data() }));
-                actualizarLista();
+                const ventas = s.docs.map(d => ({id: d.id, ...d.data()}))
+                                   .sort((a,b) => (b.timestamp || 0) - (a.timestamp || 0));
+                renderVentas(ventas);
             });
-
-            // 3. VENTAS PRIVADAS (Lo nuevo que guardes tú)
-            onSnapshot(collection(db, 'artifacts', appId, 'users', user.uid, 'ventas_realizadas'), (s) => {
-                ventasPrivadas = s.docs.map(doc => ({ id: doc.id, source: 'private', ...doc.data() }));
-                actualizarLista();
-            });
-        }
-
-        function actualizarLista() {
-            const todas = [...ventasPublicas, ...ventasPrivadas].sort((a,b) => (b.timestamp || 0) - (a.timestamp || 0));
-            renderVentas(todas);
         }
 
         document.getElementById('sel-producto').onchange = (e) => {
@@ -184,6 +153,7 @@
             }
 
             let opciones = [];
+            // Intentamos extraer fragancias o variantes de cualquier campo disponible
             ['fragancias', 'variantes', 'notas', 'opciones'].forEach(k => {
                 if (pSeleccionado[k]) {
                     if (Array.isArray(pSeleccionado[k])) opciones = [...opciones, ...pSeleccionado[k]];
@@ -192,55 +162,52 @@
             });
 
             opciones = [...new Set(opciones)].filter(o => o !== "");
-            if (opciones.length > 0) {
-                selVar.innerHTML = opciones.map(v => `<option value="${v}">${v.toUpperCase()}</option>`).join('');
-            } else {
-                selVar.innerHTML = '<option value="GENERAL">GENERAL</option>';
-            }
+            selVar.innerHTML = opciones.length > 0 
+                ? opciones.map(v => `<option value="${v}">${v.toUpperCase()}</option>`).join('')
+                : '<option value="GENERAL">GENERAL</option>';
+            
             calcularTotal();
-        };
-
-        window.toggleCliente = (reg) => {
-            document.getElementById('btn-cli-reg').classList.toggle('active', reg);
-            document.getElementById('btn-cli-ocu').classList.toggle('active', !reg);
-            document.getElementById('area-cliente-reg').classList.toggle('hidden', !reg);
-            document.getElementById('area-cliente-ocu').classList.toggle('hidden', reg);
         };
 
         window.setTipo = (t) => {
             tipoVenta = t;
-            ['contado', 'credito', 'mayor'].forEach(id => document.getElementById('t-'+id).classList.toggle('active', id === t.toLowerCase()));
+            ['contado', 'credito', 'mayor'].forEach(id => {
+                document.getElementById('t-'+id).classList.toggle('active', id === t.toLowerCase());
+            });
             calcularTotal();
         };
 
         window.calcularTotal = () => {
             const cant = parseInt(document.getElementById('inp-cantidad').value) || 0;
             if(!pSeleccionado) return;
+            
             let p = parseFloat(pSeleccionado.precio_detal || pSeleccionado.precio || 0);
             if(tipoVenta === 'CREDITO') p = parseFloat(pSeleccionado.precio_credito || p);
             if(tipoVenta === 'MAYOR') p = parseFloat(pSeleccionado.precio_mayor || p);
+            
             document.getElementById('inp-precio').value = (p * cant).toFixed(2);
         };
 
         window.registrarVenta = async () => {
-            if(!user) return;
-            const v = document.getElementById('sel-vendedor').value;
-            const isReg = document.getElementById('btn-cli-reg').classList.contains('active');
-            const c = isReg ? document.getElementById('sel-cliente').value : document.getElementById('inp-cliente-nom').value;
+            const vend = document.getElementById('sel-vendedor').value;
+            const cli = document.getElementById('sel-cliente').value;
             const frag = document.getElementById('sel-variante').value;
-            const editId = document.getElementById('edit-id').value;
-            const editSource = document.getElementById('edit-source').value;
+            const cant = parseInt(document.getElementById('inp-cantidad').value);
+            const total = parseFloat(document.getElementById('inp-precio').value);
 
-            if(!v || !c || !pSeleccionado) return;
+            if(!vend || !cli || !pSeleccionado) {
+                alert("Por favor complete todos los campos");
+                return;
+            }
 
             const payload = {
-                vendedor: v,
-                cliente: c.toUpperCase(),
+                vendedor: vend,
+                cliente: cli.toUpperCase(),
                 producto: pSeleccionado.nombre,
                 productoId: pSeleccionado.id,
                 variante: frag,
-                cantidad: parseInt(document.getElementById('inp-cantidad').value),
-                total: parseFloat(document.getElementById('inp-precio').value),
+                cantidad: cant,
+                total: total,
                 tipo: tipoVenta,
                 timestamp: Date.now(),
                 fecha: new Date().toLocaleDateString(),
@@ -248,95 +215,48 @@
             };
 
             try {
-                if(editId) {
-                    // Actualizar donde sea que esté el origen
-                    const path = editSource === 'public' 
-                        ? doc(db, 'artifacts', appId, 'public', 'data', 'ventas_realizadas', editId)
-                        : doc(db, 'artifacts', appId, 'users', user.uid, 'ventas_realizadas', editId);
-                    await updateDoc(path, payload);
-                    cancelarEdicion();
-                } else {
-                    // Nuevas ventas van a PRIVADO por seguridad/privacidad
-                    await addDoc(collection(db, 'artifacts', appId, 'users', user.uid, 'ventas_realizadas'), payload);
-                }
-                limpiar();
-            } catch (e) { console.error(e); }
+                // Guardar en la ruta pública ORIGINAL
+                await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'ventas_realizadas'), payload);
+                // Limpiar campos simples
+                document.getElementById('inp-cantidad').value = 1;
+                document.getElementById('inp-precio').value = "0.00";
+            } catch (e) {
+                console.error("Error al guardar:", e);
+            }
         };
 
-        window.iniciarEdicion = (id, source) => {
-            const list = source === 'public' ? ventasPublicas : ventasPrivadas;
-            const v = list.find(x => x.id === id);
-            if(!v) return;
-
-            document.getElementById('edit-id').value = id;
-            document.getElementById('edit-source').value = source;
-            document.getElementById('btn-venta').innerText = "Actualizar Registro";
-            document.getElementById('btn-cancel-edit').classList.remove('hidden');
-            
-            document.getElementById('sel-vendedor').value = v.vendedor;
-            document.getElementById('sel-producto').value = v.productoId;
-            document.getElementById('sel-producto').dispatchEvent(new Event('change'));
-            
-            setTimeout(() => {
-                document.getElementById('sel-variante').value = v.variante;
-                document.getElementById('inp-cantidad').value = v.cantidad;
-                setTipo(v.tipo);
-                window.scrollTo({top: 0, behavior: 'smooth'});
-            }, 100);
+        window.eliminarVenta = async (id) => {
+            if(!confirm("¿Eliminar este registro permanentemente?")) return;
+            await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'ventas_realizadas', id));
         };
-
-        window.cancelarEdicion = () => {
-            document.getElementById('edit-id').value = "";
-            document.getElementById('edit-source').value = "";
-            document.getElementById('btn-venta').innerText = "Guardar Venta";
-            document.getElementById('btn-cancel-edit').classList.add('hidden');
-            limpiar();
-        };
-
-        window.eliminarVenta = async (id, source) => {
-            if(!confirm("¿Eliminar permanentemente?")) return;
-            const path = source === 'public'
-                ? doc(db, 'artifacts', appId, 'public', 'data', 'ventas_realizadas', id)
-                : doc(db, 'artifacts', appId, 'users', user.uid, 'ventas_realizadas', id);
-            await deleteDoc(path);
-        };
-
-        function limpiar() {
-            document.getElementById('inp-cliente-nom').value = "";
-            document.getElementById('inp-cantidad').value = 1;
-            document.getElementById('inp-precio').value = "0.00";
-            document.getElementById('sel-producto').value = "";
-            document.getElementById('sel-variante').innerHTML = '<option value="">Elija opción</option>';
-        }
 
         function renderVentas(data) {
             const container = document.getElementById('listaVentas');
+            if(data.length === 0) {
+                container.innerHTML = '<p class="text-center text-gray-500 text-[10px]">No hay ventas registradas.</p>';
+                return;
+            }
             container.innerHTML = data.map(v => `
                 <div class="sale-card gold-border">
-                    <div class="flex justify-between items-start">
+                    <div class="flex justify-between items-start mb-2">
                         <div>
-                            <span class="text-[7px] font-black uppercase text-gold">${v.tipo} ${v.source === 'private' ? '🔒' : '🌐'}</span>
+                            <span class="text-[7px] font-black uppercase text-gold">${v.tipo}</span>
                             <div class="text-[11px] font-bold uppercase text-white">${v.cliente}</div>
                             <div class="text-[8px] text-gray-500">${v.fecha} · ${v.hora}</div>
                         </div>
                         <div class="text-right">
-                            <div class="flex gap-3 mb-2">
-                                <button onclick="iniciarEdicion('${v.id}', '${v.source}')" class="text-blue-500/50 text-[10px]"><i class="fa-solid fa-pen"></i></button>
-                                <button onclick="eliminarVenta('${v.id}', '${v.source}')" class="text-red-500/50 text-[10px]"><i class="fa-solid fa-trash"></i></button>
-                            </div>
+                            <button onclick="eliminarVenta('${v.id}')" class="text-red-900/50 text-[10px] mb-1"><i class="fa-solid fa-trash"></i></button>
                             <div class="text-green-400 font-black text-sm">$${v.total.toFixed(2)}</div>
                         </div>
                     </div>
-                    <div class="mt-2 flex gap-1 items-center">
-                        <span class="bg-white/5 border border-white/10 px-2 py-0.5 rounded text-[8px] text-gray-400">${v.producto}</span>
-                        <span class="bg-gold/10 border border-gold/20 px-2 py-0.5 rounded text-[8px] text-gold font-bold">${v.variante}</span>
-                        <span class="text-[8px] text-gray-600 ml-auto">VENDEDOR: ${v.vendedor}</span>
+                    <div class="flex gap-2 items-center">
+                        <span class="bg-white/5 px-2 py-0.5 rounded text-[8px] text-gray-400">${v.producto}</span>
+                        <span class="bg-gold/10 px-2 py-0.5 rounded text-[8px] text-gold font-bold">${v.variante}</span>
+                        <span class="text-[7px] text-gray-600 ml-auto uppercase">${v.vendedor}</span>
                     </div>
                 </div>
             `).join('');
         }
-
-        initAuth();
     </script>
 </body>
 </html>
