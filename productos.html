@@ -4,268 +4,355 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Jaddy INC | Productos Elite</title>
+    <title>Ventas CRM | Jaddy INC</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root { --gold: #D4AF37; --bg: #050505; }
-        body { background: var(--bg); color: white; font-family: 'Inter', sans-serif; overflow-x: hidden; }
+        body { background: var(--bg); color: white; font-family: 'Inter', sans-serif; margin: 0; }
         .gold-border { border: 1px solid rgba(212, 175, 55, 0.2); }
-        .input-field { background: #111; border: 1px solid #222; border-radius: 12px; padding: 14px; width: 100%; color: white; font-size: 14px; text-transform: uppercase; font-weight: bold; }
-        .input-field:focus { border-color: var(--gold); outline: none; background: #151515; }
-        .btn-gold { background: var(--gold); color: black; font-weight: 900; border-radius: 12px; width: 100%; padding: 16px; text-transform: uppercase; transition: all 0.3s; box-shadow: 0 4px 15px rgba(212, 175, 55, 0.2); }
-        .btn-gold:active { transform: scale(0.98); opacity: 0.9; }
-        .product-card { background: #0F0F0F; border: 1px solid #1A1A1A; border-radius: 20px; padding: 16px; margin-bottom: 12px; animation: fadeIn 0.5s ease; }
-        .variant-tag { background: rgba(212, 175, 55, 0.1); color: var(--gold); border: 1px solid rgba(212, 175, 55, 0.3); padding: 2px 8px; border-radius: 6px; font-size: 9px; font-weight: bold; text-transform: uppercase; }
-        
-        #modalVariantes { position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 100; display: none; align-items: center; justify-content: center; padding: 20px; }
-        .modal-content { background: #0A0A0A; border: 1px solid #222; border-radius: 28px; width: 100%; max-width: 400px; padding: 24px; position: relative; }
-        
+        .input-field { background: #111; border: 1px solid #222; border-radius: 12px; padding: 14px; width: 100%; color: white; font-size: 14px; font-weight: bold; text-transform: uppercase; appearance: none; }
+        .tab-btn { flex: 1; padding: 12px; font-size: 10px; font-weight: 900; text-transform: uppercase; border-radius: 10px; border: 1px solid #222; color: #555; transition: 0.3s; background: transparent; }
+        .tab-btn.active { background: white; color: black; border-color: white; }
+        .sale-card { background: #0F0F0F; border: 1px solid #1A1A1A; border-radius: 20px; padding: 15px; margin-bottom: 12px; animation: fadeIn 0.4s ease; position: relative; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        #statusDot { width: 12px; height: 12px; border-radius: 50%; border: 2px solid rgba(0,0,0,0.5); }
+        input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); }
+        .modal-overlay { background: rgba(0,0,0,0.8); backdrop-filter: blur(4px); display: none; position: fixed; inset: 0; z-index: 50; align-items: center; justify-content: center; padding: 20px; }
+        .modal-content { background: #0A0A0A; border: 1px solid #333; border-radius: 24px; padding: 24px; width: 100%; max-width: 320px; text-align: center; }
     </style>
 </head>
-<body class="p-4 pb-10">
+<body class="p-4 pb-24 max-w-md mx-auto">
 
-    <!-- MODAL DE VARIANTES -->
-    <div id="modalVariantes">
-        <div class="modal-content shadow-2xl">
-            <header class="flex justify-between items-center mb-6">
-                <div>
-                    <h2 class="text-lg font-black uppercase tracking-tighter">Gestionar <span class="text-gold">Variantes</span></h2>
-                    <p id="targetNombre" class="text-[10px] text-gray-500 font-bold uppercase"></p>
-                </div>
-                <button onclick="cerrarModal()" class="text-gray-500 hover:text-white"><i class="fas fa-times"></i></button>
-            </header>
-
-            <div class="space-y-4">
-                <div class="flex gap-2">
-                    <input type="text" id="nuevaVariante" placeholder="MARCA, FRAGANCIA O SABOR" class="input-field flex-1 text-xs">
-                    <button id="addVariantBtn" class="bg-white text-black px-4 rounded-xl font-black"><i class="fas fa-plus"></i></button>
-                </div>
-                
-                <div id="listaVariantesModal" class="max-h-40 overflow-y-auto grid grid-cols-2 gap-2 pt-2"></div>
-
-                <button id="saveVariantsBtn" class="btn-gold py-4 text-xs mt-4">Guardar Cambios</button>
-            </div>
-        </div>
-    </div>
-
-    <header class="flex justify-between items-center py-4 mb-6">
-        <div>
-            <h1 class="text-xl font-black italic uppercase tracking-tighter">PRODUCTOS <span class="text-[#D4AF37]">JADDY</span></h1>
-            <p class="text-[8px] text-gray-500 font-bold tracking-[0.3em] uppercase">Módulos de Élite v2.0</p>
-        </div>
-        <div id="statusDot" class="w-3 h-3 rounded-full bg-zinc-800 transition-all duration-500"></div>
+    <header class="flex justify-between items-center mb-6">
+        <button onclick="window.history.back()" class="text-[10px] font-black border border-gold/30 px-4 py-2 rounded-full text-gold uppercase">← Volver</button>
+        <div id="statusDot" class="bg-red-500"></div>
     </header>
 
-    <section class="bg-[#0A0A0A] p-5 rounded-[24px] gold-border mb-8 shadow-2xl">
-        <form id="formProd" class="space-y-4">
-            <div class="grid grid-cols-3 gap-3">
-                <input type="text" id="codigo" placeholder="CÓD" class="input-field" required>
-                <input type="text" id="nombre" placeholder="NOMBRE DEL PRODUCTO" class="col-span-2 input-field" required>
+    <section id="form-container" class="bg-[#0A0A0A] p-5 rounded-[28px] gold-border mb-8 shadow-2xl">
+        <h2 id="form-title" class="text-center text-gold font-black uppercase text-[10px] tracking-[4px] mb-6 italic">Panel de Despacho</h2>
+        
+        <div class="space-y-4">
+            <input type="hidden" id="edit-id" value="">
+            
+            <div class="relative">
+                <p class="text-[7px] text-gold font-black absolute -top-2 left-3 bg-[#0A0A0A] px-2 uppercase z-10">Despachado por:</p>
+                <select id="sel-vendedor" class="input-field border-gold/30 text-gold">
+                    <option value="">-- ESPERANDO CONEXIÓN --</option>
+                </select>
             </div>
+
+            <div class="flex gap-2">
+                <button id="btn-cli-reg" onclick="toggleCliente(true)" class="tab-btn active">Registrado</button>
+                <button id="btn-cli-ocu" onclick="toggleCliente(false)" class="tab-btn">Ocasional</button>
+            </div>
+            
+            <div id="area-cliente-reg">
+                <select id="sel-cliente" class="input-field">
+                    <option value="">-- CARGANDO CLIENTES --</option>
+                </select>
+            </div>
+            
+            <div id="area-cliente-ocu" class="hidden">
+                <input type="text" id="inp-cliente-nom" placeholder="ESCRIBE EL NOMBRE" class="input-field">
+            </div>
+
+            <div class="grid grid-cols-1 gap-3">
+                <div class="relative">
+                    <p class="text-[7px] text-gray-500 absolute -top-2 left-3 bg-[#0A0A0A] px-2 uppercase z-10">Producto en Inventario:</p>
+                    <select id="sel-producto" class="input-field">
+                        <option value="">-- SELECCIONAR PRODUCTO --</option>
+                    </select>
+                </div>
+                <div class="relative">
+                    <p class="text-[7px] text-gray-500 absolute -top-2 left-3 bg-[#0A0A0A] px-2 uppercase z-10">Variante / Fragancia:</p>
+                    <select id="sel-variante" class="input-field border-gold/20 text-gold">
+                        <option value="">-- ELIGE VARIANTE --</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-3 gap-2">
+                <button onclick="setTipo('CONTADO')" id="t-contado" class="tab-btn active">Detal</button>
+                <button onclick="setTipo('CREDITO')" id="t-credito" class="tab-btn">Crédito</button>
+                <button onclick="setTipo('MAYOR')" id="t-mayor" class="tab-btn">Mayor</button>
+            </div>
+
+            <div id="panel-credito" class="hidden space-y-3 p-4 bg-[#111] rounded-xl border border-gold/10">
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <p class="text-[7px] mb-1 text-gray-500 uppercase">F. Entrega</p>
+                        <input type="date" id="fecha-entrega" class="input-field py-2 text-xs">
+                    </div>
+                    <div>
+                        <p class="text-[7px] mb-1 text-gray-500 uppercase">F. Cobro</p>
+                        <input type="date" id="fecha-pago" class="input-field py-2 text-xs">
+                    </div>
+                </div>
+            </div>
+
             <div class="grid grid-cols-2 gap-3">
-                <input type="number" step="0.01" id="costo" placeholder="COSTO $" class="input-field">
-                <input type="number" step="0.01" id="detal" placeholder="DETAL $" class="input-field text-green-400">
+                <div class="relative">
+                    <p class="text-[7px] text-gray-500 absolute -top-2 left-3 bg-[#0A0A0A] px-2 uppercase z-10">Cant:</p>
+                    <input type="number" id="inp-cantidad" value="1" min="1" oninput="calcularTotal()" class="input-field text-center text-xl">
+                </div>
+                <div class="relative">
+                    <p class="text-[7px] text-gray-500 absolute -top-2 left-3 bg-[#0A0A0A] px-2 uppercase z-10">Total:</p>
+                    <input type="text" id="inp-precio" value="0.00" readonly class="input-field text-center text-xl text-green-400">
+                </div>
             </div>
-            <div class="grid grid-cols-2 gap-3">
-                <input type="number" step="0.01" id="credito" placeholder="CRÉDITO $" class="input-field text-blue-400">
-                <input type="number" step="0.01" id="mayor" placeholder="MAYOR $" class="input-field text-gold font-bold">
+
+            <div class="flex gap-2">
+                <button id="btn-cancel-edit" onclick="cancelarEdicion()" class="hidden flex-1 bg-red-900/30 text-red-500 border border-red-500/30 font-black py-4 rounded-xl uppercase text-xs">Cancelar</button>
+                <button id="btn-venta" onclick="registrarVenta()" class="flex-[2] bg-white text-black font-black py-5 rounded-xl uppercase text-sm">Procesar Venta</button>
             </div>
-            <button type="submit" id="btnEnvio" class="btn-gold">Registrar Producto</button>
-        </form>
+        </div>
     </section>
 
-    <div class="mb-4 flex items-center justify-between">
-        <h2 class="text-[10px] font-black text-gray-500 uppercase tracking-widest">Lista Maestra</h2>
-        <span id="contador" class="text-[10px] font-bold text-gold">0 ITEMS</span>
+    <div id="listaVentas" class="space-y-3 pb-10 text-center">
+        <p class="text-[10px] text-gray-600 font-bold uppercase tracking-widest py-10">Conectando con la nube...</p>
     </div>
-    
-    <div id="displayLista" class="space-y-3">
-        <div class="text-center py-10">
-            <i class="fas fa-circle-notch fa-spin text-gold mb-2"></i>
-            <p class="text-[10px] text-gray-600 font-bold uppercase tracking-widest">Sincronizando...</p>
+
+    <div id="confirmModal" class="modal-overlay">
+        <div class="modal-content">
+            <h3 class="text-white font-black uppercase text-sm mb-4">¿Eliminar Venta?</h3>
+            <div class="flex gap-2">
+                <button onclick="closeConfirm()" class="flex-1 py-3 rounded-xl border border-gray-700 text-gray-400 text-[10px] font-black uppercase">No</button>
+                <button id="confirmDeleteBtn" class="flex-1 py-3 rounded-xl bg-red-600 text-white text-[10px] font-black uppercase">Sí, eliminar</button>
+            </div>
         </div>
     </div>
 
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, onSnapshot, query, doc, deleteDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, onSnapshot, addDoc, updateDoc, deleteDoc, query, orderBy, doc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyCrjjeOoXPOtJDXDfrHLOA4Ny0QW2zfVWk",
-            authDomain: "apps-d45d6.firebaseapp.com",
-            projectId: "apps-d45d6",
-            storageBucket: "apps-d45d6.firebasestorage.app",
-            messagingSenderId: "502648373937",
-            appId: "1:502648373937:web:8c3beaa2a6c9289a4d9890"
-        };
-
+        const firebaseConfig = JSON.parse(__firebase_config);
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        const appId = "jaddy-inc-finanzas";
+        const appId = "jaddy-inc-finanzas"; 
 
-        const statusDot = document.getElementById('statusDot');
-        const form = document.getElementById('formProd');
-        const listaDiv = document.getElementById('displayLista');
-        const contador = document.getElementById('contador');
-
+        let productosGlobal = [];
+        let pSeleccionado = null;
+        let tipoVenta = 'CONTADO';
+        let ventasActuales = [];
         let userId = null;
-        let currentId = null;
-        let tempVariants = [];
 
+        // SISTEMA DE AUTENTICACIÓN MEJORADO
         const initAuth = async () => {
-            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                await signInWithCustomToken(auth, __initial_auth_token);
-            } else {
-                await signInAnonymously(auth);
+            try {
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+            } catch (err) {
+                console.error("Auth Error:", err);
             }
         };
+
         initAuth();
 
         onAuthStateChanged(auth, (user) => {
-            if (user) {
+            if(user) {
                 userId = user.uid;
-                statusDot.style.backgroundColor = "#22c55e";
-                statusDot.style.boxShadow = "0 0 15px rgba(34, 197, 94, 0.6)";
-                cargarProductos(user.uid);
+                document.getElementById('statusDot').className = "bg-green-500 w-3 h-3 rounded-full shadow-[0_0_15px_#00ff00]";
+                cargarDatos(user.uid);
+            } else {
+                document.getElementById('statusDot').className = "bg-red-500 w-3 h-3 rounded-full";
             }
         });
 
-        function cargarProductos(uid) {
-            const q = collection(db, 'artifacts', appId, 'users', uid, 'productos');
-            onSnapshot(q, (snapshot) => {
-                const productos = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-                contador.innerText = `${productos.length} ITEMS`;
-                dibujar(productos);
-            }, (error) => console.error("Error cargando:", error));
+        function cargarDatos(uid) {
+            // Vendedores (Privado)
+            onSnapshot(collection(db, 'artifacts', appId, 'users', uid, "vendedores"), (snap) => {
+                const data = snap.docs.map(d => d.data());
+                const sel = document.getElementById('sel-vendedor');
+                sel.innerHTML = '<option value="">-- ELIGE VENDEDOR --</option>' + 
+                    data.map(v => `<option value="${v.nombre}">${v.nombre.toUpperCase()}</option>`).join('');
+            }, (err) => console.log("Sin acceso a vendedores"));
+
+            // Clientes (Privado)
+            onSnapshot(collection(db, 'artifacts', appId, 'users', uid, "clientes"), (snap) => {
+                const data = snap.docs.map(d => d.data());
+                document.getElementById('sel-cliente').innerHTML = '<option value="">-- ELEGIR CLIENTE --</option>' + 
+                    data.map(c => `<option value="${c.nombre}">${c.nombre.toUpperCase()}</option>`).join('');
+            }, (err) => console.log("Sin acceso a clientes"));
+
+            // PRODUCTOS (Sincronizado con productos.html)
+            const qProd = collection(db, 'artifacts', appId, 'users', uid, 'productos');
+            onSnapshot(qProd, (snap) => {
+                productosGlobal = snap.docs.map(d => ({id: d.id, ...d.data()}));
+                document.getElementById('sel-producto').innerHTML = '<option value="">-- SELECCIONAR PRODUCTO --</option>' + 
+                    productosGlobal.map(p => `<option value="${p.id}">${p.nombre}</option>`).join('');
+            }, (err) => {
+                document.getElementById('listaVentas').innerHTML = `<p class="text-red-500 text-[10px] font-bold">ERROR DE PERMISOS EN NUBE</p>`;
+            });
+
+            // Ventas Realizadas (Privado)
+            const qVentas = collection(db, 'artifacts', appId, 'users', uid, "ventas_realizadas");
+            onSnapshot(qVentas, (snap) => {
+                ventasActuales = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+                // Ordenar localmente por tiempo (Regla 2: No usar orderBy en servidor sin índices)
+                ventasActuales.sort((a, b) => b.timestamp - a.timestamp);
+                renderVentas(ventasActuales);
+            }, (err) => console.log("Error cargando ventas"));
         }
 
-        function dibujar(productos) {
-            if (productos.length === 0) {
-                listaDiv.innerHTML = '<p class="text-center text-gray-700 py-10 font-bold text-xs">NO HAY PRODUCTOS</p>';
+        document.getElementById('sel-producto').onchange = (e) => {
+            pSeleccionado = productosGlobal.find(x => x.id === e.target.value);
+            actualizarVariantes(); 
+            calcularTotal(); 
+        };
+
+        function actualizarVariantes(val = null) {
+            const selVar = document.getElementById('sel-variante');
+            if (pSeleccionado) {
+                const lista = pSeleccionado.variantes || [];
+                if (lista.length > 0) {
+                    selVar.innerHTML = lista.map(v => `<option value="${v}">${v.toUpperCase()}</option>`).join('');
+                } else {
+                    selVar.innerHTML = '<option value="ÚNICA">-- SIN VARIANTES --</option>';
+                }
+                if(val) selVar.value = val;
+            } else {
+                selVar.innerHTML = '<option value="">-- ELIGE VARIANTE --</option>';
+            }
+        }
+
+        window.toggleCliente = (reg) => {
+            document.getElementById('btn-cli-reg').classList.toggle('active', reg);
+            document.getElementById('btn-cli-ocu').classList.toggle('active', !reg);
+            document.getElementById('area-cliente-reg').classList.toggle('hidden', !reg);
+            document.getElementById('area-cliente-ocu').classList.toggle('hidden', reg);
+        };
+
+        window.setTipo = (t) => {
+            tipoVenta = t;
+            ['contado', 'credito', 'mayor'].forEach(id => document.getElementById('t-'+id).classList.toggle('active', id === t.toLowerCase()));
+            document.getElementById('panel-credito').classList.toggle('hidden', t !== 'CREDITO');
+            calcularTotal();
+        };
+
+        window.calcularTotal = () => {
+            const cant = parseInt(document.getElementById('inp-cantidad').value) || 0;
+            if(!pSeleccionado) {
+                document.getElementById('inp-precio').value = "0.00";
                 return;
             }
-            listaDiv.innerHTML = productos.map(p => `
-                <div class="product-card">
-                    <div class="flex justify-between items-start">
-                        <div>
-                            <span class="text-[8px] font-black text-gold uppercase tracking-widest">${p.codigo || 'S/C'}</span>
-                            <h3 class="text-sm font-black uppercase text-white">${p.nombre}</h3>
-                        </div>
-                        <div class="text-right">
-                            <p class="text-[10px] text-gray-500 font-bold">DETAL</p>
-                            <p class="text-sm font-black text-green-400">$${(p.precio_detal || 0).toLocaleString()}</p>
-                        </div>
-                    </div>
-                    <div class="flex flex-wrap gap-1 mt-2 mb-3">
-                        ${(p.variantes || []).map(v => `<span class="variant-tag">${v}</span>`).join('')}
-                    </div>
-                    <div class="flex justify-between items-center pt-3 border-t border-white/5">
-                        <div class="flex gap-4">
-                            <div>
-                                <p class="text-[7px] text-gray-500 font-bold uppercase">Mayor</p>
-                                <p class="text-[10px] font-bold text-gold">$${(p.precio_mayor || 0).toLocaleString()}</p>
-                            </div>
-                            <button onclick="abrirVariantes('${p.id}', '${p.nombre}', ${JSON.stringify(p.variantes || []).replace(/"/g, '&quot;')})" class="flex items-center gap-1 text-[10px] font-bold text-gray-400 bg-white/5 px-3 py-1 rounded-full">
-                                <i class="fas fa-tags text-gold"></i> VARIANTES
-                            </button>
-                        </div>
-                        <button onclick="eliminarProd('${p.id}', '${p.nombre}')" class="text-red-500/30 hover:text-red-500 transition-colors px-2">
-                            <i class="fas fa-trash-alt text-xs"></i>
-                        </button>
-                    </div>
-                </div>
-            `).reverse().join('');
-        }
+            let precioUnitario = 0;
+            if(tipoVenta === 'CONTADO') precioUnitario = pSeleccionado.precio_detal || 0;
+            else if(tipoVenta === 'CREDITO') precioUnitario = pSeleccionado.precio_credito || 0;
+            else if(tipoVenta === 'MAYOR') precioUnitario = pSeleccionado.precio_mayor || 0;
 
-        window.abrirVariantes = (id, nombre, variantes) => {
-            currentId = id;
-            tempVariants = [...variantes];
-            document.getElementById('targetNombre').innerText = nombre;
-            document.getElementById('modalVariantes').style.display = 'flex';
-            renderVariantesModal();
+            document.getElementById('inp-precio').value = (precioUnitario * cant).toLocaleString('en-US', {minimumFractionDigits: 2});
         };
 
-        window.cerrarModal = () => { document.getElementById('modalVariantes').style.display = 'none'; };
+        window.registrarVenta = async () => {
+            if(!userId) return alert("No hay conexión con la base de datos");
+            const editId = document.getElementById('edit-id').value;
+            const v = document.getElementById('sel-vendedor').value;
+            const c = document.getElementById('btn-cli-reg').classList.contains('active') ? document.getElementById('sel-cliente').value : document.getElementById('inp-cliente-nom').value;
+            const varElegida = document.getElementById('sel-variante').value;
 
-        function renderVariantesModal() {
-            const container = document.getElementById('listaVariantesModal');
-            container.innerHTML = tempVariants.map((v, i) => `
-                <div class="bg-[#111] p-2 rounded-lg border border-[#222] flex justify-between items-center">
-                    <span class="text-[9px] font-bold uppercase text-gold">${v}</span>
-                    <button onclick="quitarVariante(${i})" class="text-red-500 text-[10px] ml-2"><i class="fas fa-times"></i></button>
-                </div>
-            `).join('');
-        }
+            if(!v || !pSeleccionado || !c || !varElegida) return alert("Faltan datos por completar");
 
-        document.getElementById('addVariantBtn').onclick = () => {
-            const input = document.getElementById('nuevaVariante');
-            const val = input.value.trim().toUpperCase();
-            if(val) {
-                tempVariants.push(val);
-                input.value = "";
-                renderVariantesModal();
-            }
-        };
-
-        window.quitarVariante = (i) => {
-            tempVariants.splice(i, 1);
-            renderVariantesModal();
-        };
-
-        document.getElementById('saveVariantsBtn').onclick = async () => {
-            if(!userId || !currentId) return;
-            const btn = document.getElementById('saveVariantsBtn');
-            btn.innerText = "GUARDANDO...";
-            try {
-                const docRef = doc(db, 'artifacts', appId, 'users', userId, 'productos', currentId);
-                await updateDoc(docRef, { variantes: tempVariants });
-                cerrarModal();
-            } catch (e) { console.error(e); }
-            btn.innerText = "GUARDAR CAMBIOS";
-        };
-
-        window.eliminarProd = async (id, nombre) => {
-            if (!userId) return;
-            if (confirm(`¿ELIMINAR ${nombre}?`)) {
-                try {
-                    await deleteDoc(doc(db, 'artifacts', appId, 'users', userId, 'productos', id));
-                } catch (e) { console.error(e); }
-            }
-        };
-
-        form.onsubmit = async (e) => {
-            e.preventDefault();
-            if (!userId) return;
-            const btn = document.getElementById('btnEnvio');
-            btn.innerText = "GUARDANDO...";
-            btn.disabled = true;
-
-            const datos = {
-                codigo: document.getElementById('codigo').value.toUpperCase().trim(),
-                nombre: document.getElementById('nombre').value.toUpperCase().trim(),
-                costo: parseFloat(document.getElementById('costo').value) || 0,
-                precio_detal: parseFloat(document.getElementById('detal').value) || 0,
-                precio_credito: parseFloat(document.getElementById('credito').value) || 0,
-                precio_mayor: parseFloat(document.getElementById('mayor').value) || 0,
-                variantes: [],
-                fecha: new Date().toISOString()
+            const data = {
+                vendedor: v,
+                cliente: c.toUpperCase(),
+                producto: pSeleccionado.nombre,
+                productoId: pSeleccionado.id,
+                variante: varElegida,
+                cantidad: parseInt(document.getElementById('inp-cantidad').value),
+                total: parseFloat(document.getElementById('inp-precio').value.replace(/,/g, '')),
+                tipo: tipoVenta,
+                timestamp: Date.now(),
+                fecha_legible: new Date().toLocaleDateString(),
+                hora: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
             };
 
             try {
-                const collRef = collection(db, 'artifacts', appId, 'users', userId, 'productos');
-                await addDoc(collRef, datos);
-                form.reset();
-            } catch (error) {
-                console.error(error);
-            } finally {
-                btn.innerText = "REGISTRAR PRODUCTO";
-                btn.disabled = false;
-            }
+                const path = collection(db, 'artifacts', appId, 'users', userId, "ventas_realizadas");
+                if(editId) {
+                    await updateDoc(doc(db, 'artifacts', appId, 'users', userId, "ventas_realizadas", editId), data);
+                    cancelarEdicion();
+                } else {
+                    await addDoc(path, data);
+                }
+                limpiar();
+            } catch (e) { alert("Error al guardar en la nube"); }
         };
+
+        window.iniciarEdicion = (id) => {
+            const v = ventasActuales.find(x => x.id === id);
+            document.getElementById('edit-id').value = id;
+            document.getElementById('btn-venta').innerText = "ACTUALIZAR";
+            document.getElementById('btn-cancel-edit').classList.remove('hidden');
+            document.getElementById('sel-vendedor').value = v.vendedor;
+            document.getElementById('sel-producto').value = v.productoId;
+            pSeleccionado = productosGlobal.find(p => p.id === v.productoId);
+            actualizarVariantes(v.variante);
+            setTipo(v.tipo);
+            document.getElementById('inp-cantidad').value = v.cantidad;
+            window.scrollTo({top: 0, behavior: 'smooth'});
+        };
+
+        window.cancelarEdicion = () => {
+            document.getElementById('edit-id').value = "";
+            document.getElementById('btn-venta').innerText = "PROCESAR VENTA";
+            document.getElementById('btn-cancel-edit').classList.add('hidden');
+            limpiar();
+        };
+
+        window.pedirEliminar = (id) => {
+            const modal = document.getElementById('confirmModal');
+            modal.style.display = 'flex';
+            document.getElementById('confirmDeleteBtn').onclick = async () => {
+                await deleteDoc(doc(db, 'artifacts', appId, 'users', userId, "ventas_realizadas", id));
+                closeConfirm();
+            };
+        };
+
+        window.closeConfirm = () => document.getElementById('confirmModal').style.display = 'none';
+
+        function limpiar() {
+            document.getElementById('sel-producto').value = "";
+            document.getElementById('sel-variante').innerHTML = '<option value="">-- ELIGE VARIANTE --</option>';
+            document.getElementById('inp-cliente-nom').value = "";
+            document.getElementById('inp-cantidad').value = 1;
+            document.getElementById('inp-precio').value = "0.00";
+            pSeleccionado = null;
+        }
+
+        function renderVentas(ventas) {
+            if(ventas.length === 0) {
+                document.getElementById('listaVentas').innerHTML = '<p class="text-[10px] text-gray-700 py-10 font-bold uppercase">No hay ventas hoy</p>';
+                return;
+            }
+            document.getElementById('listaVentas').innerHTML = ventas.map(v => `
+                <div class="sale-card text-left">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <span class="text-[7px] text-gold uppercase font-black px-2 py-0.5 border border-gold/20 rounded">${v.tipo}</span>
+                            <div class="text-[11px] font-black uppercase mt-1">${v.cliente}</div>
+                            <div class="text-[8px] text-gray-500">${v.fecha_legible} ${v.hora}</div>
+                        </div>
+                        <div class="flex flex-col items-end">
+                            <div class="flex gap-2 mb-1">
+                                <button onclick="iniciarEdicion('${v.id}')" class="text-blue-500 text-xs"><i class="fa-solid fa-pen"></i></button>
+                                <button onclick="pedirEliminar('${v.id}')" class="text-red-500 text-xs"><i class="fa-solid fa-trash"></i></button>
+                            </div>
+                            <div class="text-green-400 font-black">$${v.total.toLocaleString()}</div>
+                        </div>
+                    </div>
+                    <div class="text-[9px] text-gray-400 mt-1 italic border-t border-white/5 pt-1">
+                        ${v.producto} / ${v.variante} <span class="text-gold">(x${v.cantidad})</span>
+                    </div>
+                </div>
+            `).join('');
+        }
     </script>
 </body>
 </html>
