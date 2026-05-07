@@ -4,19 +4,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Ventas Privadas | Jaddy INC</title>
+    <title>Gestión de Ventas | Jaddy INC</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root { --gold: #D4AF37; --bg: #050505; }
-        body { background: var(--bg); color: white; font-family: 'Inter', sans-serif; margin: 0; overflow-x: hidden; }
+        body { background: var(--bg); color: white; font-family: 'Inter', sans-serif; margin: 0; }
         .gold-border { border: 1px solid rgba(212, 175, 55, 0.2); }
-        .input-field { background: #111; border: 1px solid #222; border-radius: 12px; padding: 14px; width: 100%; color: white; font-size: 14px; font-weight: bold; text-transform: uppercase; appearance: none; }
+        .input-field { background: #111; border: 1px solid #222; border-radius: 12px; padding: 14px; width: 100%; color: white; font-size: 14px; font-weight: bold; text-transform: uppercase; }
         .tab-btn { flex: 1; padding: 12px; font-size: 10px; font-weight: 900; text-transform: uppercase; border-radius: 10px; border: 1px solid #222; color: #555; transition: 0.3s; background: transparent; }
         .tab-btn.active { background: white; color: black; border-color: white; }
         .sale-card { background: #0F0F0F; border: 1px solid #1A1A1A; border-radius: 20px; padding: 15px; margin-bottom: 12px; position: relative; }
-        #statusDot { width: 10px; height: 10px; border-radius: 50%; transition: 0.3s; }
-        .modal-overlay { background: rgba(0,0,0,0.85); backdrop-filter: blur(4px); display: none; position: fixed; inset: 0; z-index: 50; align-items: center; justify-content: center; padding: 20px; }
+        #statusDot { width: 10px; height: 10px; border-radius: 50%; }
     </style>
 </head>
 <body class="p-4 pb-24 max-w-md mx-auto">
@@ -24,22 +23,23 @@
     <header class="flex justify-between items-center mb-6">
         <div class="flex items-center gap-2">
             <div id="statusDot" class="bg-gray-600"></div>
-            <span id="userBadge" class="text-[8px] font-mono text-gray-500 uppercase tracking-tighter">Conectando...</span>
+            <span id="userBadge" class="text-[8px] font-mono text-gray-500 uppercase">Sincronizando...</span>
         </div>
         <h1 class="text-gold font-black italic text-xs tracking-widest">JADDY INC</h1>
     </header>
 
     <!-- Formulario de Registro -->
-    <section id="form-container" class="bg-[#0A0A0A] p-5 rounded-[28px] gold-border mb-8 shadow-2xl">
-        <h2 class="text-center text-gold font-black uppercase text-[10px] tracking-[4px] mb-6 italic">Nuevo Despacho</h2>
+    <section id="form-container" class="bg-[#0A0A0A] p-5 rounded-[28px] gold-border mb-8">
+        <h2 class="text-center text-gold font-black uppercase text-[10px] tracking-[4px] mb-6 italic">Nuevo Registro</h2>
         
         <div class="space-y-4">
             <input type="hidden" id="edit-id" value="">
+            <input type="hidden" id="edit-source" value=""> <!-- Para saber si es pública o privada -->
             
             <div class="relative">
                 <p class="text-[7px] text-gold font-black absolute -top-2 left-3 bg-[#0A0A0A] px-2 uppercase z-10">Vendedor:</p>
                 <select id="sel-vendedor" class="input-field border-gold/30 text-gold">
-                    <option value="">Cargando vendedores...</option>
+                    <option value="">Cargando...</option>
                 </select>
             </div>
 
@@ -50,7 +50,7 @@
             
             <div id="area-cliente-reg">
                 <select id="sel-cliente" class="input-field">
-                    <option value="">Cargando clientes...</option>
+                    <option value="">Cargando...</option>
                 </select>
             </div>
             
@@ -63,9 +63,9 @@
                     <option value="">Seleccionar Producto</option>
                 </select>
                 <div class="relative">
-                    <p class="text-[7px] text-gold font-black absolute -top-2 left-3 bg-[#0A0A0A] px-2 uppercase z-10">Variante / Fragancia:</p>
+                    <p class="text-[7px] text-gold font-black absolute -top-2 left-3 bg-[#0A0A0A] px-2 uppercase z-10">Fragancia / Variedad:</p>
                     <select id="sel-variante" class="input-field border-gold/20 text-gold">
-                        <option value="">Elija fragancia</option>
+                        <option value="">Elija opción</option>
                     </select>
                 </div>
             </div>
@@ -76,56 +76,32 @@
                 <button onclick="setTipo('MAYOR')" id="t-mayor" class="tab-btn">Mayor</button>
             </div>
 
-            <div id="panel-credito" class="hidden space-y-3 p-4 bg-[#111] rounded-xl border border-gold/10">
-                <div class="grid grid-cols-2 gap-2">
-                    <div>
-                        <p class="text-[7px] mb-1 text-gray-500 uppercase italic">Fecha Entrega</p>
-                        <input type="date" id="fecha-entrega" class="input-field py-2 text-xs">
-                    </div>
-                    <div>
-                        <p class="text-[7px] mb-1 text-gray-500 uppercase italic">Fecha Cobro</p>
-                        <input type="date" id="fecha-pago" class="input-field py-2 text-xs">
-                    </div>
-                </div>
-            </div>
-
             <div class="grid grid-cols-2 gap-3">
                 <div class="relative">
                     <p class="text-[7px] text-gray-500 absolute -top-2 left-3 bg-[#0A0A0A] px-1 uppercase">Cant.</p>
-                    <input type="number" id="inp-cantidad" value="1" min="1" oninput="calcularTotal()" class="input-field text-center text-xl">
+                    <input type="number" id="inp-cantidad" value="1" min="1" oninput="calcularTotal()" class="input-field text-center text-xl font-bold">
                 </div>
                 <div class="relative">
                     <p class="text-[7px] text-gray-500 absolute -top-2 left-3 bg-[#0A0A0A] px-1 uppercase">Total USD</p>
-                    <input type="text" id="inp-precio" value="0.00" readonly class="input-field text-center text-xl text-green-400">
+                    <input type="text" id="inp-precio" value="0.00" readonly class="input-field text-center text-xl text-green-400 font-bold">
                 </div>
             </div>
 
             <div class="flex gap-2">
                 <button id="btn-cancel-edit" onclick="cancelarEdicion()" class="hidden flex-1 bg-red-900/20 text-red-500 border border-red-500/20 font-black py-4 rounded-xl uppercase text-[10px]">Cancelar</button>
-                <button id="btn-venta" onclick="registrarVenta()" class="flex-[2] bg-white text-black font-black py-5 rounded-xl uppercase text-xs tracking-widest">Registrar Venta</button>
+                <button id="btn-venta" onclick="registrarVenta()" class="flex-[2] bg-white text-black font-black py-5 rounded-xl uppercase text-xs tracking-widest shadow-xl">Guardar Venta</button>
             </div>
         </div>
     </section>
 
-    <!-- Listado Privado -->
-    <h3 class="text-[8px] text-gray-500 font-black uppercase tracking-[3px] mb-4 text-center italic">Mis ventas recientes</h3>
+    <!-- Listado Combinado -->
+    <h3 class="text-[8px] text-gray-500 font-black uppercase tracking-[3px] mb-4 text-center italic">Historial de Ventas</h3>
     <div id="listaVentas" class="space-y-3 pb-10"></div>
-
-    <!-- Modales -->
-    <div id="confirmModal" class="modal-overlay">
-        <div class="modal-content bg-[#0A0A0A] border border-white/10 p-6 rounded-3xl w-full max-w-[280px] text-center">
-            <h3 class="text-white font-black uppercase text-xs mb-6 italic">¿Eliminar este registro?</h3>
-            <div class="flex gap-2">
-                <button onclick="closeConfirm()" class="flex-1 py-3 rounded-xl border border-white/5 text-gray-500 text-[9px] font-black uppercase">Volver</button>
-                <button id="confirmDeleteBtn" class="flex-1 py-3 rounded-xl bg-red-600 text-white text-[9px] font-black uppercase shadow-lg shadow-red-900/20">Eliminar</button>
-            </div>
-        </div>
-    </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, onSnapshot, addDoc, updateDoc, deleteDoc, query, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, onSnapshot, addDoc, updateDoc, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         const firebaseConfig = JSON.parse(__firebase_config);
         const app = initializeApp(firebaseConfig);
@@ -133,13 +109,14 @@
         const db = getFirestore(app);
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'jaddy-inc-main';
 
-        let currentUser = null;
+        let user = null;
         let productosGlobal = [];
         let pSeleccionado = null;
         let tipoVenta = 'CONTADO';
-        let misVentas = [];
+        
+        let ventasPublicas = [];
+        let ventasPrivadas = [];
 
-        // 1. Autenticación con Privacidad
         const initAuth = async () => {
             if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
                 await signInWithCustomToken(auth, __initial_auth_token);
@@ -148,74 +125,77 @@
             }
         };
 
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-                currentUser = user;
-                document.getElementById('statusDot').className = "w-2.5 h-2.5 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]";
-                document.getElementById('userBadge').innerText = `ID: ${user.uid.substring(0,8)}...`;
+        onAuthStateChanged(auth, (u) => {
+            if (u) {
+                user = u;
+                document.getElementById('statusDot').className = "w-2.5 h-2.5 rounded-full bg-green-500";
+                document.getElementById('userBadge').innerText = "Conectado";
                 conectarDatos();
             }
         });
 
-        // 2. Carga de Datos (Independiente)
         function conectarDatos() {
-            if(!currentUser) return;
+            if(!user) return;
 
-            // Vendedores y Clientes (Colecciones Públicas de la App)
-            onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'vendedores'), (snap) => {
-                const data = snap.docs.map(d => d.data());
-                document.getElementById('sel-vendedor').innerHTML = '<option value="">-- VENDEDOR --</option>' + 
-                    data.map(v => `<option value="${v.nombre}">${v.nombre}</option>`).join('');
+            // 1. Catálogos (Vendedores, Clientes, Productos)
+            onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'vendedores'), (s) => {
+                const d = s.docs.map(doc => doc.data());
+                document.getElementById('sel-vendedor').innerHTML = '<option value="">-- SELECCIONAR --</option>' + 
+                    d.map(v => `<option value="${v.nombre}">${v.nombre}</option>`).join('');
             });
 
-            onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'clientes'), (snap) => {
-                const data = snap.docs.map(d => d.data());
-                document.getElementById('sel-cliente').innerHTML = '<option value="">-- CLIENTE --</option>' + 
-                    data.map(c => `<option value="${c.nombre}">${c.nombre.toUpperCase()}</option>`).join('');
+            onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'clientes'), (s) => {
+                const d = s.docs.map(doc => doc.data());
+                document.getElementById('sel-cliente').innerHTML = '<option value="">-- SELECCIONAR --</option>' + 
+                    d.map(c => `<option value="${c.nombre}">${c.nombre.toUpperCase()}</option>`).join('');
             });
 
-            onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'productos'), (snap) => {
-                productosGlobal = snap.docs.map(d => ({id: d.id, ...d.data()}));
-                document.getElementById('sel-producto').innerHTML = '<option value="">-- PRODUCTO --</option>' + 
+            onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'productos'), (s) => {
+                productosGlobal = s.docs.map(doc => ({id: doc.id, ...doc.data()}));
+                document.getElementById('sel-producto').innerHTML = '<option value="">-- SELECCIONAR --</option>' + 
                     productosGlobal.map(p => `<option value="${p.id}">${p.nombre}</option>`).join('');
             });
 
-            // MIS VENTAS (Ruta Privada por Usuario)
-            const mySalesPath = collection(db, 'artifacts', appId, 'users', currentUser.uid, 'ventas_realizadas');
-            onSnapshot(mySalesPath, (snap) => {
-                misVentas = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-                // Ordenar localmente por tiempo (Regla 2: Sin consultas complejas)
-                misVentas.sort((a, b) => b.timestamp - a.timestamp);
-                renderVentas(misVentas);
-            }, (err) => console.error("Error en snapshot privado:", err));
+            // 2. VENTAS PÚBLICAS (Lo que ya estaba registrado antes)
+            onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'ventas_realizadas'), (s) => {
+                ventasPublicas = s.docs.map(doc => ({ id: doc.id, source: 'public', ...doc.data() }));
+                actualizarLista();
+            });
+
+            // 3. VENTAS PRIVADAS (Lo nuevo que guardes tú)
+            onSnapshot(collection(db, 'artifacts', appId, 'users', user.uid, 'ventas_realizadas'), (s) => {
+                ventasPrivadas = s.docs.map(doc => ({ id: doc.id, source: 'private', ...doc.data() }));
+                actualizarLista();
+            });
         }
 
-        // 3. Lógica de Variantes (Fragancia/Preparado)
+        function actualizarLista() {
+            const todas = [...ventasPublicas, ...ventasPrivadas].sort((a,b) => (b.timestamp || 0) - (a.timestamp || 0));
+            renderVentas(todas);
+        }
+
         document.getElementById('sel-producto').onchange = (e) => {
             pSeleccionado = productosGlobal.find(x => x.id === e.target.value);
             const selVar = document.getElementById('sel-variante');
             
             if (!pSeleccionado) {
-                selVar.innerHTML = '<option value="">-- ELIGE FRAGANCIA --</option>';
+                selVar.innerHTML = '<option value="">Elija opción</option>';
                 return;
             }
 
             let opciones = [];
-            // Escaneo profundo de campos de variantes
-            const keys = ['fragancias', 'variantes', 'notas', 'opciones', 'tipo'];
-            keys.forEach(k => {
-                const val = pSeleccionado[k];
-                if (!val) return;
-                if (Array.isArray(val)) opciones = [...opciones, ...val];
-                else if (typeof val === 'string') opciones = [...opciones, ...val.split(/[,/-]/).map(s => s.trim())];
+            ['fragancias', 'variantes', 'notas', 'opciones'].forEach(k => {
+                if (pSeleccionado[k]) {
+                    if (Array.isArray(pSeleccionado[k])) opciones = [...opciones, ...pSeleccionado[k]];
+                    else opciones = [...opciones, ...pSeleccionado[k].split(',').map(s => s.trim())];
+                }
             });
 
             opciones = [...new Set(opciones)].filter(o => o !== "");
-            
             if (opciones.length > 0) {
                 selVar.innerHTML = opciones.map(v => `<option value="${v}">${v.toUpperCase()}</option>`).join('');
             } else {
-                selVar.innerHTML = '<option value="UNICA">GENERAL / UNICA</option>';
+                selVar.innerHTML = '<option value="GENERAL">GENERAL</option>';
             }
             calcularTotal();
         };
@@ -229,43 +209,36 @@
 
         window.setTipo = (t) => {
             tipoVenta = t;
-            ['contado', 'credito', 'mayor'].forEach(id => {
-                document.getElementById('t-'+id).classList.toggle('active', id === t.toLowerCase());
-            });
-            document.getElementById('panel-credito').classList.toggle('hidden', t !== 'CREDITO');
+            ['contado', 'credito', 'mayor'].forEach(id => document.getElementById('t-'+id).classList.toggle('active', id === t.toLowerCase()));
             calcularTotal();
         };
 
         window.calcularTotal = () => {
             const cant = parseInt(document.getElementById('inp-cantidad').value) || 0;
             if(!pSeleccionado) return;
-            let precio = parseFloat(pSeleccionado.precio_detal || pSeleccionado.precio || 0);
-            if(tipoVenta === 'CREDITO') precio = parseFloat(pSeleccionado.precio_credito || precio);
-            if(tipoVenta === 'MAYOR') precio = parseFloat(pSeleccionado.precio_mayor || precio);
-            document.getElementById('inp-precio').value = (precio * cant).toFixed(2);
+            let p = parseFloat(pSeleccionado.precio_detal || pSeleccionado.precio || 0);
+            if(tipoVenta === 'CREDITO') p = parseFloat(pSeleccionado.precio_credito || p);
+            if(tipoVenta === 'MAYOR') p = parseFloat(pSeleccionado.precio_mayor || p);
+            document.getElementById('inp-precio').value = (p * cant).toFixed(2);
         };
 
-        // 4. CRUD de Ventas
         window.registrarVenta = async () => {
-            if(!currentUser) return;
-            
+            if(!user) return;
             const v = document.getElementById('sel-vendedor').value;
             const isReg = document.getElementById('btn-cli-reg').classList.contains('active');
             const c = isReg ? document.getElementById('sel-cliente').value : document.getElementById('inp-cliente-nom').value;
-            const fragancia = document.getElementById('sel-variante').value;
+            const frag = document.getElementById('sel-variante').value;
             const editId = document.getElementById('edit-id').value;
+            const editSource = document.getElementById('edit-source').value;
 
-            if(!v || !c || !pSeleccionado || !fragancia) {
-                alert("Complete Vendedor, Cliente, Producto y Fragancia.");
-                return;
-            }
+            if(!v || !c || !pSeleccionado) return;
 
             const payload = {
                 vendedor: v,
                 cliente: c.toUpperCase(),
                 producto: pSeleccionado.nombre,
                 productoId: pSeleccionado.id,
-                variante: fragancia,
+                variante: frag,
                 cantidad: parseInt(document.getElementById('inp-cantidad').value),
                 total: parseFloat(document.getElementById('inp-precio').value),
                 tipo: tipoVenta,
@@ -274,96 +247,90 @@
                 hora: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
             };
 
-            if(tipoVenta === 'CREDITO') {
-                payload.fecha_entrega = document.getElementById('fecha-entrega').value;
-                payload.fecha_cobro = document.getElementById('fecha-pago').value;
-            }
-
             try {
-                const collRef = collection(db, 'artifacts', appId, 'users', currentUser.uid, 'ventas_realizadas');
                 if(editId) {
-                    await updateDoc(doc(db, 'artifacts', appId, 'users', currentUser.uid, 'ventas_realizadas', editId), payload);
+                    // Actualizar donde sea que esté el origen
+                    const path = editSource === 'public' 
+                        ? doc(db, 'artifacts', appId, 'public', 'data', 'ventas_realizadas', editId)
+                        : doc(db, 'artifacts', appId, 'users', user.uid, 'ventas_realizadas', editId);
+                    await updateDoc(path, payload);
                     cancelarEdicion();
                 } else {
-                    await addDoc(collRef, payload);
+                    // Nuevas ventas van a PRIVADO por seguridad/privacidad
+                    await addDoc(collection(db, 'artifacts', appId, 'users', user.uid, 'ventas_realizadas'), payload);
                 }
                 limpiar();
             } catch (e) { console.error(e); }
         };
 
-        window.iniciarEdicion = (id) => {
-            const v = misVentas.find(x => x.id === id);
+        window.iniciarEdicion = (id, source) => {
+            const list = source === 'public' ? ventasPublicas : ventasPrivadas;
+            const v = list.find(x => x.id === id);
             if(!v) return;
+
             document.getElementById('edit-id').value = id;
-            document.getElementById('btn-venta').innerText = "Guardar Cambios";
+            document.getElementById('edit-source').value = source;
+            document.getElementById('btn-venta').innerText = "Actualizar Registro";
             document.getElementById('btn-cancel-edit').classList.remove('hidden');
             
             document.getElementById('sel-vendedor').value = v.vendedor;
             document.getElementById('sel-producto').value = v.productoId;
-            pSeleccionado = productosGlobal.find(p => p.id === v.productoId);
-            
-            // Forzar actualización de variantes para que se seleccione la correcta
             document.getElementById('sel-producto').dispatchEvent(new Event('change'));
-            setTimeout(() => { document.getElementById('sel-variante').value = v.variante; }, 50);
-
-            setTipo(v.tipo);
-            document.getElementById('inp-cantidad').value = v.cantidad;
-            window.scrollTo({top: 0, behavior: 'smooth'});
+            
+            setTimeout(() => {
+                document.getElementById('sel-variante').value = v.variante;
+                document.getElementById('inp-cantidad').value = v.cantidad;
+                setTipo(v.tipo);
+                window.scrollTo({top: 0, behavior: 'smooth'});
+            }, 100);
         };
 
         window.cancelarEdicion = () => {
             document.getElementById('edit-id').value = "";
-            document.getElementById('btn-venta').innerText = "Registrar Venta";
+            document.getElementById('edit-source').value = "";
+            document.getElementById('btn-venta').innerText = "Guardar Venta";
             document.getElementById('btn-cancel-edit').classList.add('hidden');
             limpiar();
         };
 
-        window.pedirEliminar = (id) => {
-            document.getElementById('confirmModal').style.display = 'flex';
-            document.getElementById('confirmDeleteBtn').onclick = async () => {
-                await deleteDoc(doc(db, 'artifacts', appId, 'users', currentUser.uid, 'ventas_realizadas', id));
-                closeConfirm();
-            };
+        window.eliminarVenta = async (id, source) => {
+            if(!confirm("¿Eliminar permanentemente?")) return;
+            const path = source === 'public'
+                ? doc(db, 'artifacts', appId, 'public', 'data', 'ventas_realizadas', id)
+                : doc(db, 'artifacts', appId, 'users', user.uid, 'ventas_realizadas', id);
+            await deleteDoc(path);
         };
-
-        window.closeConfirm = () => document.getElementById('confirmModal').style.display = 'none';
 
         function limpiar() {
             document.getElementById('inp-cliente-nom').value = "";
             document.getElementById('inp-cantidad').value = 1;
             document.getElementById('inp-precio').value = "0.00";
             document.getElementById('sel-producto').value = "";
-            document.getElementById('sel-variante').innerHTML = '<option value="">Elija fragancia</option>';
-            pSeleccionado = null;
+            document.getElementById('sel-variante').innerHTML = '<option value="">Elija opción</option>';
         }
 
         function renderVentas(data) {
             const container = document.getElementById('listaVentas');
-            if(data.length === 0) {
-                container.innerHTML = '<p class="text-center text-[9px] text-gray-700 py-10 uppercase tracking-widest">Sin registros personales</p>';
-                return;
-            }
-
             container.innerHTML = data.map(v => `
                 <div class="sale-card gold-border">
-                    <div class="flex justify-between items-start mb-3">
+                    <div class="flex justify-between items-start">
                         <div>
-                            <span class="text-[7px] font-black uppercase ${v.tipo === 'CREDITO' ? 'text-red-500' : 'text-gold'}">${v.tipo}</span>
+                            <span class="text-[7px] font-black uppercase text-gold">${v.tipo} ${v.source === 'private' ? '🔒' : '🌐'}</span>
                             <div class="text-[11px] font-bold uppercase text-white">${v.cliente}</div>
                             <div class="text-[8px] text-gray-500">${v.fecha} · ${v.hora}</div>
                         </div>
-                        <div class="flex flex-col items-end">
-                            <div class="flex gap-4 mb-2">
-                                <button onclick="iniciarEdicion('${v.id}')" class="text-blue-500/50 text-xs"><i class="fa-solid fa-pen"></i></button>
-                                <button onclick="pedirEliminar('${v.id}')" class="text-red-500/50 text-xs"><i class="fa-solid fa-trash"></i></button>
+                        <div class="text-right">
+                            <div class="flex gap-3 mb-2">
+                                <button onclick="iniciarEdicion('${v.id}', '${v.source}')" class="text-blue-500/50 text-[10px]"><i class="fa-solid fa-pen"></i></button>
+                                <button onclick="eliminarVenta('${v.id}', '${v.source}')" class="text-red-500/50 text-[10px]"><i class="fa-solid fa-trash"></i></button>
                             </div>
-                            <div class="text-green-400 font-mono font-black text-sm">$${v.total.toFixed(2)}</div>
+                            <div class="text-green-400 font-black text-sm">$${v.total.toFixed(2)}</div>
                         </div>
                     </div>
-                    <div class="flex flex-wrap gap-1">
-                        <span class="bg-white/5 border border-white/10 px-2 py-0.5 rounded text-[8px] text-gray-300 italic">${v.producto}</span>
-                        <span class="bg-gold/5 border border-gold/20 px-2 py-0.5 rounded text-[8px] text-gold font-bold uppercase">${v.variante}</span>
-                        <span class="text-[8px] text-gray-600 self-center ml-auto">CANT: ${v.cantidad}</span>
+                    <div class="mt-2 flex gap-1 items-center">
+                        <span class="bg-white/5 border border-white/10 px-2 py-0.5 rounded text-[8px] text-gray-400">${v.producto}</span>
+                        <span class="bg-gold/10 border border-gold/20 px-2 py-0.5 rounded text-[8px] text-gold font-bold">${v.variante}</span>
+                        <span class="text-[8px] text-gray-600 ml-auto">VENDEDOR: ${v.vendedor}</span>
                     </div>
                 </div>
             `).join('');
