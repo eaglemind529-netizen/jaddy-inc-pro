@@ -11,7 +11,8 @@
         :root { --gold: #D4AF37; --bg: #050505; }
         body { background: var(--bg); color: white; font-family: 'Inter', sans-serif; margin: 0; }
         .gold-border { border: 1px solid rgba(212, 175, 55, 0.2); }
-        .input-field { background: #111; border: 1px solid #222; border-radius: 12px; padding: 14px; width: 100%; color: white; font-size: 14px; font-weight: bold; text-transform: uppercase; }
+        .input-field { background: #111; border: 1px solid #222; border-radius: 12px; padding: 14px; width: 100%; color: white; font-size: 14px; font-weight: bold; text-transform: uppercase; outline: none; }
+        .input-field:focus { border-color: var(--gold); }
         .client-card { background: #0F0F0F; border: 1px solid #1A1A1A; border-radius: 20px; padding: 15px; margin-bottom: 12px; cursor: pointer; transition: 0.3s; }
         #modalDetalle, #subModalAnalisis { 
             position: fixed; inset: 0; background: rgba(0,0,0,0.98); z-index: 100; 
@@ -33,11 +34,12 @@
 </head>
 <body class="pb-24 max-w-md mx-auto">
 
-    <div id="notifBanner" onclick="activarNotificaciones()">
+    <div id="notifBanner">
         <i class="fas fa-bell animate-bounce mr-2"></i> Activar Alertas de Cobro
     </div>
 
     <div class="p-4">
+        <!-- Modales -->
         <div id="subModalAnalisis">
             <header class="flex justify-between items-center mb-8">
                 <button onclick="cerrarAnalisis()" class="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-white text-xl">←</button>
@@ -56,11 +58,13 @@
             <div id="detalleContenido" class="flex-1 overflow-y-auto space-y-6 pb-10"></div>
         </div>
 
+        <!-- Header Principal -->
         <header class="flex justify-between items-center mb-6">
             <button onclick="window.history.back()" class="text-[10px] font-black border border-gold/30 px-4 py-2 rounded-full text-gold uppercase">← Volver</button>
-            <div id="statusDot" class="w-3 h-3 rounded-full bg-red-600"></div>
+            <div id="statusDot" class="w-3 h-3 rounded-full bg-zinc-800 transition-all duration-500"></div>
         </header>
 
+        <!-- Formulario de Registro -->
         <section class="bg-[#0A0A0A] p-5 rounded-[28px] gold-border mb-8 shadow-2xl">
             <h2 class="text-center text-gold font-black uppercase text-[10px] tracking-[4px] mb-6 italic">Registro Jaddy INC</h2>
             <input type="hidden" id="edit-id">
@@ -71,16 +75,17 @@
                 </div>
                 <input type="text" id="cli-ubicacion" placeholder="Ubicación" class="input-field">
                 <input type="tel" id="cli-telefono" placeholder="WhatsApp" class="input-field">
-                <button id="btn-guardar" onclick="procesarCliente()" class="w-full bg-white text-black font-black py-4 rounded-xl uppercase text-xs">Guardar Cliente</button>
+                <button id="btn-guardar" onclick="procesarCliente()" class="w-full bg-white text-black font-black py-4 rounded-xl uppercase text-xs hover:bg-gold transition-colors">Guardar Cliente</button>
             </div>
         </section>
 
+        <!-- Lista de Clientes -->
         <div id="listaClientes" class="space-y-3"></div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getAuth, onAuthStateChanged, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, onSnapshot, collection, query, orderBy, deleteDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         const firebaseConfig = {
@@ -95,55 +100,83 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
+        const appId = "jaddy-inc-finanzas";
 
         let todasLasVentas = [];
         let todosLosClientes = [];
+        let userId = null;
 
-        onAuthStateChanged(auth, (u) => { 
-            if(u){ 
-                escucharVentas(); 
-                escucharClientes(); 
+        onAuthStateChanged(auth, (user) => { 
+            if(user){ 
+                userId = user.uid;
                 document.getElementById('statusDot').style.backgroundColor="#22c55e";
-            } 
+                document.getElementById('statusDot').style.boxShadow="0 0 10px #22c55e";
+                escucharVentas(user.uid); 
+                escucharClientes(user.uid); 
+            } else {
+                // Si no hay sesión, intentamos anónimo o redirigimos (según tu flujo)
+                signInAnonymously(auth);
+            }
         });
 
-        function escucharVentas() { 
-            onSnapshot(collection(db, "ventas_realizadas"), (s) => { 
+        function escucharVentas(uid) { 
+            const qVentas = collection(db, 'artifacts', appId, 'users', uid, 'ventas_realizadas');
+            onSnapshot(qVentas, (s) => { 
                 todasLasVentas = s.docs.map(d => ({id: d.id, ...d.data()})); 
             }); 
         }
 
-        function escucharClientes() { 
-            onSnapshot(query(collection(db, "clientes"), orderBy("nombre", "asc")), (s) => { 
+        function escucharClientes(uid) { 
+            const qClientes = query(collection(db, 'artifacts', appId, 'users', uid, 'clientes'), orderBy("nombre", "asc"));
+            onSnapshot(qClientes, (s) => { 
                 todosLosClientes = s.docs.map(d => ({id_doc: d.id, ...d.data()})); 
                 renderizarClientes(); 
             }); 
         }
 
         window.procesarCliente = async () => {
+            if(!userId) return;
             const editId = document.getElementById('edit-id').value;
+            const btn = document.getElementById('btn-guardar');
+            
             const c = { 
                 codigo: document.getElementById('cli-codigo').value.toUpperCase(),
                 nombre: document.getElementById('cli-nombre').value.toUpperCase(),
                 ubicacion: document.getElementById('cli-ubicacion').value.toUpperCase(),
-                telefono: document.getElementById('cli-telefono').value
+                telefono: document.getElementById('cli-telefono').value,
+                updatedAt: Date.now()
             };
+
             if(!c.nombre) return;
+
             try {
-                if(editId) await updateDoc(doc(db, "clientes", editId), c);
-                else await setDoc(doc(db, "clientes", "CLI-"+Date.now()), c);
+                btn.disabled = true;
+                btn.innerText = "PROCESANDO...";
+                
+                const userClientesRef = collection(db, 'artifacts', appId, 'users', userId, 'clientes');
+
+                if(editId) {
+                    await updateDoc(doc(db, 'artifacts', appId, 'users', userId, 'clientes', editId), c);
+                } else {
+                    const newId = "CLI-" + Date.now();
+                    await setDoc(doc(userClientesRef, newId), c);
+                }
                 limpiar();
-            } catch (e) { alert("Error"); }
+            } catch (e) { 
+                console.error("Error al guardar cliente:", e);
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "Guardar Cliente";
+            }
         };
 
         window.abrirDetalle = (id) => {
             const c = todosLosClientes.find(x => x.id_doc === id);
-            // Sincronización corregida: filtramos por nombre exacto en mayúsculas
-            const ventas = todasLasVentas.filter(v => v.cliente === c.nombre);
+            if(!c) return;
             
-            // Usamos v.total en lugar de v.precio
-            const totalGasto = ventas.reduce((acc, v) => acc + (v.total || 0), 0);
-            const totalDeuda = ventas.filter(v => v.tipo === 'CREDITO').reduce((acc, v) => acc + (v.total || 0), 0);
+            const ventas = todasLasVentas.filter(v => v.cliente === c.nombre);
+            const totalGasto = ventas.reduce((acc, v) => acc + (parseFloat(v.total) || 0), 0);
+            const totalDeuda = ventas.filter(v => v.tipo === 'CREDITO').reduce((acc, v) => acc + (parseFloat(v.total) || 0), 0);
 
             document.getElementById('detalleContenido').innerHTML = `
                 <div class="premium-card p-6 text-center">
@@ -173,13 +206,13 @@
 
                 <div class="space-y-2">
                     <h4 class="text-[8px] font-black text-gray-600 uppercase ml-2 italic">Historial de Despachos</h4>
-                    ${ventas.map(v => `
+                    ${ventas.length === 0 ? '<p class="text-center text-[9px] text-zinc-600 py-4 uppercase font-black">Sin registros de ventas</p>' : ventas.map(v => `
                         <div class="history-item ${v.tipo === 'CREDITO' ? 'credito' : 'contado'} flex justify-between items-center">
                             <div>
-                                <p class="text-[10px] font-black text-white uppercase">${v.producto}</p>
+                                <p class="text-[10px] font-black text-white uppercase">${v.producto || 'Producto'}</p>
                                 <p class="text-[7px] text-gray-500 font-bold uppercase">${v.variante || 'GENERAL'} • ${v.fecha_legible || 'S/F'}</p>
                             </div>
-                            <p class="text-[11px] font-black text-gold">$${(v.total || 0).toLocaleString()}</p>
+                            <p class="text-[11px] font-black text-gold">$${(parseFloat(v.total) || 0).toLocaleString()}</p>
                         </div>
                     `).join('')}
                 </div>
@@ -198,14 +231,15 @@
             const resumenProd = {};
 
             ventas.forEach(v => {
-                if(!resumenProd[v.producto]) resumenProd[v.producto] = { cant: 0, total: 0, var: v.variante };
-                resumenProd[v.producto].cant += (v.cantidad || 1);
-                resumenProd[v.producto].total += (v.total || 0);
+                const key = v.producto || 'Indefinido';
+                if(!resumenProd[key]) resumenProd[key] = { cant: 0, total: 0, var: v.variante };
+                resumenProd[key].cant += (parseFloat(v.cantidad) || 1);
+                resumenProd[key].total += (parseFloat(v.total) || 0);
             });
 
             document.getElementById('listaAnalisisProds').innerHTML = `
                 <h4 class="text-[9px] font-black text-gold uppercase tracking-[3px] mb-4 italic">Análisis de Consumo</h4>
-                ${Object.entries(resumenProd).map(([p, d]) => `
+                ${Object.keys(resumenProd).length === 0 ? '<p class="text-center text-[9px] text-zinc-600 py-10 uppercase font-black">No hay datos suficientes</p>' : Object.entries(resumenProd).map(([p, d]) => `
                     <div class="bg-white/5 p-4 rounded-2xl flex justify-between items-center mb-2 border border-white/5">
                         <div>
                             <p class="text-xs font-black text-white uppercase">${p}</p>
@@ -221,6 +255,28 @@
             document.getElementById('subModalAnalisis').style.display = 'flex';
         };
 
+        window.prepararEdicion = (id) => {
+            const c = todosLosClientes.find(x => x.id_doc === id);
+            if(!c) return;
+            document.getElementById('edit-id').value = c.id_doc;
+            document.getElementById('cli-codigo').value = c.codigo;
+            document.getElementById('cli-nombre').value = c.nombre;
+            document.getElementById('cli-ubicacion').value = c.ubicacion;
+            document.getElementById('cli-telefono').value = c.telefono;
+            cerrarDetalle();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        };
+
+        window.eliminarCliente = async (id) => {
+            if(!userId) return;
+            if(confirm('¿ELIMINAR ESTE CLIENTE Y TODOS SUS REGISTROS?')) {
+                try {
+                    await deleteDoc(doc(db, 'artifacts', appId, 'users', userId, 'clientes', id));
+                    cerrarDetalle();
+                } catch (e) { console.error(e); }
+            }
+        };
+
         window.cerrarAnalisis = () => { document.getElementById('subModalAnalisis').style.display = 'none'; };
         window.cerrarDetalle = () => { document.getElementById('modalDetalle').style.display = 'none'; };
 
@@ -228,8 +284,8 @@
             document.getElementById('listaClientes').innerHTML = todosLosClientes.map(c => `
                 <div class="client-card flex justify-between items-center" onclick="abrirDetalle('${c.id_doc}')">
                     <div>
-                        <p class="text-[7px] text-gold font-black mb-1">${c.codigo}</p>
-                        <h4 class="text-xs font-black uppercase text-white">${c.nombre}</h4>
+                        <p class="text-[7px] text-gold font-black mb-1">${c.codigo || 'S/C'}</p>
+                        <h4 class="text-xs font-black uppercase text-white tracking-wide">${c.nombre}</h4>
                     </div>
                     <i class="fas fa-chevron-right text-[10px] text-gold/40"></i>
                 </div>
@@ -243,11 +299,8 @@
             document.getElementById('cli-ubicacion').value = "";
             document.getElementById('cli-telefono').value = "";
         }
-
-        signInAnonymously(auth);
     </script>
 </body>
 </html>
-
 
 ```
