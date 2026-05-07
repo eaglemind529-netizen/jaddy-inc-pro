@@ -1,4 +1,4 @@
-
+```html
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -11,7 +11,8 @@
         :root { --gold: #D4AF37; --bg: #050505; }
         body { background: var(--bg); color: white; font-family: 'Inter', sans-serif; }
         .gold-border { border: 1px solid rgba(212, 175, 55, 0.2); }
-        .input-field { background: #111; border: 1px solid #222; border-radius: 12px; padding: 14px; width: 100%; color: white; font-size: 14px; text-transform: uppercase; font-weight: bold; }
+        .input-field { background: #111; border: 1px solid #222; border-radius: 12px; padding: 14px; width: 100%; color: white; font-size: 14px; text-transform: uppercase; font-weight: bold; outline: none; }
+        .input-field:focus { border-color: var(--gold); }
         .card-master { background: #0F0F0F; border: 1px solid #1A1A1A; border-radius: 20px; margin-bottom: 12px; overflow: hidden; transition: all 0.3s; }
         .stat-number { font-size: 14px; font-weight: 900; }
         .label-stat { font-size: 7px; text-transform: uppercase; color: #555; font-weight: 800; letter-spacing: 1px; }
@@ -24,17 +25,16 @@
 
     <header class="flex justify-between items-center mb-6">
         <button onclick="window.location.href='index.html'" class="text-[10px] font-black border border-gold/30 px-4 py-2 rounded-full text-gold uppercase">← Inicio</button>
-        <div id="statusDot" class="w-3 h-3 rounded-full bg-red-600 shadow-[0_0_10px_rgba(220,38,38,0.5)]"></div>
+        <div id="statusDot" class="w-3 h-3 rounded-full bg-zinc-800 transition-all duration-500 shadow-[0_0_10px_rgba(0,0,0,0.5)]"></div>
     </header>
 
-    <!-- Registro de Entrada de Mercancía -->
     <section class="bg-[#0A0A0A] p-5 rounded-[24px] gold-border mb-8 shadow-2xl">
         <h2 class="text-center text-gold font-black uppercase text-[10px] tracking-[3px] mb-6 italic">Entrada de Mercancía</h2>
         <div class="space-y-4">
-            <!-- Se llena con productos de la DB -->
-            <select id="sel-producto" class="input-field"></select>
+            <select id="sel-producto" class="input-field">
+                <option value="">Cargando productos...</option>
+            </select>
             
-            <!-- Se llena con variantes del producto seleccionado -->
             <select id="sel-variante" class="input-field">
                 <option value="">Selecciona Variante</option>
             </select>
@@ -52,7 +52,6 @@
         <div class="text-center py-10 opacity-30 italic text-xs uppercase font-bold">Cargando inventario...</div>
     </div>
 
-    <!-- CEREBRO FIREBASE INYECTADO -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
@@ -70,44 +69,53 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
+        const appId = "jaddy-inc-finanzas";
 
         const statusDot = document.getElementById('statusDot');
         const selProd = document.getElementById('sel-producto');
         const selVar = document.getElementById('sel-variante');
+        const btnGuardar = document.getElementById('btnGuardar');
         
         let productosMaestros = [];
         let inventarioData = {};
-
-        signInAnonymously(auth);
+        let userId = null;
 
         onAuthStateChanged(auth, (user) => {
             if (user) {
+                userId = user.uid;
                 statusDot.style.backgroundColor = "#22c55e";
                 statusDot.style.boxShadow = "0 0 10px rgba(34, 197, 94, 0.5)";
-                escucharProductos();
-                escucharInventario();
+                escucharProductos(user.uid);
+                escucharInventario(user.uid);
+            } else {
+                signInAnonymously(auth);
             }
         });
 
-        // 1. Escuchar la lista de productos (de la otra página)
-        function escucharProductos() {
-            onSnapshot(query(collection(db, "productos")), (snap) => {
+        // 1. Escuchar la lista de productos (Privada)
+        function escucharProductos(uid) {
+            const qProds = collection(db, 'artifacts', appId, 'users', uid, 'productos');
+            onSnapshot(qProds, (snap) => {
                 productosMaestros = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-                selProd.innerHTML = '<option value="">-- ELIGE PRODUCTO --</option>' + 
-                    productosMaestros.map(p => `<option value="${p.id}">${p.nombre}</option>`).join('');
+                if(productosMaestros.length === 0) {
+                    selProd.innerHTML = '<option value="">SIN PRODUCTOS REGISTRADOS</option>';
+                } else {
+                    selProd.innerHTML = '<option value="">-- ELIGE PRODUCTO --</option>' + 
+                        productosMaestros.map(p => `<option value="${p.id}">${p.nombre}</option>`).join('');
+                }
             });
         }
 
-        // 2. Escuchar el inventario físico
-        function escucharInventario() {
-            onSnapshot(collection(db, "inventario_master"), (snap) => {
+        // 2. Escuchar el inventario físico (Privado)
+        function escucharInventario(uid) {
+            const qInv = collection(db, 'artifacts', appId, 'users', uid, 'inventario_master');
+            onSnapshot(qInv, (snap) => {
                 inventarioData = {};
                 snap.docs.forEach(d => inventarioData[d.id] = d.data());
                 renderizarInventario();
             });
         }
 
-        // 3. Cambiar variantes al elegir producto
         selProd.onchange = (e) => {
             const prod = productosMaestros.find(p => p.id === e.target.value);
             if (prod && prod.variantes && prod.variantes.length > 0) {
@@ -117,8 +125,8 @@
             }
         };
 
-        // 4. Guardar Entrada
-        document.getElementById('btnGuardar').onclick = async () => {
+        btnGuardar.onclick = async () => {
+            if (!userId) return;
             const prodId = selProd.value;
             const variante = selVar.value;
             const cant = parseInt(document.getElementById('inp-cantidad').value);
@@ -132,23 +140,31 @@
             const docId = `${prodId}_${variante.replace(/\s+/g, '_')}`;
 
             try {
-                await setDoc(doc(db, "inventario_master", docId), {
+                btnGuardar.disabled = true;
+                btnGuardar.innerText = "PROCESANDO...";
+                
+                const masterRef = doc(db, 'artifacts', appId, 'users', userId, 'inventario_master', docId);
+
+                await setDoc(masterRef, {
                     prodId: prodId,
                     nombreProducto: prod.nombre,
                     variante: variante,
                     entradas: increment(cant),
                     ventas: increment(0),
-                    stock: increment(cant)
+                    stock: increment(cant),
+                    lastUpdate: Date.now()
                 }, { merge: true });
 
                 document.getElementById('inp-cantidad').value = "";
                 alert("Stock actualizado con éxito");
             } catch (e) {
-                alert("Error: " + e.message);
+                alert("Error al actualizar: " + e.message);
+            } finally {
+                btnGuardar.disabled = false;
+                btnGuardar.innerText = "Actualizar Stock";
             }
         };
 
-        // 5. Mostrar en pantalla
         window.toggleDetalle = (id) => {
             document.getElementById('det-' + id).classList.toggle('active');
         };
@@ -164,7 +180,7 @@
             });
 
             if (Object.keys(grupos).length === 0) {
-                container.innerHTML = '<div class="text-center py-10 opacity-20 text-xs font-black uppercase">Inventario vacío</div>';
+                container.innerHTML = '<div class="text-center py-10 opacity-20 text-xs font-black uppercase tracking-widest">Inventario vacío</div>';
                 return;
             }
 
@@ -176,7 +192,7 @@
 
                 container.innerHTML += `
                     <div class="card-master">
-                        <button onclick="toggleDetalle('${id}')" class="w-full flex justify-between items-center p-5 bg-[#0D0D0D] active:bg-[#151515]">
+                        <button onclick="toggleDetalle('${id}')" class="w-full flex justify-between items-center p-5 bg-[#0D0D0D] active:bg-[#151515] transition-colors">
                             <div class="text-left">
                                 <h3 class="text-xs font-black uppercase text-white tracking-tighter">${g.nombre}</h3>
                                 <span class="text-[7px] text-gold font-bold uppercase tracking-widest">${g.items.length} Variantes en stock</span>
@@ -228,3 +244,4 @@
 </body>
 </html>
 
+```
