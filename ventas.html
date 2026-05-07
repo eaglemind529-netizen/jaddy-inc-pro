@@ -1,4 +1,4 @@
-```html
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -19,7 +19,6 @@
         #statusDot { width: 12px; height: 12px; border-radius: 50%; }
         input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); }
         
-        /* Estilos para el modo edición */
         .editing-mode { border-color: #3b82f6 !important; box-shadow: 0 0 20px rgba(59, 130, 246, 0.2); }
     </style>
 </head>
@@ -34,7 +33,6 @@
         <h2 id="form-title" class="text-center text-gold font-black uppercase text-[10px] tracking-[4px] mb-6 italic">Panel de Despacho</h2>
         
         <div class="space-y-4">
-            <!-- Campo oculto para ID de edición -->
             <input type="hidden" id="edit-id" value="">
 
             <div class="relative">
@@ -129,7 +127,6 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        const appId = "jaddy-inc-finanzas";
 
         let productosGlobal = [];
         let ventasGlobal = [];
@@ -156,37 +153,29 @@
         });
 
         function cargarDatos(uid) {
-            // CARGAR VENDEDORES - Corregido para conectar con vendedores.html
-            // Según tu archivo, la ruta es: users/UID/vendedores
-            const colVendedores = query(collection(db, "users", uid, "vendedores"), orderBy("nombre", "asc"));
-            onSnapshot(colVendedores, (snap) => {
+            // VENDEDORES - Sincronizado con vendedores.html
+            onSnapshot(query(collection(db, "users", uid, "vendedores"), orderBy("nombre", "asc")), (snap) => {
                 const selVendedor = document.getElementById('sel-vendedor');
-                const vendedores = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-                
-                let options = '<option value="">-- SELECCIONAR VENDEDOR --</option>';
-                vendedores.forEach(v => {
-                    if (v.nombre) {
-                        options += `<option value="${v.nombre}">${v.nombre.toUpperCase()}</option>`;
-                    }
-                });
-                selVendedor.innerHTML = options;
+                const vendedores = snap.docs.map(d => d.data());
+                selVendedor.innerHTML = '<option value="">-- SELECCIONAR VENDEDOR --</option>' + 
+                    vendedores.map(v => `<option value="${v.nombre}">${v.nombre.toUpperCase()}</option>`).join('');
             });
 
-            // PRODUCTOS - Ruta del artefacto
-            onSnapshot(collection(db, 'artifacts', appId, 'users', uid, 'productos'), (snap) => {
+            // PRODUCTOS - Guardados bajo el usuario para persistencia
+            onSnapshot(collection(db, "users", uid, "productos"), (snap) => {
                 productosGlobal = snap.docs.map(d => ({id: d.id, ...d.data()}));
                 document.getElementById('sel-producto').innerHTML = '<option value="">-- SELECCIONAR PRODUCTO --</option>' + 
                     productosGlobal.map(p => `<option value="${p.id}">${p.nombre}</option>`).join('');
             });
 
-            // CLIENTES - Ruta del artefacto
-            onSnapshot(collection(db, 'artifacts', appId, 'users', uid, "clientes"), (snap) => {
+            // CLIENTES - Guardados bajo el usuario
+            onSnapshot(collection(db, "users", uid, "clientes"), (snap) => {
                 const data = snap.docs.map(d => d.data());
                 document.getElementById('sel-cliente').innerHTML = '<option value="">-- CLIENTES --</option>' + 
                     data.map(c => `<option value="${c.nombre}">${c.nombre.toUpperCase()}</option>`).join('');
             });
 
-            // VENTAS - Ruta: users/UID/ventas_realizadas (según tu archivo vendedores.html)
+            // VENTAS - Guardadas bajo el usuario para que no se borren al salir
             onSnapshot(collection(db, "users", uid, "ventas_realizadas"), (snap) => {
                 ventasGlobal = snap.docs.map(d => ({ id: d.id, ...d.data() }));
                 renderVentas(ventasGlobal.sort((a,b) => b.timestamp - a.timestamp));
@@ -261,14 +250,12 @@
             try {
                 if(editId) {
                     await updateDoc(doc(db, "users", userId, "ventas_realizadas", editId), data);
-                    alert("VENTA ACTUALIZADA");
                 } else {
                     await addDoc(collection(db, "users", userId, "ventas_realizadas"), data);
-                    alert("VENTA REGISTRADA");
                 }
                 cancelarEdicion();
             } catch(e) {
-                alert("Error en la operación");
+                alert("Error al guardar en la base de datos");
             }
         };
 
@@ -307,7 +294,7 @@
         };
 
         window.eliminarVenta = async (id) => {
-            if(confirm("¿Estás seguro de eliminar esta venta?")) {
+            if(confirm("¿Eliminar definitivamente esta venta?")) {
                 try {
                     await deleteDoc(doc(db, "users", userId, "ventas_realizadas", id));
                 } catch(e) { alert("Error al eliminar"); }
