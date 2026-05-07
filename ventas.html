@@ -4,190 +4,208 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Ventas Elite | Jaddy INC</title>
+    <title>Registro Jaddy INC</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root { --gold: #D4AF37; --bg: #050505; }
         body { background: var(--bg); color: white; font-family: 'Inter', sans-serif; }
-        .gold-border { border: 1px solid rgba(212, 175, 55, 0.2); }
-        .input-field { background: #111; border: 1px solid #222; border-radius: 12px; padding: 14px; width: 100%; color: white; font-size: 14px; font-weight: bold; text-transform: uppercase; outline: none; }
-        .input-field:focus { border-color: var(--gold); }
-        .tab-btn { flex: 1; padding: 12px; font-size: 10px; font-weight: 900; text-transform: uppercase; border-radius: 10px; border: 1px solid #222; color: #555; background: transparent; transition: 0.3s; }
-        .tab-btn.active { background: white; color: black; border-color: white; shadow: 0 0 15px rgba(255,255,255,0.2); }
-        .btn-main { background: white; color: black; font-weight: 900; border-radius: 15px; width: 100%; padding: 18px; text-transform: uppercase; transition: 0.3s; margin-top: 20px; }
-        .btn-main:active { transform: scale(0.98); opacity: 0.8; }
-        .sale-card { background: #0F0F0F; border: 1px solid #1A1A1A; border-radius: 20px; padding: 15px; margin-bottom: 12px; }
+        .gold-border { border: 1px solid rgba(212, 175, 55, 0.1); }
+        .input-field { background: #111; border: 1px solid #222; border-radius: 14px; padding: 16px; width: 100%; color: white; font-size: 14px; font-weight: 700; text-transform: uppercase; outline: none; appearance: none; }
+        .input-field:focus { border-color: #444; }
+        .tab-btn { flex: 1; padding: 14px; font-size: 11px; font-weight: 900; text-transform: uppercase; border-radius: 12px; border: 1px solid #222; color: #666; background: transparent; transition: 0.3s; }
+        .tab-btn.active { background: white; color: black; border-color: white; }
+        .btn-main { background: white; color: black; font-weight: 900; border-radius: 18px; width: 100%; padding: 20px; text-transform: uppercase; transition: 0.3s; margin-top: 10px; font-size: 14px; letter-spacing: 1px; }
+        .btn-main:active { transform: scale(0.96); }
+        .label-text { font-size: 9px; font-weight: 900; color: #555; text-transform: uppercase; margin-left: 12px; margin-bottom: 6px; display: block; }
     </style>
 </head>
-<body class="p-4 pb-24 max-w-md mx-auto">
+<body class="p-4 max-w-md mx-auto">
 
-    <header class="flex justify-between items-center mb-6">
-        <h1 class="text-xs font-black uppercase tracking-[3px]">Nuevo <span class="text-gold">Registro</span></h1>
-        <div id="statusDot" class="w-3 h-3 rounded-full bg-red-600"></div>
+    <header class="flex justify-between items-center mb-6 pt-2">
+        <h1 class="text-[11px] font-black uppercase tracking-[4px]">Nuevo <span class="text-white">Registro</span></h1>
+        <div id="statusDot" class="w-3 h-3 rounded-full bg-red-600 shadow-[0_0_10px_red]"></div>
     </header>
 
-    <section class="bg-[#0A0A0A] p-5 rounded-[28px] gold-border mb-8">
-        <div class="space-y-4">
-            <!-- Vendedor -->
-            <div>
-                <label class="text-[8px] font-black text-gray-500 uppercase ml-2 mb-1 block">Vendedor</label>
-                <select id="sel-vendedor" class="input-field border-gold/20 text-gold">
-                    <option value="">Cargando vendedores...</option>
-                </select>
-            </div>
-
-            <!-- Cliente -->
-            <div class="flex gap-2">
-                <button id="btn-cli-reg" onclick="toggleCliente(true)" class="tab-btn active">Registrado</button>
-                <button id="btn-cli-ocu" onclick="toggleCliente(false)" class="tab-btn">Ocasional</button>
-            </div>
-            <div id="area-cliente-reg">
-                <select id="sel-cliente" class="input-field"><option value="">Cargando clientes...</option></select>
-            </div>
-            <div id="area-cliente-ocu" class="hidden">
-                <input type="text" id="inp-cliente-nom" placeholder="Nombre del Cliente" class="input-field">
-            </div>
-
-            <!-- Producto -->
-            <div>
-                <label class="text-[8px] font-black text-gray-500 uppercase ml-2 mb-1 block">Producto</label>
-                <select id="sel-producto" class="input-field">
-                    <option value="">-- Elige Producto --</option>
-                </select>
-            </div>
-
-            <!-- Fragancia -->
-            <div>
-                <label class="text-[8px] font-black text-gold uppercase ml-2 mb-1 block">Fragancia / Variedad</label>
-                <select id="sel-variante" class="input-field border-gold/40">
-                    <option value="">Elija Opción</option>
-                </select>
-            </div>
-
-            <!-- Tipo de Venta -->
-            <div class="grid grid-cols-3 gap-2">
-                <button onclick="setTipo('CONTADO')" id="t-contado" class="tab-btn active text-[8px]">Contado</button>
-                <button onclick="setTipo('CREDITO')" id="t-credito" class="tab-btn text-[8px]">Crédito</button>
-                <button onclick="setTipo('MAYOR')" id="t-mayor" class="tab-btn text-[8px]">Mayor</button>
-            </div>
-
-            <div class="grid grid-cols-2 gap-3">
-                <div class="bg-[#111] p-2 rounded-xl border border-white/5">
-                    <label class="text-[8px] font-black text-gray-500 uppercase block text-center">Cant.</label>
-                    <input type="number" id="inp-cantidad" value="1" min="1" class="w-full bg-transparent text-center text-xl font-black outline-none py-1">
-                </div>
-                <div class="bg-[#111] p-2 rounded-xl border border-white/5">
-                    <label class="text-[8px] font-black text-gray-500 uppercase block text-center">Total USD</label>
-                    <input type="text" id="inp-precio" value="0.00" readonly class="w-full bg-transparent text-center text-xl font-black text-green-400 outline-none py-1">
-                </div>
-            </div>
-
-            <button onclick="registrarVenta()" class="btn-main">Guardar Venta</button>
+    <div class="bg-[#0A0A0A] p-6 rounded-[32px] border border-white/5 space-y-5">
+        <!-- Vendedor -->
+        <div>
+            <label class="label-text">Vendedor:</label>
+            <select id="sel-vendedor" class="input-field">
+                <option value="">Cargando...</option>
+            </select>
         </div>
-    </section>
 
-    <h3 class="text-[10px] font-black text-gray-600 uppercase tracking-widest mb-4 text-center">Historial Local</h3>
-    <div id="listaVentas" class="space-y-3 pb-10 text-center text-xs text-gray-500">
-        Iniciando sesión...
+        <!-- Tipo Cliente -->
+        <div class="flex gap-3">
+            <button id="btn-cli-reg" onclick="toggleCliente(true)" class="tab-btn active">Registrado</button>
+            <button id="btn-cli-ocu" onclick="toggleCliente(false)" class="tab-btn">Ocasional</button>
+        </div>
+
+        <!-- Selector Cliente -->
+        <div id="area-cliente-reg">
+            <select id="sel-cliente" class="input-field">
+                <option value="">Cargando...</option>
+            </select>
+        </div>
+        <div id="area-cliente-ocu" class="hidden">
+            <input type="text" id="inp-cliente-nom" placeholder="Nombre del Cliente" class="input-field">
+        </div>
+
+        <!-- Producto -->
+        <div>
+            <label class="label-text">Seleccionar Producto</label>
+            <select id="sel-producto" class="input-field">
+                <option value="">-- ELIGE PRODUCTO --</option>
+            </select>
+        </div>
+
+        <!-- Variedad -->
+        <div>
+            <label class="label-text">Fragancia / Variedad:</label>
+            <select id="sel-variante" class="input-field">
+                <option value="">ELIJA OPCIÓN</option>
+            </select>
+        </div>
+
+        <!-- Tipo Venta -->
+        <div class="grid grid-cols-3 gap-2">
+            <button onclick="setTipo('CONTADO')" id="t-contado" class="tab-btn active text-[9px]">Contado</button>
+            <button onclick="setTipo('CREDITO')" id="t-credito" class="tab-btn text-[9px]">Crédito</button>
+            <button onclick="setTipo('MAYOR')" id="t-mayor" class="tab-btn text-[9px]">Mayor</button>
+        </div>
+
+        <!-- Cantidad y Total -->
+        <div class="grid grid-cols-2 gap-4">
+            <div class="bg-[#111] p-3 rounded-2xl border border-white/5">
+                <label class="label-text text-center ml-0">Cant.</label>
+                <input type="number" id="inp-cantidad" value="1" min="1" class="w-full bg-transparent text-center text-2xl font-black outline-none">
+            </div>
+            <div class="bg-[#111] p-3 rounded-2xl border border-white/5">
+                <label class="label-text text-center ml-0">Total USD</label>
+                <input type="text" id="inp-precio" value="0.00" readonly class="w-full bg-transparent text-center text-2xl font-black text-green-500 outline-none">
+            </div>
+        </div>
+
+        <button onclick="registrarVenta()" class="btn-main">Guardar Venta</button>
+    </div>
+
+    <div class="mt-12 text-center">
+        <p class="text-[9px] font-black text-gray-700 uppercase tracking-[3px]">Historial de Ventas</p>
+        <div id="listaVentas" class="mt-4 space-y-3"></div>
     </div>
 
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getFirestore, collection, onSnapshot, addDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, doc, onSnapshot, addDoc, query, orderBy, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyCrjjeOoXPOtJDXDfrHLOA4Ny0QW2zfVWk",
-            authDomain: "apps-d45d6.firebaseapp.com",
-            projectId: "apps-d45d6",
-            storageBucket: "apps-d45d6.firebasestorage.app",
-            messagingSenderId: "502648373937",
-            appId: "1:502648373937:web:8c3beaa2a6c9289a4d9890"
-        };
-
+        const firebaseConfig = JSON.parse(__firebase_config);
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        
-        let userId = null;
-        let productosMaestros = [];
-        let pSeleccionado = null;
-        let tipoVenta = 'CONTADO';
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+
+        let currentUser = null;
+        let productosData = [];
+        let pSel = null;
+        let tVenta = 'CONTADO';
+
+        // REGLA 3: Autenticación obligatoria antes de cualquier consulta
+        const init = async () => {
+            try {
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+            } catch (err) {
+                console.error("Error Auth:", err);
+            }
+        };
 
         onAuthStateChanged(auth, (user) => {
-            if(user) {
-                userId = user.uid;
-                document.getElementById('statusDot').style.backgroundColor = "#22c55e";
-                cargarDatosPrivados();
+            if (user) {
+                currentUser = user;
+                document.getElementById('statusDot').classList.replace('bg-red-600', 'bg-green-500');
+                document.getElementById('statusDot').classList.add('shadow-[0_0_10px_#22c55e]');
+                cargarTodo();
             }
         });
 
-        function cargarDatosPrivados() {
-            // RUTA CRÍTICA: Ahora todo busca en collection(db, "users", userId, "...")
-            
-            // 1. Vendedores del usuario
-            onSnapshot(collection(db, "users", userId, "vendedores"), snap => {
-                const list = snap.docs.map(d => `<option value="${d.data().nombre}">${d.data().nombre.toUpperCase()}</option>`);
-                document.getElementById('sel-vendedor').innerHTML = list.length ? list.join('') : '<option>Sin vendedores</option>';
-            });
+        function cargarTodo() {
+            if (!currentUser) return;
 
-            // 2. Clientes del usuario
-            onSnapshot(collection(db, "users", userId, "clientes"), snap => {
-                const list = snap.docs.map(d => `<option value="${d.data().nombre}">${d.data().nombre.toUpperCase()}</option>`);
-                document.getElementById('sel-cliente').innerHTML = list.length ? list.join('') : '<option>Sin clientes</option>';
-            });
+            // Vendedores privados
+            onSnapshot(collection(db, 'artifacts', appId, 'users', currentUser.uid, 'vendedores'), snap => {
+                const html = snap.docs.map(d => `<option value="${d.data().nombre}">${d.data().nombre.toUpperCase()}</option>`).join('');
+                document.getElementById('sel-vendedor').innerHTML = html || '<option>SIN VENDEDORES</option>';
+            }, err => console.error(err));
 
-            // 3. Productos del usuario
-            onSnapshot(collection(db, "users", userId, "productos"), snap => {
-                productosMaestros = snap.docs.map(d => ({id: d.id, ...d.data()}));
-                const list = productosMaestros.map(p => `<option value="${p.id}">${p.nombre.toUpperCase()}</option>`);
-                document.getElementById('sel-producto').innerHTML = '<option value="">-- ELIGE PRODUCTO --</option>' + list.join('');
-            });
+            // Clientes privados (Donde debe aparecer DAN)
+            onSnapshot(collection(db, 'artifacts', appId, 'users', currentUser.uid, 'clientes'), snap => {
+                const html = snap.docs.map(d => `<option value="${d.data().nombre}">${d.data().nombre.toUpperCase()}</option>`).join('');
+                document.getElementById('sel-cliente').innerHTML = html || '<option>SIN CLIENTES</option>';
+            }, err => console.error(err));
 
-            // 4. Historial de ventas del usuario
-            const q = query(collection(db, "users", userId, "ventas_realizadas"), orderBy("timestamp", "desc"));
-            onSnapshot(q, snap => {
-                renderVentas(snap.docs.map(d => ({id: d.id, ...d.data()})));
-            });
+            // Productos privados
+            onSnapshot(collection(db, 'artifacts', appId, 'users', currentUser.uid, 'productos'), snap => {
+                productosData = snap.docs.map(d => ({id: d.id, ...d.data()}));
+                const html = productosData.map(p => `<option value="${p.id}">${p.nombre.toUpperCase()}</option>`).join('');
+                document.getElementById('sel-producto').innerHTML = '<option value="">-- ELIGE PRODUCTO --</option>' + html;
+            }, err => console.error(err));
+
+            // Ventas privadas
+            onSnapshot(collection(db, 'artifacts', appId, 'users', currentUser.uid, 'ventas'), snap => {
+                const container = document.getElementById('listaVentas');
+                const docs = snap.docs.map(d => d.data());
+                container.innerHTML = docs.length ? '' : '<p class="text-[10px] text-gray-800 uppercase font-bold">Sin movimientos</p>';
+                docs.forEach(v => {
+                    const card = document.createElement('div');
+                    card.className = "bg-[#0F0F0F] p-4 rounded-2xl border border-white/5 text-left flex justify-between items-center";
+                    card.innerHTML = `
+                        <div>
+                            <p class="text-[10px] font-black">${v.cliente}</p>
+                            <p class="text-[8px] text-gray-500">${v.producto} (${v.variante})</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-green-500 font-black text-xs">$${v.total}</p>
+                            <p class="text-[7px] text-gray-800">${v.tipo}</p>
+                        </div>
+                    `;
+                    container.appendChild(card);
+                });
+            }, err => console.error(err));
         }
 
         document.getElementById('sel-producto').onchange = (e) => {
-            pSeleccionado = productosMaestros.find(x => x.id === e.target.value);
-            const selVar = document.getElementById('sel-variante');
-            
-            if (pSeleccionado) {
-                actualizarPrecio();
-                // Usamos 'variantes' que es el nombre exacto que usas en tu registro
-                const lista = pSeleccionado.variantes || [];
-                if (lista.length > 0) {
-                    selVar.innerHTML = lista.map(v => `<option value="${v}">${v.toUpperCase()}</option>`).join('');
-                } else {
-                    selVar.innerHTML = '<option value="GENERAL">SIN FRAGANCIA</option>';
-                }
-            } else {
-                selVar.innerHTML = '<option value="">Elija Opción</option>';
+            pSel = productosData.find(x => x.id === e.target.value);
+            const sVar = document.getElementById('sel-variante');
+            if (pSel) {
+                const vars = pSel.variantes || pSel.fragancias || [];
+                sVar.innerHTML = vars.length ? vars.map(v => `<option value="${v}">${v.toUpperCase()}</option>`).join('') : '<option value="GENERAL">SIN VARIEDAD</option>';
+                calc();
             }
         };
 
         window.setTipo = (t) => {
-            tipoVenta = t;
+            tVenta = t;
             ['contado', 'credito', 'mayor'].forEach(id => {
                 document.getElementById('t-'+id).classList.toggle('active', id === t.toLowerCase());
             });
-            actualizarPrecio();
+            calc();
         };
 
-        function actualizarPrecio() {
-            if(!pSeleccionado) return;
-            const cant = parseInt(document.getElementById('inp-cantidad').value) || 1;
-            let p = pSeleccionado.precio_detal || 0;
-            if(tipoVenta === 'CREDITO') p = pSeleccionado.precio_credito || p;
-            if(tipoVenta === 'MAYOR') p = pSeleccionado.precio_mayor || p;
-            document.getElementById('inp-precio').value = (p * cant).toFixed(2);
+        function calc() {
+            if (!pSel) return;
+            const c = parseInt(document.getElementById('inp-cantidad').value) || 1;
+            let p = pSel.precio_detal || 0;
+            if (tVenta === 'CREDITO') p = pSel.precio_credito || p;
+            if (tVenta === 'MAYOR') p = pSel.precio_mayor || p;
+            document.getElementById('inp-precio').value = (p * c).toFixed(2);
         }
 
-        document.getElementById('inp-cantidad').oninput = actualizarPrecio;
+        document.getElementById('inp-cantidad').oninput = calc;
 
         window.toggleCliente = (reg) => {
             document.getElementById('btn-cli-reg').classList.toggle('active', reg);
@@ -197,54 +215,31 @@
         };
 
         window.registrarVenta = async () => {
-            const v = document.getElementById('sel-vendedor').value;
-            const c = document.getElementById('btn-cli-reg').classList.contains('active') ? document.getElementById('sel-cliente').value : document.getElementById('inp-cliente-nom').value;
-            const varElegida = document.getElementById('sel-variante').value;
+            if (!currentUser) return;
+            const vend = document.getElementById('sel-vendedor').value;
+            const cli = document.getElementById('btn-cli-reg').classList.contains('active') ? document.getElementById('sel-cliente').value : document.getElementById('inp-cliente-nom').value;
+            const vari = document.getElementById('sel-variante').value;
 
-            if(!v || !c || !pSeleccionado || !varElegida) return alert("Completa todos los campos");
+            if (!vend || !cli || !pSel) return alert("Faltan datos");
 
-            const venta = {
-                vendedor: v,
-                cliente: c.toUpperCase(),
-                producto: pSeleccionado.nombre,
-                variante: varElegida,
+            const vData = {
+                vendedor: vend,
+                cliente: cli.toUpperCase(),
+                producto: pSel.nombre,
+                variante: vari,
                 cantidad: parseInt(document.getElementById('inp-cantidad').value),
-                total: parseFloat(document.getElementById('inp-precio').value),
-                tipo: tipoVenta,
-                timestamp: Date.now(),
-                hora: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
+                total: document.getElementById('inp-precio').value,
+                tipo: tVenta,
+                fecha: new Date().toISOString()
             };
 
             try {
-                await addDoc(collection(db, "users", userId, "ventas_realizadas"), venta);
-                alert("VENTA REGISTRADA CON ÉXITO");
-            } catch(e) { alert("Error: " + e.message); }
+                await addDoc(collection(db, 'artifacts', appId, 'users', currentUser.uid, 'ventas'), vData);
+                alert("VENTA GUARDADA");
+            } catch (e) { alert("Error al guardar"); }
         };
 
-        function renderVentas(ventas) {
-            const container = document.getElementById('listaVentas');
-            if(ventas.length === 0) {
-                container.innerHTML = "No hay ventas hoy";
-                return;
-            }
-            container.innerHTML = ventas.map(v => `
-                <div class="sale-card">
-                    <div class="flex justify-between items-start">
-                        <div class="text-left">
-                            <p class="text-[7px] font-black text-gold tracking-widest">${v.tipo}</p>
-                            <h4 class="text-[11px] font-black uppercase text-white">${v.cliente}</h4>
-                            <p class="text-[9px] text-gray-500 mt-1">${v.producto} (${v.variante})</p>
-                        </div>
-                        <div class="text-right">
-                            <p class="text-green-400 font-black text-sm">$${v.total.toFixed(2)}</p>
-                            <p class="text-[7px] text-gray-700 uppercase">${v.hora}</p>
-                        </div>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        signInAnonymously(auth);
+        init();
     </script>
 </body>
 </html>
