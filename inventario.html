@@ -1,4 +1,4 @@
-```html
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -35,7 +35,7 @@
 
     <div id="auth-guard">
         <div class="loader mb-4"></div>
-        <p class="text-[10px] font-black tracking-[4px] text-gold uppercase animate-pulse">Conectando con productos.html...</p>
+        <p class="text-[10px] font-black tracking-[4px] text-gold uppercase animate-pulse">Sincronizando con Usuarios...</p>
     </div>
 
     <main id="main-content">
@@ -51,14 +51,14 @@
                 <div class="relative">
                     <p class="text-[7px] text-gray-500 absolute -top-2 left-3 bg-[#0A0A0A] px-2 uppercase z-10">Producto Maestro:</p>
                     <select id="sel-producto" class="input-field border-gold/20">
-                        <option value="">OBTENIENDO LISTADO...</option>
+                        <option value="">CARGANDO PRODUCTOS...</option>
                     </select>
                 </div>
                 
                 <div class="relative">
                     <p class="text-[7px] text-gray-500 absolute -top-2 left-3 bg-[#0A0A0A] px-2 uppercase z-10">Variante / Talla:</p>
                     <select id="sel-variante" class="input-field">
-                        <option value="">ESPERANDO PRODUCTO...</option>
+                        <option value="GENERAL">ESTÁNDAR (UNICA)</option>
                     </select>
                 </div>
 
@@ -115,17 +115,8 @@
         let inventarioData = {};
         let userId = null;
 
-        const initAuth = async () => {
-            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                await signInWithCustomToken(auth, __initial_auth_token);
-            } else {
-                await signInAnonymously(auth);
-            }
-        };
-        initAuth();
-
         onAuthStateChanged(auth, (user) => {
-            if (user) {
+            if (user && !user.isAnonymous) {
                 userId = user.uid;
                 authGuard.style.opacity = "0";
                 setTimeout(() => {
@@ -133,43 +124,30 @@
                     mainContent.classList.add('authorized');
                 }, 500);
                 vincularBaseDeDatos(user.uid);
+            } else {
+                window.location.href = 'login.html';
             }
         });
 
         function vincularBaseDeDatos(uid) {
-            // CONEXIÓN DIRECTA A LA COLECCIÓN DE productos.html
-            onSnapshot(collection(db, 'users', uid, 'productos'), (snap) => {
+            // RUTA CORREGIDA: 'usuarios' en lugar de 'users'
+            onSnapshot(collection(db, 'usuarios', uid, 'productos'), (snap) => {
                 productosMaestros = snap.docs.map(d => ({ id: d.id, ...d.data() }));
                 
                 if (productosMaestros.length === 0) {
-                    selProd.innerHTML = '<option value="">SIN PRODUCTOS EN productos.html</option>';
+                    selProd.innerHTML = '<option value="">SIN PRODUCTOS REGISTRADOS</option>';
                 } else {
-                    selProd.innerHTML = '<option value="">-- SELECCIONA PRODUCTO --</option>' + 
-                        productosMaestros.map(p => `<option value="${p.id}">${p.nombre.toUpperCase()}</option>`).join('');
+                    selProd.innerHTML = '<option value="">-- SELECCIONA --</option>' + 
+                        productosMaestros.map(p => `<option value="${p.id}">${p.nombre.toUpperCase()} (${p.codigo})</option>`).join('');
                 }
             });
 
-            // ESCUCHA DEL INVENTARIO MAESTRO
-            onSnapshot(collection(db, 'users', uid, 'inventario_master'), (snap) => {
+            onSnapshot(collection(db, 'usuarios', uid, 'inventario_master'), (snap) => {
                 inventarioData = {};
                 snap.docs.forEach(d => { inventarioData[d.id] = d.data(); });
                 renderizarTabla();
             });
         }
-
-        selProd.onchange = (e) => {
-            const prod = productosMaestros.find(p => p.id === e.target.value);
-            if (prod) {
-                // Se cargan las variantes del producto seleccionado
-                if (prod.variantes && prod.variantes.length > 0) {
-                    selVar.innerHTML = prod.variantes.map(v => `<option value="${v}">${v.toUpperCase()}</option>`).join('');
-                } else {
-                    selVar.innerHTML = '<option value="GENERAL">ESTÁNDAR (SIN TALLAS)</option>';
-                }
-            } else {
-                selVar.innerHTML = '<option value="">ESPERANDO PRODUCTO...</option>';
-            }
-        };
 
         btnGuardar.onclick = async () => {
             const prodId = selProd.value;
@@ -178,22 +156,21 @@
             const cant = parseInt(document.getElementById('inp-cantidad').value);
 
             if (!userId || !prodId || isNaN(cant) || cant <= 0 || !fecha) {
-                alert("Completa todos los datos");
                 return;
             }
 
             const prod = productosMaestros.find(p => p.id === prodId);
-            // El ID del documento de stock combina el ID del producto y la variante
             const docId = `${prodId}_${variante.replace(/\s+/g, '_')}`;
 
             try {
-                btnGuardar.innerText = "ACTUALIZANDO...";
                 btnGuardar.disabled = true;
+                btnGuardar.innerText = "REGISTRANDO...";
 
-                await setDoc(doc(db, 'users', userId, 'inventario_master', docId), {
+                await setDoc(doc(db, 'usuarios', userId, 'inventario_master', docId), {
                     prodId, 
                     variante,
                     nombreProducto: prod.nombre,
+                    codigo: prod.codigo,
                     entradas: increment(cant),
                     ventas: increment(0),
                     stock: increment(cant),
@@ -202,14 +179,15 @@
                 }, { merge: true });
 
                 document.getElementById('inp-cantidad').value = "";
-                btnGuardar.innerText = "¡EXITO!";
+                btnGuardar.innerText = "¡REGISTRADO!";
                 setTimeout(() => { 
                     btnGuardar.disabled = false; 
                     btnGuardar.innerText = "REGISTRAR ENTRADA"; 
                 }, 1000);
             } catch (e) {
-                alert("Error al guardar");
+                console.error(e);
                 btnGuardar.disabled = false;
+                btnGuardar.innerText = "ERROR AL GUARDAR";
             }
         };
 
@@ -224,7 +202,7 @@
             });
 
             if (Object.keys(grupos).length === 0) {
-                displayStock.innerHTML = '<div class="text-center py-10 opacity-20 text-[10px] font-black uppercase">Sin stock registrado</div>';
+                displayStock.innerHTML = '<div class="text-center py-10 opacity-20 text-[10px] font-black uppercase">Sin inventario</div>';
                 return;
             }
 
@@ -238,11 +216,11 @@
                         <button onclick="toggleDetalle('${id}')" class="w-full flex justify-between items-center p-5 bg-[#0D0D0D] active:bg-[#151515]">
                             <div class="text-left">
                                 <h3 class="text-xs font-black uppercase text-white">${g.nombre}</h3>
-                                <p class="text-[6px] text-gray-500 font-bold uppercase mt-1">ÚLTIMO LOTE: ${ultFecha || '---'}</p>
+                                <p class="text-[6px] text-gray-500 font-bold uppercase mt-1">ÚLTIMA ENTRADA: ${ultFecha || '---'}</p>
                             </div>
                             <div class="text-right">
                                 <div class="text-white font-black text-lg leading-none">${total}</div>
-                                <div class="label-stat">Existencia</div>
+                                <div class="label-stat tracking-widest">STOCK TOTAL</div>
                             </div>
                         </button>
                         <div id="det-${id}" class="detalle-variante bg-black/40 border-t border-white/5">
@@ -250,11 +228,11 @@
                                 <div class="p-4 border-b border-white/5 last:border-0 flex justify-between items-center">
                                     <div>
                                         <p class="text-[10px] font-black text-gray-300 uppercase">${s.variante}</p>
-                                        <p class="text-[6px] text-zinc-600 font-bold uppercase">Entrada: ${s.ultimaFechaIngreso || '---'}</p>
+                                        <p class="text-[6px] text-zinc-600 font-bold uppercase">FECHA: ${s.ultimaFechaIngreso || '---'}</p>
                                     </div>
                                     <div class="flex gap-4">
-                                        <div class="text-center"><p class="label-stat">In</p><p class="text-[10px] font-bold text-blue-400">${s.entradas}</p></div>
-                                        <div class="text-center"><p class="label-stat">Stock</p><p class="text-[10px] font-black text-gold">${s.stock}</p></div>
+                                        <div class="text-center"><p class="label-stat">TOTAL IN</p><p class="text-[10px] font-bold text-blue-400">${s.entradas}</p></div>
+                                        <div class="text-center"><p class="label-stat">ACTUAL</p><p class="text-[10px] font-black text-gold">${s.stock}</p></div>
                                     </div>
                                 </div>
                             `).join('')}
