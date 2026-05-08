@@ -14,8 +14,7 @@
         .input-field { background: #111; border: 1px solid #222; border-radius: 12px; padding: 14px; width: 100%; color: white; font-size: 14px; text-transform: uppercase; font-weight: bold; }
         .input-field:focus { border-color: var(--gold); outline: none; background: #151515; }
         .btn-gold { background: var(--gold); color: black; font-weight: 900; border-radius: 12px; width: 100%; padding: 16px; text-transform: uppercase; transition: all 0.3s; box-shadow: 0 4px 15px rgba(212, 175, 55, 0.2); }
-        .btn-gold:disabled { opacity: 0.3; filter: grayscale(1); transform: none !important; }
-        .btn-gold:active { transform: scale(0.98); opacity: 0.9; }
+        .btn-gold:disabled { opacity: 0.3; filter: grayscale(1); cursor: not-allowed; }
         .product-card { background: #0F0F0F; border: 1px solid #1A1A1A; border-radius: 20px; padding: 16px; margin-bottom: 12px; animation: fadeIn 0.5s ease; }
         .variant-tag { background: rgba(212, 175, 55, 0.1); color: var(--gold); border: 1px solid rgba(212, 175, 55, 0.3); padding: 2px 8px; border-radius: 6px; font-size: 9px; font-weight: bold; text-transform: uppercase; }
         
@@ -50,12 +49,18 @@
     <header class="flex justify-between items-center py-4 mb-6">
         <div>
             <h1 class="text-xl font-black italic uppercase tracking-tighter">PRODUCTOS <span class="text-[#D4AF37]">JADDY</span></h1>
-            <p id="authStatusLabel" class="text-[8px] text-red-500 font-bold tracking-[0.3em] uppercase">SISTEMA DESCONECTADO</p>
+            <div class="flex items-center gap-2">
+                <div id="statusDot" class="w-2 h-2 rounded-full bg-red-600 animate-pulse"></div>
+                <p id="authStatusLabel" class="text-[7px] text-red-500 font-bold tracking-[0.2em] uppercase">VERIFICANDO CUENTA...</p>
+            </div>
         </div>
-        <div id="statusDot" class="w-4 h-4 rounded-full bg-red-600 shadow-[0_0_10px_rgba(220,38,38,0.5)] transition-all duration-700"></div>
+        <div class="text-right">
+            <p class="text-[6px] text-gray-600 font-bold uppercase tracking-widest">Database ID:</p>
+            <p id="userIdLabel" class="text-[8px] text-gray-400 font-mono">********</p>
+        </div>
     </header>
 
-    <section class="bg-[#0A0A0A] p-5 rounded-[24px] gold-border mb-8 shadow-2xl">
+    <section id="mainForm" class="bg-[#0A0A0A] p-5 rounded-[24px] gold-border mb-8 shadow-2xl opacity-50 pointer-events-none transition-opacity duration-500">
         <form id="formProd" class="space-y-4">
             <div class="grid grid-cols-3 gap-3">
                 <input type="text" id="codigo" placeholder="CÓD" class="input-field" required>
@@ -69,26 +74,28 @@
                 <input type="number" step="0.01" id="credito" placeholder="CRÉDITO $" class="input-field text-blue-400">
                 <input type="number" step="0.01" id="mayor" placeholder="MAYOR $" class="input-field text-gold font-bold">
             </div>
-            <button type="submit" id="btnEnvio" class="btn-gold" disabled>SINCRONIZANDO...</button>
+            <button type="submit" id="btnEnvio" class="btn-gold">Registrar Producto</button>
         </form>
     </section>
 
-    <div class="mb-4 flex items-center justify-between">
-        <h2 class="text-[10px] font-black text-gray-500 uppercase tracking-widest">Nube Jaddy</h2>
-        <span id="contador" class="text-[10px] font-bold text-gold">VERIFICANDO...</span>
+    <div class="mb-4 flex items-center justify-between px-2">
+        <h2 class="text-[9px] font-black text-gray-500 uppercase tracking-widest flex items-center gap-2">
+            <i class="fas fa-cloud text-gold"></i> Catálogo en la Nube
+        </h2>
+        <span id="contador" class="text-[9px] font-bold text-gold bg-gold/10 px-2 py-1 rounded-md">-- ITEMS</span>
     </div>
     
     <div id="displayLista" class="space-y-3">
-        <div id="loadingState" class="text-center py-10">
-            <i class="fas fa-circle-notch fa-spin text-gold mb-2"></i>
-            <p class="text-[10px] text-gray-600 font-bold uppercase tracking-widest">Esperando confirmación de Google...</p>
+        <div class="text-center py-20">
+            <i class="fas fa-spinner fa-spin text-gold text-2xl mb-4"></i>
+            <p class="text-[10px] text-gray-500 font-black uppercase tracking-[0.3em]">Sincronizando con Google...</p>
         </div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, onSnapshot, query, doc, deleteDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, onSnapshot, query, doc, deleteDoc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCrjjeOoXPOtJDXDfrHLOA4Ny0QW2zfVWk",
@@ -105,6 +112,8 @@
 
         const statusDot = document.getElementById('statusDot');
         const authLabel = document.getElementById('authStatusLabel');
+        const userIdLabel = document.getElementById('userIdLabel');
+        const mainForm = document.getElementById('mainForm');
         const btnEnvio = document.getElementById('btnEnvio');
         const listaDiv = document.getElementById('displayLista');
         const contador = document.getElementById('contador');
@@ -113,8 +122,8 @@
         let currentId = null;
         let tempVariants = [];
 
-        // PERSISTENCIA Y LOGIN
-        const initAuth = async () => {
+        // ASEGURAR QUE LA SESIÓN SE MANTENGA ACTIVA
+        const startApp = async () => {
             try {
                 await setPersistence(auth, browserLocalPersistence);
                 if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
@@ -122,78 +131,96 @@
                 } else {
                     await signInAnonymously(auth);
                 }
-            } catch (e) { console.error("Error Auth:", e); }
+            } catch (error) {
+                console.error("Error crítico de inicio:", error);
+                authLabel.innerText = "ERROR DE PERSISTENCIA";
+            }
         };
-        initAuth();
 
-        // OBSERVAR ESTADO REAL
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 userId = user.uid;
-                // SOLO AQUÍ CAMBIAMOS EL PUNTO A VERDE
-                statusDot.className = "w-4 h-4 rounded-full bg-green-500 shadow-[0_0_15px_rgba(34,197,94,0.8)]";
-                authLabel.innerText = "NUBE CONECTADA: " + user.uid.substring(0,8);
-                authLabel.classList.replace('text-red-500', 'text-gold');
-                btnEnvio.disabled = false;
-                btnEnvio.innerText = "Registrar Producto";
-                cargarProductos(user.uid);
+                userIdLabel.innerText = user.uid;
+                statusDot.className = "w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,1)] animate-none";
+                authLabel.innerText = "SESIÓN SEGURA ACTIVA";
+                authLabel.classList.replace('text-red-500', 'text-green-500');
+                
+                // Desbloquear Interfaz
+                mainForm.classList.remove('opacity-50', 'pointer-events-none');
+                
+                escucharDatos(user.uid);
             } else {
-                statusDot.className = "w-4 h-4 rounded-full bg-red-600 shadow-[0_0_10px_rgba(220,38,38,0.5)]";
-                authLabel.innerText = "ERROR DE CONEXIÓN";
-                btnEnvio.disabled = true;
+                userId = null;
+                mainForm.classList.add('opacity-50', 'pointer-events-none');
+                authLabel.innerText = "RECONECTANDO...";
             }
         });
 
-        function cargarProductos(uid) {
+        function escucharDatos(uid) {
+            // RUTA ABSOLUTA: users / [UID] / productos
             const q = collection(db, 'users', uid, 'productos');
+            
             onSnapshot(q, (snapshot) => {
                 const productos = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-                contador.innerText = `${productos.length} PRODUCTOS GUARDADOS`;
+                contador.innerText = `${productos.length} PRODUCTOS`;
                 dibujar(productos);
-            }, (err) => {
-                console.error(err);
-                listaDiv.innerHTML = '<p class="text-center text-red-500 font-bold py-10">ERROR AL SINCRONIZAR</p>';
+            }, (error) => {
+                console.error("Error de Firestore:", error);
+                listaDiv.innerHTML = `<div class="p-4 bg-red-900/20 border border-red-500/50 rounded-xl text-center">
+                    <p class="text-red-500 text-[10px] font-black uppercase">Error de Acceso a Nube</p>
+                    <p class="text-white/50 text-[8px] mt-1">${error.message}</p>
+                </div>`;
             });
         }
 
         function dibujar(productos) {
             if (productos.length === 0) {
-                listaDiv.innerHTML = '<p class="text-center text-gray-700 py-10 font-bold text-xs uppercase tracking-widest">No hay datos en esta cuenta</p>';
+                listaDiv.innerHTML = `
+                    <div class="text-center py-16 border-2 border-dashed border-white/5 rounded-[32px]">
+                        <i class="fas fa-box-open text-zinc-800 text-3xl mb-4"></i>
+                        <p class="text-[10px] text-zinc-600 font-bold uppercase tracking-widest">Nube Vacía - Registra tu primer item</p>
+                    </div>`;
                 return;
             }
-            listaDiv.innerHTML = productos.map(p => `
-                <div class="product-card">
+            listaDiv.innerHTML = productos.sort((a,b) => b.timestamp - a.timestamp).map(p => `
+                <div class="product-card gold-border">
                     <div class="flex justify-between items-start">
                         <div>
-                            <span class="text-[8px] font-black text-gold uppercase tracking-widest">${p.codigo || 'S/C'}</span>
-                            <h3 class="text-sm font-black uppercase text-white">${p.nombre}</h3>
+                            <div class="flex items-center gap-2 mb-1">
+                                <span class="bg-gold text-black text-[7px] font-black px-1.5 py-0.5 rounded">${p.codigo || 'S/C'}</span>
+                                <span class="text-[7px] text-gray-500 font-mono">${new Date(p.fecha).toLocaleDateString()}</span>
+                            </div>
+                            <h3 class="text-sm font-black uppercase text-white tracking-tight">${p.nombre}</h3>
                         </div>
                         <div class="text-right">
-                            <p class="text-[10px] text-gray-500 font-bold">DETAL</p>
+                            <p class="text-[9px] text-gray-500 font-bold uppercase">Detal</p>
                             <p class="text-sm font-black text-green-400">$${(p.precio_detal || 0).toLocaleString()}</p>
                         </div>
                     </div>
-                    <div class="flex flex-wrap gap-1 mt-2 mb-3">
-                        ${(p.variantes || []).map(v => `<span class="variant-tag">${v}</span>`).join('')}
+                    <div class="flex flex-wrap gap-1 mt-3 mb-4">
+                        ${(p.variantes || []).length > 0 
+                            ? p.variantes.map(v => `<span class="variant-tag">${v}</span>`).join('') 
+                            : '<span class="text-[8px] text-zinc-700 italic">Sin variantes</span>'}
                     </div>
                     <div class="flex justify-between items-center pt-3 border-t border-white/5">
                         <div class="flex gap-4">
                             <div>
-                                <p class="text-[7px] text-gray-500 font-bold uppercase">Mayor</p>
-                                <p class="text-[10px] font-bold text-gold">$${(p.precio_mayor || 0).toLocaleString()}</p>
+                                <p class="text-[7px] text-gray-600 font-black uppercase">Al Mayor</p>
+                                <p class="text-[10px] font-black text-gold">$${(p.precio_mayor || 0).toLocaleString()}</p>
                             </div>
-                            <button onclick="abrirVariantes('${p.id}', '${p.nombre}', ${JSON.stringify(p.variantes || []).replace(/"/g, '&quot;')})" class="flex items-center gap-1 text-[10px] font-bold text-gray-400 bg-white/5 px-3 py-1 rounded-full">
-                                <i class="fas fa-tags text-gold"></i> VARIANTES
+                            <button onclick="abrirVariantes('${p.id}', '${p.nombre}', ${JSON.stringify(p.variantes || []).replace(/"/g, '&quot;')})" class="flex items-center gap-2 text-[9px] font-black text-zinc-400 bg-zinc-900 px-3 py-1.5 rounded-xl border border-white/5">
+                                <i class="fas fa-plus-circle text-gold"></i> VARIANTES
                             </button>
                         </div>
-                        <button onclick="eliminarProd('${p.id}', '${p.nombre}')" class="text-red-500/20 hover:text-red-500 transition-colors px-2">
-                            <i class="fas fa-trash-alt text-xs"></i>
+                        <button onclick="eliminarProd('${p.id}', '${p.nombre}')" class="w-8 h-8 flex items-center justify-center rounded-full bg-red-500/5 text-red-500/20 hover:bg-red-500 hover:text-white transition-all">
+                            <i class="fas fa-trash-alt text-[10px]"></i>
                         </button>
                     </div>
                 </div>
-            `).reverse().join('');
+            `).join('');
         }
 
+        // ACCIONES GLOBALES
         window.abrirVariantes = (id, nombre, variantes) => {
             currentId = id;
             tempVariants = [...variantes];
@@ -207,9 +234,9 @@
         function renderVariantesModal() {
             const container = document.getElementById('listaVariantesModal');
             container.innerHTML = tempVariants.map((v, i) => `
-                <div class="bg-[#111] p-2 rounded-lg border border-[#222] flex justify-between items-center">
-                    <span class="text-[9px] font-bold uppercase text-gold">${v}</span>
-                    <button onclick="quitarVariante(${i})" class="text-red-500 text-[10px] ml-2"><i class="fas fa-times"></i></button>
+                <div class="bg-zinc-900 p-2.5 rounded-xl border border-white/5 flex justify-between items-center">
+                    <span class="text-[10px] font-black uppercase text-gold">${v}</span>
+                    <button onclick="quitarVariante(${i})" class="text-red-500 p-1"><i class="fas fa-times"></i></button>
                 </div>
             `).join('');
         }
@@ -231,29 +258,34 @@
 
         document.getElementById('saveVariantsBtn').onclick = async () => {
             if(!userId || !currentId) return;
+            const btn = document.getElementById('saveVariantsBtn');
+            btn.innerText = "SINCRONIZANDO...";
             try {
                 const docRef = doc(db, 'users', userId, 'productos', currentId);
                 await updateDoc(docRef, { variantes: tempVariants });
                 cerrarModal();
-            } catch (e) { console.error(e); }
+            } catch (e) { alert("Error al guardar variantes"); }
+            btn.innerText = "Guardar Cambios";
         };
 
         window.eliminarProd = async (id, nombre) => {
             if (!userId) return;
-            if (confirm(`¿ELIMINAR ${nombre}?`)) {
+            if (confirm(`¿ELIMINAR ${nombre} DEFINITIVAMENTE DE LA NUBE?`)) {
                 try {
                     await deleteDoc(doc(db, 'users', userId, 'productos', id));
-                } catch (e) { console.error(e); }
+                } catch (e) { alert("Error al eliminar"); }
             }
         };
 
         document.getElementById('formProd').onsubmit = async (e) => {
             e.preventDefault();
-            if (!userId) return;
+            if (!userId) {
+                alert("No hay conexión segura con tu cuenta.");
+                return;
+            }
             
-            const btn = document.getElementById('btnEnvio');
-            btn.innerText = "GUARDANDO...";
-            btn.disabled = true;
+            btnEnvio.innerText = "SUBIENDO A GOOGLE...";
+            btnEnvio.disabled = true;
 
             const datos = {
                 codigo: document.getElementById('codigo').value.toUpperCase().trim(),
@@ -263,7 +295,7 @@
                 precio_credito: parseFloat(document.getElementById('credito').value) || 0,
                 precio_mayor: parseFloat(document.getElementById('mayor').value) || 0,
                 variantes: [],
-                uid: userId,
+                timestamp: Date.now(),
                 fecha: new Date().toISOString()
             };
 
@@ -273,12 +305,15 @@
                 document.getElementById('formProd').reset();
             } catch (error) {
                 console.error(error);
-                alert("Error al guardar. Revisa tu conexión.");
+                alert("ERROR: No se pudo guardar. Revisa tu internet.");
             } finally {
-                btn.innerText = "Registrar Producto";
-                btn.disabled = false;
+                btnEnvio.innerText = "Registrar Producto";
+                btnEnvio.disabled = false;
             }
         };
+
+        // Iniciar aplicación
+        window.onload = startApp;
     </script>
 </body>
 </html>
