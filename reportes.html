@@ -126,26 +126,30 @@
                 userId = user.uid;
                 document.getElementById('loading-screen').style.display = "none";
                 
+                // Fecha de hoy por defecto
                 const hoy = new Date().toISOString().split('T')[0];
                 document.getElementById('fecha-inicio').value = hoy;
                 document.getElementById('fecha-fin').value = hoy;
                 
                 escucharDatos(user.uid); 
             } else {
+                // Redirección si no hay sesión activa
                 window.location.href = "login.html";
             }
         });
 
         function escucharDatos(uid) {
+            // Sincronización en tiempo real de Ventas
             onSnapshot(collection(db, 'usuarios', uid, 'ventas_realizadas'), snap => {
                 ventasData = snap.docs.map(d => ({id: d.id, ...d.data()}));
                 procesarTodo();
-            });
+            }, err => console.error("Error ventas:", err));
 
+            // Sincronización en tiempo real de Egresos
             onSnapshot(collection(db, 'usuarios', uid, 'egresos'), snap => {
                 egresosData = snap.docs.map(d => ({id: d.id, ...d.data()}));
                 procesarTodo();
-            });
+            }, err => console.error("Error egresos:", err));
         }
 
         function procesarTodo() {
@@ -154,28 +158,46 @@
 
             if(!inicio || !fin) return;
 
+            // Función para normalizar fechas de los items y compararlas con el filtro
             const filtrarRango = (itemFecha) => {
+                if(!itemFecha) return false;
                 let fechaNormalizada = itemFecha;
                 if(itemFecha.includes('/')) {
+                    // Convierte DD/MM/YYYY a YYYY-MM-DD
                     const parts = itemFecha.split('/');
                     fechaNormalizada = `${parts[2]}-${parts[1].padStart(2,'0')}-${parts[0].padStart(2,'0')}`;
                 }
                 return fechaNormalizada >= inicio && fechaNormalizada <= fin;
             };
 
+            // Filtrado de colecciones
             const ventasFiltradas = ventasData.filter(v => filtrarRango(v.fecha_venta));
             const egresosFiltrados = egresosData.filter(e => filtrarRango(e.fecha));
 
-            let totalVendido = ventasFiltradas.reduce((acc, v) => acc + v.total, 0);
-            let totalCredito = ventasFiltradas.filter(v => v.tipo === 'CREDITO').reduce((acc, v) => acc + v.total, 0);
-            let totalEgresos = egresosFiltrados.reduce((acc, e) => acc + e.monto, 0);
+            // Cálculos
+            let totalVendido = ventasFiltradas.reduce((acc, v) => acc + (v.total || 0), 0);
+            let totalCredito = ventasFiltradas.filter(v => v.tipo === 'CREDITO').reduce((acc, v) => acc + (v.total || 0), 0);
+            let totalEgresos = egresosFiltrados.reduce((acc, e) => acc + (e.monto || 0), 0);
+            let utilidadNeta = totalVendido - totalEgresos;
 
-            document.getElementById('subtotal-ventas').innerText = `$${totalVendido.toLocaleString()}`;
-            document.getElementById('subtotal-egresos').innerText = `$${totalEgresos.toLocaleString()}`;
-            document.getElementById('total-utilidad').innerText = `$${(totalVendido - totalEgresos).toLocaleString()}`;
-            document.getElementById('total-credito').innerText = `$${totalCredito.toLocaleString()}`;
+            // Actualización de la Interfaz (UI)
+            document.getElementById('subtotal-ventas').innerText = `$${totalVendido.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
+            document.getElementById('subtotal-egresos').innerText = `$${totalEgresos.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
+            document.getElementById('total-utilidad').innerText = `$${utilidadNeta.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
+            document.getElementById('total-credito').innerText = `$${totalCredito.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
             document.getElementById('total-ventas').innerText = ventasFiltradas.length;
 
+            // Color dinámico para la utilidad
+            const utilidadEl = document.getElementById('total-utilidad');
+            if(utilidadNeta < 0) {
+                utilidadEl.classList.add('text-red-500');
+                utilidadEl.classList.remove('text-white');
+            } else {
+                utilidadEl.classList.remove('text-red-500');
+                utilidadEl.classList.add('text-white');
+            }
+
+            // Renderizado de lista de Egresos
             const listaE = document.getElementById('lista-egresos');
             if(egresosFiltrados.length === 0) {
                 listaE.innerHTML = '<p class="text-[9px] text-gray-700 text-center uppercase py-2 italic">Sin gastos en este periodo</p>';
@@ -183,10 +205,10 @@
                 listaE.innerHTML = egresosFiltrados.map(e => `
                     <div class="flex justify-between items-center bg-[#111] p-3 rounded-xl border border-white/5">
                         <div>
-                            <p class="text-[10px] font-bold uppercase">${e.motivo}</p>
-                            <p class="text-[7px] text-gray-500">${e.fecha}</p>
+                            <p class="text-[10px] font-bold uppercase">${e.motivo || 'Gasto General'}</p>
+                            <p class="text-[7px] text-gray-500">${e.fecha || ''}</p>
                         </div>
-                        <p class="text-[10px] font-black text-red-400">-$${e.monto.toLocaleString()}</p>
+                        <p class="text-[10px] font-black text-red-400">-$${(e.monto || 0).toLocaleString('en-US', {minimumFractionDigits: 2})}</p>
                     </div>
                 `).join('');
             }
@@ -220,6 +242,7 @@
             window.open(`https://wa.me/?text=${mensaje}`);
         }
 
+        // Listeners para cambios de fecha
         document.getElementById('fecha-inicio').addEventListener('change', procesarTodo);
         document.getElementById('fecha-fin').addEventListener('change', procesarTodo);
     </script>
