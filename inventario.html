@@ -1,4 +1,4 @@
-
+```html
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -56,15 +56,15 @@
                 </div>
                 
                 <div class="relative">
-                    <p class="text-[7px] text-gray-500 absolute -top-2 left-3 bg-[#0A0A0A] px-2 uppercase z-10">Variante / Talla:</p>
-                    <select id="sel-variante" class="input-field">
-                        <option value="GENERAL">ESTÁNDAR (UNICA)</option>
+                    <p class="text-[7px] text-gold font-black absolute -top-2 left-3 bg-[#0A0A0A] px-2 uppercase z-10">Variante / Talla:</p>
+                    <select id="sel-variante" class="input-field border-white/10">
+                        <option value="GENERAL">SELECCIONE PRODUCTO PRIMERO</option>
                     </select>
                 </div>
 
                 <div class="grid grid-cols-2 gap-3">
                     <div class="relative">
-                        <p class="text-[7px] text-gold font-black absolute -top-2 left-3 bg-[#0A0A0A] px-2 uppercase z-10">Fecha Ingreso:</p>
+                        <p class="text-[7px] text-gray-500 absolute -top-2 left-3 bg-[#0A0A0A] px-2 uppercase z-10">Fecha Ingreso:</p>
                         <input type="date" id="inp-fecha" class="input-field text-xs">
                     </div>
                     <div class="relative">
@@ -85,8 +85,8 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getAuth, onAuthStateChanged, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, onSnapshot, collection, increment, query, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, onSnapshot, collection, increment } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCrjjeOoXPOtJDXDfrHLOA4Ny0QW2zfVWk",
@@ -130,18 +130,21 @@
         });
 
         function vincularBaseDeDatos(uid) {
-            // RUTA CORREGIDA: 'usuarios' en lugar de 'users'
+            // Cargar Productos Maestros para el Select
             onSnapshot(collection(db, 'usuarios', uid, 'productos'), (snap) => {
                 productosMaestros = snap.docs.map(d => ({ id: d.id, ...d.data() }));
                 
                 if (productosMaestros.length === 0) {
                     selProd.innerHTML = '<option value="">SIN PRODUCTOS REGISTRADOS</option>';
                 } else {
-                    selProd.innerHTML = '<option value="">-- SELECCIONA --</option>' + 
+                    const currentVal = selProd.value;
+                    selProd.innerHTML = '<option value="">-- SELECCIONA PRODUCTO --</option>' + 
                         productosMaestros.map(p => `<option value="${p.id}">${p.nombre.toUpperCase()} (${p.codigo})</option>`).join('');
+                    if(currentVal) selProd.value = currentVal;
                 }
             });
 
+            // Cargar Stock Real
             onSnapshot(collection(db, 'usuarios', uid, 'inventario_master'), (snap) => {
                 inventarioData = {};
                 snap.docs.forEach(d => { inventarioData[d.id] = d.data(); });
@@ -149,17 +152,38 @@
             });
         }
 
+        // LÓGICA: Cuando cambia el producto, cargar sus variantes específicas
+        selProd.onchange = () => {
+            const pId = selProd.value;
+            if (!pId) {
+                selVar.innerHTML = '<option value="GENERAL">SELECCIONE PRODUCTO</option>';
+                return;
+            }
+
+            const producto = productosMaestros.find(p => p.id === pId);
+            const variantes = producto.variantes || [];
+
+            if (variantes.length === 0) {
+                selVar.innerHTML = '<option value="GENERAL">GENERAL / ÚNICA</option>';
+            } else {
+                selVar.innerHTML = variantes.map(v => `<option value="${v}">${v}</option>`).join('');
+            }
+        };
+
         btnGuardar.onclick = async () => {
             const prodId = selProd.value;
             const variante = selVar.value;
             const fecha = inpFecha.value;
-            const cant = parseInt(document.getElementById('inp-cantidad').value);
+            const cantInput = document.getElementById('inp-cantidad');
+            const cant = parseInt(cantInput.value);
 
-            if (!userId || !prodId || isNaN(cant) || cant <= 0 || !fecha) {
+            if (!userId || !prodId || isNaN(cant) || cant <= 0 || !fecha || !variante) {
+                alert("Complete todos los campos correctamente");
                 return;
             }
 
             const prod = productosMaestros.find(p => p.id === prodId);
+            // El ID del documento de stock es Producto_Variante para que sean únicos
             const docId = `${prodId}_${variante.replace(/\s+/g, '_')}`;
 
             try {
@@ -178,8 +202,8 @@
                     lastUpdate: Date.now()
                 }, { merge: true });
 
-                document.getElementById('inp-cantidad').value = "";
-                btnGuardar.innerText = "¡REGISTRADO!";
+                cantInput.value = "";
+                btnGuardar.innerText = "¡EXITO!";
                 setTimeout(() => { 
                     btnGuardar.disabled = false; 
                     btnGuardar.innerText = "REGISTRAR ENTRADA"; 
@@ -196,43 +220,53 @@
         function renderizarTabla() {
             displayStock.innerHTML = '';
             const grupos = {};
+            
             Object.values(inventarioData).forEach(item => {
-                if (!grupos[item.prodId]) grupos[item.prodId] = { nombre: item.nombreProducto, items: [] };
+                if (!grupos[item.prodId]) grupos[item.prodId] = { nombre: item.nombreProducto, codigo: item.codigo, items: [] };
                 grupos[item.prodId].items.push(item);
             });
 
             if (Object.keys(grupos).length === 0) {
-                displayStock.innerHTML = '<div class="text-center py-10 opacity-20 text-[10px] font-black uppercase">Sin inventario</div>';
+                displayStock.innerHTML = '<div class="text-center py-10 opacity-20 text-[10px] font-black uppercase tracking-widest">Sin stock registrado</div>';
                 return;
             }
 
             for (let id in grupos) {
                 const g = grupos[id];
-                const total = g.items.reduce((acc, s) => acc + (s.stock || 0), 0);
+                const totalStock = g.items.reduce((acc, s) => acc + (s.stock || 0), 0);
                 const ultFecha = g.items.reduce((max, item) => !max || (item.ultimaFechaIngreso > max) ? item.ultimaFechaIngreso : max, "");
 
                 displayStock.innerHTML += `
-                    <div class="card-master">
-                        <button onclick="toggleDetalle('${id}')" class="w-full flex justify-between items-center p-5 bg-[#0D0D0D] active:bg-[#151515]">
+                    <div class="card-master gold-border">
+                        <button onclick="toggleDetalle('${id}')" class="w-full flex justify-between items-center p-5 bg-[#0D0D0D] active:bg-[#151515] transition-colors">
                             <div class="text-left">
-                                <h3 class="text-xs font-black uppercase text-white">${g.nombre}</h3>
-                                <p class="text-[6px] text-gray-500 font-bold uppercase mt-1">ÚLTIMA ENTRADA: ${ultFecha || '---'}</p>
+                                <span class="text-[7px] bg-gold/10 text-gold px-2 py-0.5 rounded border border-gold/20 font-bold uppercase">${g.codigo}</span>
+                                <h3 class="text-xs font-black uppercase text-white mt-1 tracking-tight">${g.nombre}</h3>
+                                <p class="text-[6px] text-gray-500 font-bold uppercase mt-1 tracking-tighter">ÚLT. INGRESO: ${ultFecha || '---'}</p>
                             </div>
                             <div class="text-right">
-                                <div class="text-white font-black text-lg leading-none">${total}</div>
-                                <div class="label-stat tracking-widest">STOCK TOTAL</div>
+                                <div class="text-white font-black text-xl leading-none">${totalStock}</div>
+                                <div class="label-stat tracking-widest opacity-50">UNIDADES</div>
                             </div>
                         </button>
                         <div id="det-${id}" class="detalle-variante bg-black/40 border-t border-white/5">
                             ${g.items.map(s => `
                                 <div class="p-4 border-b border-white/5 last:border-0 flex justify-between items-center">
                                     <div>
-                                        <p class="text-[10px] font-black text-gray-300 uppercase">${s.variante}</p>
-                                        <p class="text-[6px] text-zinc-600 font-bold uppercase">FECHA: ${s.ultimaFechaIngreso || '---'}</p>
+                                        <div class="flex items-center gap-2">
+                                            <p class="text-[10px] font-black text-gold uppercase">${s.variante}</p>
+                                        </div>
+                                        <p class="text-[6px] text-zinc-600 font-bold uppercase">STOCK ACTUAL</p>
                                     </div>
-                                    <div class="flex gap-4">
-                                        <div class="text-center"><p class="label-stat">TOTAL IN</p><p class="text-[10px] font-bold text-blue-400">${s.entradas}</p></div>
-                                        <div class="text-center"><p class="label-stat">ACTUAL</p><p class="text-[10px] font-black text-gold">${s.stock}</p></div>
+                                    <div class="flex gap-6">
+                                        <div class="text-center">
+                                            <p class="label-stat">ENTRADAS</p>
+                                            <p class="text-[10px] font-bold text-zinc-500">${s.entradas}</p>
+                                        </div>
+                                        <div class="text-center">
+                                            <p class="label-stat text-green-500">DISPONIBLE</p>
+                                            <p class="text-[11px] font-black text-white">${s.stock}</p>
+                                        </div>
                                     </div>
                                 </div>
                             `).join('')}
