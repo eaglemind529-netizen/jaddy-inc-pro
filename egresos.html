@@ -1,4 +1,4 @@
-```html
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -33,7 +33,7 @@
 
     <div id="loading-screen">
         <div class="w-10 h-10 border-2 border-amber-500/20 border-t-amber-500 rounded-full animate-spin mb-4"></div>
-        <p class="text-amber-500 text-[10px] font-black uppercase tracking-widest">Verificando Acceso</p>
+        <p class="text-amber-500 text-[10px] font-black uppercase tracking-widest">Verificando Seguridad</p>
     </div>
 
     <div id="app">
@@ -124,8 +124,9 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getFirestore, collection, doc, addDoc, updateDoc, onSnapshot, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, collection, doc, addDoc, updateDoc, deleteDoc, onSnapshot, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
+        // TUS CREDENCIALES MANTENIDAS
         const firebaseConfig = {
             apiKey: "AIzaSyCrjjeOoXPOtJDXDfrHLOA4Ny0QW2zfVWk",
             authDomain: "apps-d45d6.firebaseapp.com",
@@ -148,11 +149,12 @@
             { id: 'alquiler', label: 'Alquiler', icon: '🏠' },
             { id: 'servicios', label: 'Servicios', icon: '⚡' },
             { id: 'personal', label: 'Personal', icon: '👥' },
-            { id: 'otros', label: 'Otros', icon: '📦' },
-            { id: 'inversion', label: 'Inversión', icon: '💎' }
+            { id: 'deuda', label: 'Deuda', icon: '💸' },
+            { id: 'inversion', label: 'Inversión', icon: '💎' },
+            { id: 'otros', label: 'Otros', icon: '📦' }
         ];
 
-        // SEGURIDAD: Solo acceso si hay login real
+        // --- LÓGICA DE SEGURIDAD IDENTICA AL LOGIN ---
         onAuthStateChanged(auth, (user) => {
             if(user && !user.isAnonymous) {
                 userId = user.uid;
@@ -164,6 +166,7 @@
                 startListening(user.uid);
                 renderCategories();
             } else {
+                // Si no hay login real, fuera.
                 window.location.href = "login.html";
             }
         });
@@ -184,6 +187,7 @@
         }
 
         window.toggleHistory = (show) => { document.getElementById('history-modal').classList.toggle('hidden', !show); };
+        
         window.switchTab = (tab) => {
             document.getElementById('content-egresos').classList.toggle('hidden', tab !== 'egresos');
             document.getElementById('content-deudas').classList.toggle('hidden', tab !== 'deudas');
@@ -192,6 +196,23 @@
         };
 
         window.selectCategory = (id) => { activeCategory = id; renderCategories(); };
+
+        // Función para eliminar o reactivar
+        window.gestionarBorrado = async (coleccion, id) => {
+            if(!userId) return;
+            const docRef = doc(db, 'artifacts', appId, 'users', userId, coleccion, id);
+            
+            if(coleccion === 'prestamos') {
+                const snap = await getDoc(docRef);
+                if(snap.exists() && snap.data().estado === 'pagado') {
+                    // REACIVAR: Si estaba en historial, vuelve a estar activo y sin abonos
+                    await updateDoc(docRef, { estado: 'activo', abonos: [] });
+                    return;
+                }
+            }
+            // Borrado normal para egresos o deudas no pagadas
+            await deleteDoc(docRef);
+        };
 
         function renderCategories() {
             const grid = document.getElementById('categories-grid');
@@ -215,7 +236,12 @@
                             <p class="text-[10px] text-zinc-500">${e.detalle || ''}</p>
                         </div>
                     </div>
-                    <p class="text-red-500 font-black italic text-sm">-$${parseFloat(e.monto).toFixed(2)}</p>
+                    <div class="flex items-center gap-4">
+                        <p class="text-red-500 font-black italic text-sm">-$${parseFloat(e.monto).toFixed(2)}</p>
+                        <button onclick="window.gestionarBorrado('egresos', '${e.id}')" class="text-zinc-700 hover:text-red-500 transition-colors">
+                            <i class="fas fa-trash-alt text-xs"></i>
+                        </button>
+                    </div>
                 </div>`;
             }).join('');
             document.getElementById('total-egresos').innerText = `$${total.toLocaleString()}`;
@@ -230,19 +256,22 @@
                 totalD += (saldo > 0 ? saldo : 0);
                 return `
                 <div class="bg-zinc-900 border border-zinc-800 rounded-3xl overflow-hidden mb-4">
-                    <div class="p-5 bg-zinc-800/10 relative">
-                        <p class="text-white font-black text-sm uppercase italic">${p.acreedor}</p>
-                        <p class="text-amber-500 font-black text-3xl italic mt-1">$${saldo.toLocaleString()}</p>
+                    <div class="p-5 bg-zinc-800/10 flex justify-between items-start">
+                        <div>
+                            <p class="text-white font-black text-sm uppercase italic">${p.acreedor}</p>
+                            <p class="text-amber-500 font-black text-3xl italic mt-1">$${saldo.toLocaleString()}</p>
+                        </div>
+                        <button onclick="window.gestionarBorrado('prestamos', '${p.id}')" class="text-zinc-700 hover:text-red-500 transition-colors p-2">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
                     </div>
                     
                     <div class="p-4 bg-black/40 space-y-4">
-                        <!-- ABONAR -->
                         <div class="flex gap-2">
                             <input type="number" placeholder="Abonar $" id="abono-${p.id}" class="flex-1 bg-black border border-zinc-800 rounded-xl p-3 text-[11px] font-black text-white outline-none">
-                            <button onclick="window.handleAbono('${p.id}')" class="bg-white text-black text-[9px] font-black px-4 rounded-xl italic uppercase">Abonar</button>
+                            <button onclick="window.handleAbono('${p.id}', '${p.acreedor}')" class="bg-white text-black text-[9px] font-black px-4 rounded-xl italic uppercase">Abonar</button>
                         </div>
 
-                        <!-- PRÓRROGA -->
                         <div class="pt-3 border-t border-zinc-800/50 flex gap-2">
                             <div class="flex-1 grid grid-cols-2 gap-2">
                                 <input type="number" placeholder="Días" id="pro-dias-${p.id}" class="bg-black/50 border border-zinc-800 rounded-lg p-2 text-[10px] text-white">
@@ -259,22 +288,25 @@
         function renderHistorial(data) {
             const container = document.getElementById('list-history');
             container.innerHTML = data.map(p => `
-                <div class="bg-zinc-900/40 border border-zinc-800 p-5 rounded-3xl opacity-60">
-                    <div class="flex justify-between items-start">
-                        <div>
-                            <p class="text-[8px] font-black text-emerald-500 uppercase mb-1"><i class="fas fa-check-circle mr-1"></i>Liquidada</p>
-                            <p class="text-white font-black text-sm uppercase italic">${p.acreedor}</p>
-                        </div>
+                <div class="bg-zinc-900/40 border border-zinc-800 p-5 rounded-3xl opacity-60 flex justify-between items-center">
+                    <div>
+                        <p class="text-[8px] font-black text-emerald-500 uppercase mb-1"><i class="fas fa-check-circle mr-1"></i>Liquidada</p>
+                        <p class="text-white font-black text-sm uppercase italic">${p.acreedor}</p>
+                    </div>
+                    <div class="flex items-center gap-4">
                         <p class="text-zinc-500 font-black italic text-sm">$${parseFloat(p.montoTotalConInteres).toFixed(2)}</p>
+                        <button onclick="window.gestionarBorrado('prestamos', '${p.id}')" class="text-amber-500 p-2" title="Reactivar">
+                            <i class="fas fa-undo-alt"></i>
+                        </button>
                     </div>
                 </div>
             `).join('');
         }
 
-        window.handleAbono = async (id) => {
+        window.handleAbono = async (id, acreedor) => {
             const input = document.getElementById(`abono-${id}`);
             const monto = parseFloat(input.value);
-            if(!monto) return;
+            if(!monto || !userId) return;
             const docRef = doc(db, 'artifacts', appId, 'users', userId, 'prestamos', id);
             const snap = await getDoc(docRef);
             if(snap.exists()) {
@@ -284,6 +316,15 @@
                 const update = { abonos: [...abonos, { monto, fecha: new Date().toLocaleDateString() }] };
                 if (totalAbonado >= data.montoTotalConInteres) update.estado = 'pagado';
                 await updateDoc(docRef, update);
+                
+                // Registrar también como egreso automáticamente
+                await addDoc(collection(db, 'artifacts', appId, 'users', userId, 'egresos'), {
+                    categoria: 'deuda',
+                    monto: monto,
+                    detalle: `ABONO A: ${acreedor}`.toUpperCase(),
+                    fecha: new Date().toLocaleDateString()
+                });
+
                 input.value = '';
             }
         };
@@ -293,28 +334,21 @@
             const porcInput = document.getElementById(`pro-porc-${id}`);
             const dias = parseInt(diasInput.value);
             const porc = parseFloat(porcInput.value);
-            
-            if(!dias || !porc) return;
-
+            if(!dias || !porc || !userId) return;
             const docRef = doc(db, 'artifacts', appId, 'users', userId, 'prestamos', id);
             const snap = await getDoc(docRef);
             if(snap.exists()){
                 const data = snap.data();
                 const extra = data.montoTotalConInteres * (porc / 100);
                 const nuevoTotal = data.montoTotalConInteres + extra;
-                
-                await updateDoc(docRef, {
-                    montoTotalConInteres: nuevoTotal,
-                    prorrogaAplicada: true,
-                    ultimaProrroga: { dias, porc, fecha: new Date().toLocaleDateString() }
-                });
-                diasInput.value = '';
-                porcInput.value = '';
+                await updateDoc(docRef, { montoTotalConInteres: nuevoTotal });
+                diasInput.value = ''; porcInput.value = '';
             }
         };
 
         document.getElementById('egreso-form').onsubmit = async (e) => {
             e.preventDefault();
+            if(!userId) return;
             await addDoc(collection(db, 'artifacts', appId, 'users', userId, 'egresos'), {
                 categoria: activeCategory,
                 monto: parseFloat(document.getElementById('egreso-monto').value),
@@ -326,6 +360,7 @@
 
         document.getElementById('deuda-form').onsubmit = async (e) => {
             e.preventDefault();
+            if(!userId) return;
             const mBase = parseFloat(document.getElementById('deuda-monto').value);
             const porc = parseFloat(document.getElementById('deuda-interes-valor').value || 0);
             const mTotal = mBase + (mBase * (porc / 100));
