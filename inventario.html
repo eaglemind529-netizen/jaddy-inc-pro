@@ -9,52 +9,86 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root { --gold: #D4AF37; --bg: #050505; }
-        body { background: var(--bg); color: white; font-family: 'Inter', sans-serif; }
+        body { background: var(--bg); color: white; font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
         .gold-border { border: 1px solid rgba(212, 175, 55, 0.2); }
-        .input-field { background: #111; border: 1px solid #222; border-radius: 12px; padding: 14px; width: 100%; color: white; font-size: 14px; text-transform: uppercase; font-weight: bold; outline: none; }
-        .input-field:focus { border-color: var(--gold); }
-        .card-master { background: #0F0F0F; border: 1px solid #1A1A1A; border-radius: 20px; margin-bottom: 12px; overflow: hidden; transition: all 0.3s; }
+        .input-field { background: #111; border: 1px solid #222; border-radius: 12px; padding: 14px; width: 100%; color: white; font-size: 14px; text-transform: uppercase; font-weight: bold; outline: none; transition: 0.3s; }
+        .input-field:focus { border-color: var(--gold); background: #151515; }
+        .card-master { background: #0F0F0F; border: 1px solid #1A1A1A; border-radius: 24px; margin-bottom: 12px; overflow: hidden; transition: all 0.3s; }
         .stat-number { font-size: 14px; font-weight: 900; }
         .label-stat { font-size: 7px; text-transform: uppercase; color: #555; font-weight: 800; letter-spacing: 1px; }
-        .detalle-variante { display: none; max-height: 0; overflow: hidden; transition: max-height 0.5s ease-out; }
-        .detalle-variante.active { display: block; max-height: 1000px; }
-        .bg-gold-soft { background: rgba(212, 175, 55, 0.1); }
+        .detalle-variante { display: none; overflow: hidden; }
+        .detalle-variante.active { display: block; animation: slideIn 0.3s ease-out; }
+        .bg-gold-soft { background: rgba(212, 175, 55, 0.05); }
+
+        @keyframes slideIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        #blocker { position: fixed; inset: 0; background: #050505; z-index: 999; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.5s ease; }
     </style>
 </head>
 <body class="p-4 pb-24 max-w-md mx-auto">
 
-    <header class="flex justify-between items-center mb-6">
-        <button onclick="window.location.href='index.html'" class="text-[10px] font-black border border-gold/30 px-4 py-2 rounded-full text-gold uppercase">← Inicio</button>
-        <div id="statusDot" class="w-3 h-3 rounded-full bg-zinc-800 transition-all duration-500 shadow-[0_0_10px_rgba(0,0,0,0.5)]"></div>
+    <!-- Bloqueador de Seguridad -->
+    <div id="blocker">
+        <div class="w-10 h-10 border-2 border-gold/20 border-t-gold rounded-full animate-spin mb-4"></div>
+        <p class="text-gold text-[8px] font-black uppercase tracking-[0.4em]">Sincronizando Stock...</p>
+    </div>
+
+    <header class="flex justify-between items-center py-6">
+        <button onclick="window.location.href='index.html'" class="w-10 h-10 flex items-center justify-center rounded-full border border-gold/20 text-gold hover:bg-gold/10">
+            <i class="fas fa-chevron-left text-xs"></i>
+        </button>
+        <h1 class="text-xs font-black uppercase tracking-[0.3em] text-center">Control de <span class="text-gold">Inventario</span></h1>
+        <div id="statusDot" class="w-2 h-2 rounded-full bg-zinc-800 shadow-[0_0_10px_rgba(0,0,0,0.5)]"></div>
     </header>
 
-    <section class="bg-[#0A0A0A] p-5 rounded-[24px] gold-border mb-8 shadow-2xl">
-        <h2 class="text-center text-gold font-black uppercase text-[10px] tracking-[3px] mb-6 italic">Entrada de Mercancía</h2>
+    <!-- Panel de Entrada -->
+    <section class="bg-[#0A0A0A] p-6 rounded-[32px] gold-border mb-8 shadow-2xl">
+        <div class="flex items-center gap-3 mb-6">
+            <div class="w-8 h-8 rounded-lg bg-gold/10 flex items-center justify-center text-gold">
+                <i class="fas fa-plus-circle text-xs"></i>
+            </div>
+            <h2 class="text-[10px] font-black uppercase tracking-widest italic">Cargar Mercancía</h2>
+        </div>
+        
         <div class="space-y-4">
-            <select id="sel-producto" class="input-field">
-                <option value="">Cargando productos...</option>
-            </select>
+            <div class="relative">
+                <select id="sel-producto" class="input-field appearance-none">
+                    <option value="">Cargando productos...</option>
+                </select>
+                <i class="fas fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-[10px] text-gold/40 pointer-events-none"></i>
+            </div>
             
-            <select id="sel-variante" class="input-field">
-                <option value="">Selecciona Variante</option>
-            </select>
+            <div class="relative">
+                <select id="sel-variante" class="input-field appearance-none">
+                    <option value="">-- VARIANTE --</option>
+                </select>
+                <i class="fas fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-[10px] text-gold/40 pointer-events-none"></i>
+            </div>
             
-            <input type="number" id="inp-cantidad" placeholder="CANTIDAD A INGRESAR" class="input-field font-black text-xl text-center text-gold">
+            <div class="grid grid-cols-1 gap-2">
+                <p class="text-[7px] font-black text-gray-500 uppercase ml-2">Cantidad a sumar:</p>
+                <input type="number" id="inp-cantidad" placeholder="0" class="input-field font-black text-2xl text-center text-gold py-6">
+            </div>
             
-            <button id="btnGuardar" class="w-full bg-white text-black font-black py-4 rounded-xl uppercase tracking-widest text-sm active:scale-95 transition-transform">
-                Actualizar Stock
+            <button id="btnGuardar" class="w-full bg-gold text-black font-black py-5 rounded-2xl uppercase tracking-widest text-xs shadow-lg shadow-gold/10 active:scale-95 transition-all">
+                Actualizar Existencias
             </button>
         </div>
     </section>
 
-    <h2 class="text-[10px] font-black text-gray-500 uppercase tracking-[2px] mb-4 ml-2">Control de Stock Maestro</h2>
-    <div id="displayStock" class="space-y-4">
-        <div class="text-center py-10 opacity-30 italic text-xs uppercase font-bold">Cargando inventario...</div>
+    <!-- Lista de Stock Real -->
+    <div class="flex justify-between items-center mb-4 px-2">
+        <h2 class="text-[9px] font-black text-gray-600 uppercase tracking-[2px]">Estado del Almacén</h2>
+        <span id="totalItems" class="text-[8px] font-bold text-gold/60 uppercase">0 Registros</span>
+    </div>
+
+    <div id="displayStock" class="space-y-3">
+        <!-- Render dinámico aquí -->
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, onSnapshot, collection, increment, query } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         const firebaseConfig = {
@@ -69,16 +103,27 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        const appId = "jaddy-inc-finanzas";
 
+        const blocker = document.getElementById('blocker');
         const statusDot = document.getElementById('statusDot');
         const selProd = document.getElementById('sel-producto');
         const selVar = document.getElementById('sel-variante');
         const btnGuardar = document.getElementById('btnGuardar');
+        const displayStock = document.getElementById('displayStock');
         
         let productosMaestros = [];
         let inventarioData = {};
         let userId = null;
+
+        // Iniciar Auth
+        const initAuth = async () => {
+            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                await signInWithCustomToken(auth, __initial_auth_token);
+            } else {
+                await signInAnonymously(auth);
+            }
+        };
+        initAuth();
 
         onAuthStateChanged(auth, (user) => {
             if (user) {
@@ -87,41 +132,46 @@
                 statusDot.style.boxShadow = "0 0 10px rgba(34, 197, 94, 0.5)";
                 escucharProductos(user.uid);
                 escucharInventario(user.uid);
-            } else {
-                signInAnonymously(auth);
+                
+                setTimeout(() => {
+                    blocker.style.opacity = '0';
+                    setTimeout(() => blocker.style.display = 'none', 500);
+                }, 800);
             }
         });
 
-        // 1. Escuchar la lista de productos (Privada)
         function escucharProductos(uid) {
-            const qProds = collection(db, 'artifacts', appId, 'users', uid, 'productos');
-            onSnapshot(qProds, (snap) => {
+            onSnapshot(collection(db, 'users', uid, 'productos'), (snap) => {
                 productosMaestros = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-                if(productosMaestros.length === 0) {
-                    selProd.innerHTML = '<option value="">SIN PRODUCTOS REGISTRADOS</option>';
+                if (productosMaestros.length === 0) {
+                    selProd.innerHTML = '<option value="">SIN PRODUCTOS CREADOS</option>';
                 } else {
-                    selProd.innerHTML = '<option value="">-- ELIGE PRODUCTO --</option>' + 
-                        productosMaestros.map(p => `<option value="${p.id}">${p.nombre}</option>`).join('');
+                    selProd.innerHTML = '<option value="">-- SELECCIONAR PRODUCTO --</option>' + 
+                        productosMaestros.map(p => `<option value="${p.id}">${p.nombre.toUpperCase()}</option>`).join('');
                 }
             });
         }
 
-        // 2. Escuchar el inventario físico (Privado)
         function escucharInventario(uid) {
-            const qInv = collection(db, 'artifacts', appId, 'users', uid, 'inventario_master');
-            onSnapshot(qInv, (snap) => {
+            // Escuchar la colección de inventario maestro
+            onSnapshot(collection(db, 'users', uid, 'inventario_master'), (snap) => {
                 inventarioData = {};
-                snap.docs.forEach(d => inventarioData[d.id] = d.data());
+                snap.docs.forEach(d => {
+                    inventarioData[d.id] = { id_doc: d.id, ...d.data() };
+                });
+                document.getElementById('totalItems').innerText = `${snap.size} VARIANTES REGISTRADAS`;
                 renderizarInventario();
+            }, (error) => {
+                console.error("Error cargando inventario:", error);
             });
         }
 
         selProd.onchange = (e) => {
             const prod = productosMaestros.find(p => p.id === e.target.value);
             if (prod && prod.variantes && prod.variantes.length > 0) {
-                selVar.innerHTML = prod.variantes.map(v => `<option value="${v}">${v}</option>`).join('');
+                selVar.innerHTML = prod.variantes.map(v => `<option value="${v}">${v.toUpperCase()}</option>`).join('');
             } else {
-                selVar.innerHTML = '<option value="GENERAL">SIN VARIANTES</option>';
+                selVar.innerHTML = '<option value="GENERAL">ESTANDAR / UNICA</option>';
             }
         };
 
@@ -129,21 +179,23 @@
             if (!userId) return;
             const prodId = selProd.value;
             const variante = selVar.value;
-            const cant = parseInt(document.getElementById('inp-cantidad').value);
+            const cantInput = document.getElementById('inp-cantidad');
+            const cant = parseInt(cantInput.value);
 
-            if (!prodId || !variante || isNaN(cant)) {
-                alert("Completa todos los campos");
+            if (!prodId || !variante || isNaN(cant) || cant <= 0) {
+                alert("Selecciona un producto y una cantidad válida mayor a 0");
                 return;
             }
 
             const prod = productosMaestros.find(p => p.id === prodId);
+            // Creamos un ID único para la variante de ese producto
             const docId = `${prodId}_${variante.replace(/\s+/g, '_')}`;
 
             try {
                 btnGuardar.disabled = true;
-                btnGuardar.innerText = "PROCESANDO...";
+                btnGuardar.innerText = "ACTUALIZANDO...";
                 
-                const masterRef = doc(db, 'artifacts', appId, 'users', userId, 'inventario_master', docId);
+                const masterRef = doc(db, 'users', userId, 'inventario_master', docId);
 
                 await setDoc(masterRef, {
                     prodId: prodId,
@@ -155,82 +207,104 @@
                     lastUpdate: Date.now()
                 }, { merge: true });
 
-                document.getElementById('inp-cantidad').value = "";
-                alert("Stock actualizado con éxito");
+                cantInput.value = "";
             } catch (e) {
-                alert("Error al actualizar: " + e.message);
+                alert("Error al guardar: " + e.message);
             } finally {
                 btnGuardar.disabled = false;
-                btnGuardar.innerText = "Actualizar Stock";
+                btnGuardar.innerText = "Actualizar Existencias";
             }
         };
 
         window.toggleDetalle = (id) => {
-            document.getElementById('det-' + id).classList.toggle('active');
+            const el = document.getElementById('det-' + id);
+            const icon = document.getElementById('icon-' + id);
+            const isActive = el.classList.contains('active');
+            
+            // Cerrar otros si se desea (opcional)
+            el.classList.toggle('active');
+            icon.style.transform = !isActive ? 'rotate(180deg)' : 'rotate(0deg)';
         };
 
         function renderizarInventario() {
-            const container = document.getElementById('displayStock');
-            container.innerHTML = '';
+            displayStock.innerHTML = '';
             
             const grupos = {};
+            // Agrupar variantes por producto
             Object.values(inventarioData).forEach(item => {
-                if (!grupos[item.prodId]) grupos[item.prodId] = { nombre: item.nombreProducto, items: [] };
+                if (!grupos[item.prodId]) {
+                    grupos[item.prodId] = { 
+                        nombre: item.nombreProducto || "Producto Desconocido", 
+                        items: [] 
+                    };
+                }
                 grupos[item.prodId].items.push(item);
             });
 
             if (Object.keys(grupos).length === 0) {
-                container.innerHTML = '<div class="text-center py-10 opacity-20 text-xs font-black uppercase tracking-widest">Inventario vacío</div>';
+                displayStock.innerHTML = `
+                    <div class="text-center py-16 opacity-30">
+                        <i class="fas fa-box-open text-4xl mb-4 block text-gold/20"></i>
+                        <p class="text-[10px] font-black uppercase tracking-[3px]">Almacén Vacío</p>
+                        <p class="text-[8px] mt-2 italic text-gray-500">Carga mercancía en el panel superior</p>
+                    </div>`;
                 return;
             }
 
             for (let id in grupos) {
                 const g = grupos[id];
                 const totalStock = g.items.reduce((acc, s) => acc + (s.stock || 0), 0);
-                const totalEntradas = g.items.reduce((acc, s) => acc + (s.entradas || 0), 0);
                 const totalVentas = g.items.reduce((acc, s) => acc + (s.ventas || 0), 0);
 
-                container.innerHTML += `
-                    <div class="card-master">
-                        <button onclick="toggleDetalle('${id}')" class="w-full flex justify-between items-center p-5 bg-[#0D0D0D] active:bg-[#151515] transition-colors">
+                displayStock.innerHTML += `
+                    <div class="card-master shadow-lg">
+                        <button onclick="toggleDetalle('${id}')" class="w-full flex justify-between items-center p-5 bg-[#0D0D0D] active:bg-[#121212] transition-all">
                             <div class="text-left">
-                                <h3 class="text-xs font-black uppercase text-white tracking-tighter">${g.nombre}</h3>
-                                <span class="text-[7px] text-gold font-bold uppercase tracking-widest">${g.items.length} Variantes en stock</span>
+                                <h3 class="text-[11px] font-black uppercase text-white tracking-tight leading-none mb-1">${g.nombre}</h3>
+                                <div class="flex items-center gap-2">
+                                    <span class="text-[7px] text-gold font-bold uppercase tracking-widest opacity-60">${g.items.length} VARIANTES</span>
+                                </div>
                             </div>
-                            <div class="text-right">
-                                <div class="text-white font-black text-lg leading-none">${totalStock}</div>
-                                <div class="label-stat">Total Stock</div>
+                            <div class="flex items-center gap-4">
+                                <div class="text-right">
+                                    <div class="text-white font-black text-xl leading-none">${totalStock}</div>
+                                    <div class="label-stat">STOCK TOTAL</div>
+                                </div>
+                                <i id="icon-${id}" class="fas fa-chevron-down text-[10px] text-gold/30 transition-transform duration-300"></i>
                             </div>
                         </button>
                         
                         <div id="det-${id}" class="detalle-variante bg-black/40 border-t border-white/5">
-                            <div class="p-4 grid grid-cols-2 gap-4 border-b border-white/5 bg-white/5">
+                            <div class="grid grid-cols-2 p-3 bg-white/[0.02] border-b border-white/5 text-center">
                                 <div>
-                                    <p class="label-stat">Total Entradas</p>
-                                    <p class="text-[10px] font-black text-blue-400">${totalEntradas}</p>
+                                    <div class="label-stat opacity-40">Salidas Totales</div>
+                                    <div class="text-[10px] font-black text-red-500/80">${totalVentas} UNIDADES</div>
                                 </div>
-                                <div class="text-right">
-                                    <p class="label-stat">Total Ventas</p>
-                                    <p class="text-[10px] font-black text-red-500">${totalVentas}</p>
+                                <div class="border-l border-white/5">
+                                    <div class="label-stat opacity-40">Valoración</div>
+                                    <div class="text-[10px] font-black text-green-500/80">ACTIVO</div>
                                 </div>
                             </div>
-                            
+
                             ${g.items.map(s => `
-                                <div class="p-4 border-b border-white/5 last:border-0">
-                                    <div class="text-[10px] font-black text-gray-300 uppercase mb-3 flex items-center gap-2">
-                                        <i class="fas fa-tag text-[8px] text-gold"></i> ${s.variante}
+                                <div class="p-4 border-b border-white/5 last:border-0 bg-gold-soft/30">
+                                    <div class="flex justify-between items-center mb-3">
+                                        <div class="text-[9px] font-black text-gray-200 uppercase flex items-center gap-2">
+                                            <i class="fas fa-tag text-[7px] text-gold"></i> ${s.variante}
+                                        </div>
+                                        <span class="text-[7px] text-gray-600 font-bold tracking-tighter">ACTUALIZADO: ${new Date(s.lastUpdate).toLocaleDateString()}</span>
                                     </div>
                                     <div class="grid grid-cols-3 gap-2">
-                                        <div class="bg-blue-900/10 p-2 rounded-lg text-center border border-blue-900/20">
-                                            <div class="label-stat text-blue-500">Entró</div>
+                                        <div class="bg-black/60 p-2 rounded-xl text-center border border-white/5">
+                                            <div class="label-stat text-blue-400">Entradas</div>
                                             <div class="stat-number text-blue-100">${s.entradas || 0}</div>
                                         </div>
-                                        <div class="bg-red-900/10 p-2 rounded-lg text-center border border-red-900/20">
-                                            <div class="label-stat text-red-500">Vendió</div>
+                                        <div class="bg-black/60 p-2 rounded-xl text-center border border-white/5">
+                                            <div class="label-stat text-red-400">Ventas</div>
                                             <div class="stat-number text-red-100">${s.ventas || 0}</div>
                                         </div>
-                                        <div class="bg-gold-soft p-2 rounded-lg text-center border border-gold/30">
-                                            <div class="label-stat text-gold">Queda</div>
+                                        <div class="bg-gold/20 p-2 rounded-xl text-center border border-gold/30">
+                                            <div class="label-stat text-gold">Disponible</div>
                                             <div class="stat-number text-gold">${s.stock || 0}</div>
                                         </div>
                                     </div>
