@@ -1,130 +1,58 @@
-
+```html
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Analítica Maestra | Jaddy INC</title>
+    <title>Analítica Real | Jaddy INC</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root { --gold: #D4AF37; --bg: #050505; }
-        body { background: var(--bg); color: white; font-family: 'Inter', sans-serif; margin: 0; overflow-x: hidden; display: none; }
-        .gold-text { color: var(--gold); }
+        body { background: var(--bg); color: white; font-family: 'Inter', sans-serif; margin: 0; display: none; }
         .card-stats { background: #0F0F0F; border: 1px solid #1A1A1A; border-radius: 24px; padding: 20px; }
-        .premium-gradient { background: linear-gradient(135deg, #1a1a1a 0%, #050505 100%); border: 1px solid rgba(212, 175, 55, 0.1); }
-        
-        #ia-launcher { position: fixed; bottom: 20px; right: 20px; width: 60px; height: 60px; background: var(--gold); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; color: black; box-shadow: 0 10px 30px rgba(212, 175, 55, 0.4); z-index: 1000; cursor: pointer; border: 4px solid #050505; }
-        #ia-modal { position: fixed; inset: 0; background: #000; z-index: 1001; display: none; flex-direction: column; }
-        .chat-container { flex: 1; overflow-y: auto; padding: 20px; }
-        .msg { max-width: 85%; margin-bottom: 15px; padding: 12px 16px; border-radius: 20px; font-size: 13px; line-height: 1.4; }
-        .msg-ia { background: #1A1A1A; color: #EEE; border-bottom-left-radius: 4px; border: 1px solid #333; }
-        .msg-user { background: var(--gold); color: black; margin-left: auto; border-bottom-right-radius: 4px; font-weight: 600; }
-        .input-area { background: #111; padding: 15px; border-top: 1px solid #222; display: flex; gap: 10px; align-items: center; }
-        .chat-input { background: #222; border: 1px solid #333; border-radius: 25px; padding: 12px 20px; color: white; flex: 1; outline: none; }
-        
-        .filter-btn { background: #111; border: 1px solid #222; color: #666; padding: 8px 4px; border-radius: 10px; font-size: 7px; font-weight: 900; text-transform: uppercase; transition: 0.3s; letter-spacing: 0.5px; }
-        .filter-btn.active { background: var(--gold); border-color: var(--gold); color: black; box-shadow: 0 4px 15px rgba(212, 175, 55, 0.2); }
-
-        .date-input-custom { background: #111; border: 1px solid #222; color: white; font-size: 10px; padding: 5px; border-radius: 8px; outline: none; width: 100%; }
-        .date-input-custom::-webkit-calendar-picker-indicator { filter: invert(1); cursor: pointer; }
-
-        #loading-screen { 
-            position: fixed; inset: 0; background: #000; z-index: 9999; 
-            display: flex; flex-direction: column; align-items: center; justify-content: center; 
-        }
+        .filter-btn { background: #111; border: 1px solid #222; color: #666; padding: 8px 4px; border-radius: 10px; font-size: 8px; font-weight: 900; text-transform: uppercase; flex: 1; }
+        .filter-btn.active { background: var(--gold); color: black; }
+        #loading-screen { position: fixed; inset: 0; background: #000; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; }
     </style>
 </head>
-<body class="p-4 pb-24 max-w-md mx-auto select-none">
+<body class="p-4 pb-24 max-w-md mx-auto">
 
     <div id="loading-screen">
         <div class="w-10 h-10 border-2 border-gold/20 border-t-gold rounded-full animate-spin mb-4"></div>
-        <p class="text-gold text-[10px] font-black uppercase tracking-widest">Verificando Seguridad</p>
-    </div>
-
-    <div id="ia-launcher" onclick="abrirIA()">
-        <i class="fas fa-robot"></i>
-    </div>
-
-    <div id="ia-modal">
-        <header class="p-4 border-b border-white/10 flex items-center justify-between bg-black">
-            <div class="flex items-center gap-3">
-                <div class="w-8 h-8 rounded-full bg-[#D4AF37] flex items-center justify-center text-black"><i class="fas fa-robot"></i></div>
-                <div>
-                    <h2 class="text-[10px] font-black uppercase text-white tracking-widest">Asistente Jaddy</h2>
-                    <p class="text-[7px] font-bold text-orange-500 uppercase">Análisis en Vivo</p>
-                </div>
-            </div>
-            <button onclick="cerrarIA()" class="text-gray-500 text-xl"><i class="fas fa-times"></i></button>
-        </header>
-        <div id="chatBox" class="chat-container">
-            <div class="msg msg-ia">Hola Jaddy. Acceso verificado. Los datos están sincronizados y el cálculo de egresos incluye los abonos de tus deudas activas.</div>
-        </div>
-        <div class="input-area">
-            <input type="text" class="chat-input" id="chatInput" placeholder="Pregúntame algo..." onkeypress="if(event.key === 'Enter') enviarMsgIA()">
-            <button onclick="enviarMsgIA()" class="w-10 h-10 bg-gold rounded-full text-black flex items-center justify-center"><i class="fas fa-paper-plane"></i></button>
-        </div>
+        <p class="text-gold text-[10px] font-black uppercase tracking-widest">Sincronizando con Firestore...</p>
     </div>
 
     <header class="flex justify-between items-center mb-6">
-        <button onclick="window.history.back()" class="text-[10px] font-black border border-gold/30 px-4 py-2 rounded-full text-[#D4AF37] uppercase">← Regresar</button>
+        <button onclick="window.history.back()" class="text-[10px] font-black border border-gold/30 px-4 py-2 rounded-full text-gold uppercase">← Regresar</button>
         <h1 class="text-[10px] font-black text-white uppercase tracking-[4px]">Financial Intelligence</h1>
     </header>
 
-    <div class="bg-[#0A0A0A] border border-white/5 p-3 rounded-2xl mb-4">
-        <div class="flex items-center justify-between mb-2">
-            <p class="text-[7px] font-black text-gold/60 uppercase tracking-widest"><i class="fas fa-calendar-alt mr-1"></i> Rango Personalizado</p>
-            <button onclick="limpiarCalendario()" class="text-[7px] font-black text-gray-500 uppercase">Limpiar</button>
-        </div>
-        <div class="grid grid-cols-2 gap-3">
-            <div>
-                <label class="text-[6px] font-black text-gray-500 uppercase mb-1 block">Desde</label>
-                <input type="date" id="fecha-inicio" onchange="aplicarCalendario()" class="date-input-custom">
-            </div>
-            <div>
-                <label class="text-[6px] font-black text-gray-500 uppercase mb-1 block">Hasta</label>
-                <input type="date" id="fecha-fin" onchange="aplicarCalendario()" class="date-input-custom">
-            </div>
-        </div>
-    </div>
-
     <div class="flex justify-between gap-1 mb-6">
-        <button onclick="cambiarFiltro('hoy')" id="btn-hoy" class="filter-btn active flex-1">Hoy</button>
-        <button onclick="cambiarFiltro('semana')" id="btn-semana" class="filter-btn flex-1">Semana</button>
-        <button onclick="cambiarFiltro('mes')" id="btn-mes" class="filter-btn flex-1">Mes</button>
-        <button onclick="cambiarFiltro('anio')" id="btn-anio" class="filter-btn flex-1">Año</button>
-        <button onclick="cambiarFiltro('todo')" id="btn-todo" class="filter-btn flex-1 border-gold/40">Todo</button>
+        <button onclick="cambiarFiltro('hoy')" id="btn-hoy" class="filter-btn">Hoy</button>
+        <button onclick="cambiarFiltro('todo')" id="btn-todo" class="filter-btn active">Todo</button>
     </div>
 
-    <section class="mb-8">
-        <h2 class="text-[9px] font-black text-green-400 uppercase tracking-[3px] mb-4 ml-2 text-center">Salud del Negocio (<span id="txt-periodo">Hoy</span>)</h2>
-        <div class="card-stats premium-gradient border-green-500/20">
-            <div class="flex justify-between items-end mb-4">
-                <div>
-                    <p class="text-[7px] font-black text-gray-400 uppercase mb-1">Inversión en Inventario (Vendido)</p>
-                    <h3 id="inversion-total" class="text-2xl font-black text-white">$0.00</h3>
-                </div>
-                <div class="text-right">
-                    <p class="text-[7px] font-black text-green-500 uppercase mb-1">Utilidad Final Real</p>
-                    <h3 id="ganancia-neta" class="text-xl font-black text-green-400">+$0.00</h3>
-                </div>
-            </div>
-            <p id="mensaje-meta" class="text-[9px] text-center italic text-gray-400 mt-4 px-2"></p>
+    <section class="mb-8 text-center">
+        <p class="text-[9px] font-black text-gold uppercase mb-2">Utilidad Neta Real</p>
+        <div class="card-stats bg-gradient-to-br from-[#1a1a1a] to-black border-gold/20">
+            <h3 id="ganancia-neta" class="text-3xl font-black text-green-400">$0.00</h3>
+            <p id="mensaje-status" class="text-[7px] text-gray-500 mt-2 uppercase tracking-widest"></p>
         </div>
     </section>
 
-    <section class="grid grid-cols-1 gap-4 mb-8">
+    <section class="grid grid-cols-1 gap-4">
         <div class="card-stats">
-            <p class="text-[8px] font-black text-gray-500 uppercase tracking-[2px] mb-1 text-center">Ventas Brutas Totales</p>
+            <p class="text-[8px] font-black text-gray-500 uppercase mb-1 text-center">Ventas Brutas</p>
             <h2 id="total-ventas" class="text-4xl font-black text-white text-center">$0.00</h2>
         </div>
         <div class="grid grid-cols-2 gap-4">
             <div class="card-stats border-red-900/30">
-                <p class="text-[7px] font-black text-red-500 uppercase mb-2">Total Gastos + Abonos</p>
+                <p class="text-[7px] font-black text-red-500 uppercase mb-2">Gastos</p>
                 <h3 id="total-egresos" class="text-xl font-black text-white">$0.00</h3>
             </div>
             <div class="card-stats border-blue-900/30">
-                <p class="text-[7px] font-black text-blue-500 uppercase mb-2">CxC (Crédito)</p>
+                <p class="text-[7px] font-black text-blue-500 uppercase mb-2">Por Cobrar</p>
                 <h3 id="total-credito" class="text-xl font-black text-white">$0.00</h3>
             </div>
         </div>
@@ -147,191 +75,73 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        const appId = 'jaddy-inc-finanzas';
         
-        let userId = null;
-        let filtroActual = 'hoy';
+        let store = { ventas: [], productos: [], gastos: [], prestamos: [] };
+        let filtro = 'todo';
 
-        let store = {
-            ventas: [],
-            productos: [],
-            egresos: [],
-            prestamos: []
-        };
-
-        // --- PROTOCOLO DE SEGURIDAD ---
         onAuthStateChanged(auth, (user) => {
-            if(user && !user.isAnonymous) {
-                userId = user.uid;
-                document.body.style.display = "block";
-                document.getElementById('loading-screen').style.display = "none";
-                iniciarSincronizacion(user.uid);
-            } else {
-                window.location.href = "login.html";
+            if (user) {
+                document.getElementById('loading-screen').style.display = 'none';
+                document.body.style.display = 'block';
+                
+                // NOMBRES CORREGIDOS SEGÚN TU CAPTURA DE PANTALLA
+                onSnapshot(collection(db, "ventas"), s => { store.ventas = s.docs.map(d => d.data()); calcular(); });
+                onSnapshot(collection(db, "productos"), s => { store.productos = s.docs.map(d => d.data()); calcular(); });
+                onSnapshot(collection(db, "gastos"), s => { store.gastos = s.docs.map(d => d.data()); calcular(); });
+                onSnapshot(collection(db, "deudas"), s => { store.prestamos = s.docs.map(d => d.data()); calcular(); });
             }
         });
 
-        function iniciarSincronizacion(uid) {
-            // Productos (Inventario General)
-            onSnapshot(collection(db, "productos"), snap => {
-                store.productos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-                renderizarConDebounce();
-            });
-
-            // Egresos del usuario actual
-            onSnapshot(collection(db, 'artifacts', appId, 'users', uid, 'egresos'), snap => {
-                store.egresos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-                renderizarConDebounce();
-            });
-
-            // Préstamos/Deudas del usuario actual (para sumar abonos)
-            onSnapshot(collection(db, 'artifacts', appId, 'users', uid, 'prestamos'), snap => {
-                store.prestamos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-                renderizarConDebounce();
-            });
-
-            // Ventas (Compartidas o del usuario según tu arquitectura anterior)
-            onSnapshot(collection(db, "ventas_realizadas"), snap => {
-                store.ventas = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-                renderizarConDebounce();
-            });
+        function parse(v) {
+            if(!v) return 0;
+            return parseFloat(v.toString().replace(/[$,]/g, '')) || 0;
         }
 
-        let timeoutCalc;
-        function renderizarConDebounce() {
-            clearTimeout(timeoutCalc);
-            timeoutCalc = setTimeout(calcularTodo, 100);
-        }
+        function calcular() {
+            let tVentas = 0; let tGastos = 0; let tInversion = 0; let tCredito = 0;
+            const hoy = new Date().toDateString();
 
-        function parseNum(val) {
-            if (!val) return 0;
-            if (typeof val === 'number') return val;
-            let n = parseFloat(val.toString().replace(/[$,]/g, ''));
-            return isNaN(n) ? 0 : n;
-        }
-
-        function esFechaEnPeriodo(fechaInput) {
-            if (filtroActual === 'todo') return true;
-            if (!fechaInput) return false;
-            
-            let fecha;
-            if (typeof fechaInput === 'number') fecha = new Date(fechaInput);
-            else if (typeof fechaInput === 'string' && fechaInput.includes('/')) {
-                const parts = fechaInput.split('/');
-                fecha = new Date(parts[2], parts[1]-1, parts[0]);
-            } else fecha = new Date(fechaInput);
-
-            if (isNaN(fecha.getTime())) return false;
-            const ahora = new Date();
-            
-            if (filtroActual === 'custom') {
-                const fInicioInput = document.getElementById('fecha-inicio').value;
-                const fFinInput = document.getElementById('fecha-fin').value;
-                if(!fInicioInput || !fFinInput) return false;
-                const fInicio = new Date(fInicioInput + "T00:00:00");
-                const fFin = new Date(fFinInput + "T23:59:59");
-                return fecha >= fInicio && fecha <= fFin;
-            }
-
-            if (filtroActual === 'hoy') return fecha.toDateString() === ahora.toDateString();
-            if (filtroActual === 'semana') {
-                const hoy = new Date();
-                const diff = hoy.getDate() - hoy.getDay() + (hoy.getDay() === 0 ? -6 : 1);
-                const lunes = new Date(hoy.setDate(diff));
-                lunes.setHours(0,0,0,0);
-                return fecha >= lunes;
-            }
-            if (filtroActual === 'mes') return fecha.getMonth() === ahora.getMonth() && fecha.getFullYear() === ahora.getFullYear();
-            if (filtroActual === 'anio') return fecha.getFullYear() === ahora.getFullYear();
-            return true;
-        }
-
-        function calcularTodo() {
-            let totalVentas = 0;
-            let totalGastos = 0;
-            let totalAbonos = 0;
-            let totalCredito = 0;
-            let costoVendido = 0;
-
-            // 1. Egresos Directos
-            store.egresos.forEach(e => {
-                if (esFechaEnPeriodo(e.fecha)) {
-                    totalGastos += parseNum(e.monto);
-                }
-            });
-
-            // 2. Abonos de Préstamos (Importante: Suma como egreso lo pagado a deudas)
-            store.prestamos.forEach(p => {
-                if (p.abonos && Array.isArray(p.abonos)) {
-                    p.abonos.forEach(abono => {
-                        if (esFechaEnPeriodo(abono.fecha)) {
-                            totalAbonos += parseNum(abono.monto);
-                        }
-                    });
-                }
-            });
-
-            // 3. Ventas y Costos
             store.ventas.forEach(v => {
-                if (esFechaEnPeriodo(v.fecha)) {
-                    const monto = parseNum(v.precio || v.total || 0);
-                    const cant = parseInt(v.cantidad || 1);
-                    totalVentas += monto;
+                // Si no hay fecha, permitimos que pase en el filtro "todo"
+                let fechaV = v.fecha?.seconds ? new Date(v.fecha.seconds * 1000).toDateString() : (v.fecha ? new Date(v.fecha).toDateString() : null);
+                
+                if (filtro === 'todo' || fechaV === hoy) {
+                    const monto = parse(v.total || v.precio);
+                    tVentas += monto;
 
-                    if ((v.tipo || v.metodo || '').toUpperCase().includes('CREDITO')) {
-                        totalCredito += monto;
-                    }
+                    // Costo
+                    const p = store.productos.find(prod => prod.nombre === v.producto);
+                    tInversion += (parse(p?.costo) * (v.cantidad || 1));
 
-                    const prod = store.productos.find(p => p.nombre === v.producto);
-                    if (prod) {
-                        costoVendido += (parseNum(prod.costo) * cant);
+                    // Crédito
+                    if ((v.metodo || v.tipo || "").toLowerCase().includes("credito")) {
+                        let abonos = 0;
+                        v.abonos?.forEach(a => abonos += parse(a.monto));
+                        tCredito += (monto - abonos);
                     }
                 }
             });
 
-            const totalEgresosAbonos = totalGastos + totalAbonos;
-            const utilidadFinal = totalVentas - costoVendido - totalEgresosAbonos;
-
-            requestAnimationFrame(() => {
-                document.getElementById('total-ventas').innerText = `$${totalVentas.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
-                document.getElementById('total-egresos').innerText = `$${totalEgresosAbonos.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
-                document.getElementById('total-credito').innerText = `$${totalCredito.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
-                document.getElementById('inversion-total').innerText = `$${costoVendido.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
-                document.getElementById('ganancia-neta').innerText = `${utilidadFinal >= 0 ? '+' : ''}$${utilidadFinal.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
-                
-                const meta = document.getElementById('mensaje-meta');
-                meta.innerHTML = utilidadFinal < 0 
-                    ? `⚠️ Pérdida operativa de <span class="text-white font-bold">$${Math.abs(utilidadFinal).toFixed(2)}</span>`
-                    : `✅ Utilidad neta real de <span class="text-white font-bold">$${utilidadFinal.toFixed(2)}</span>`;
-                meta.className = `text-[9px] text-center italic mt-4 px-2 ${utilidadFinal < 0 ? 'text-red-400' : 'text-green-400'}`;
+            store.gastos.forEach(g => {
+                let fechaG = g.fecha?.seconds ? new Date(g.fecha.seconds * 1000).toDateString() : (g.fecha ? new Date(g.fecha).toDateString() : null);
+                if (filtro === 'todo' || fechaG === hoy) tGastos += parse(g.monto);
             });
+
+            const neta = tVentas - tGastos - tInversion;
+
+            document.getElementById('total-ventas').innerText = `$${tVentas.toLocaleString()}`;
+            document.getElementById('total-egresos').innerText = `$${tGastos.toLocaleString()}`;
+            document.getElementById('total-credito').innerText = `$${tCredito.toLocaleString()}`;
+            document.getElementById('ganancia-neta').innerText = `$${neta.toLocaleString()}`;
+            document.getElementById('mensaje-status').innerText = `${store.ventas.length} ventas procesadas`;
         }
 
-        window.limpiarCalendario = () => {
-            document.getElementById('fecha-inicio').value = '';
-            document.getElementById('fecha-fin').value = '';
-            cambiarFiltro('hoy');
-        };
-
-        window.aplicarCalendario = () => {
-            filtroActual = 'custom';
+        window.cambiarFiltro = (f) => {
+            filtro = f;
             document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-            document.getElementById('txt-periodo').innerText = `Personalizado`;
-            calcularTodo();
-        };
-
-        window.cambiarFiltro = (filtro) => {
-            filtroActual = filtro;
-            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-            const btn = document.getElementById(`btn-${filtro}`);
-            if(btn) btn.classList.add('active');
-            const labels = { hoy: 'Hoy', semana: 'Esta Semana', mes: 'Este Mes', anio: 'Este Año', todo: 'Historial' };
-            document.getElementById('txt-periodo').innerText = labels[filtro];
-            calcularTodo();
-        };
-
-        window.abrirIA = () => { document.getElementById('ia-modal').style.display = 'flex'; };
-        window.cerrarIA = () => { document.getElementById('ia-modal').style.display = 'none'; };
+            document.getElementById('btn-'+f).classList.add('active');
+            calcular();
+        }
     </script>
 </body>
 </html>
