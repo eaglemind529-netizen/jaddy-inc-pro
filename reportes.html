@@ -1,4 +1,4 @@
-```html
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root { --gold: #D4AF37; --bg: #050505; }
-        body { background: var(--bg); color: white; font-family: 'Inter', sans-serif; margin: 0; overflow-x: hidden; }
+        body { background: var(--bg); color: white; font-family: 'Inter', sans-serif; margin: 0; overflow-x: hidden; display: none; }
         .gold-text { color: var(--gold); }
         .card-stats { background: #0F0F0F; border: 1px solid #1A1A1A; border-radius: 24px; padding: 20px; }
         .premium-gradient { background: linear-gradient(135deg, #1a1a1a 0%, #050505 100%); border: 1px solid rgba(212, 175, 55, 0.1); }
@@ -28,9 +28,19 @@
 
         .date-input-custom { background: #111; border: 1px solid #222; color: white; font-size: 10px; padding: 5px; border-radius: 8px; outline: none; width: 100%; }
         .date-input-custom::-webkit-calendar-picker-indicator { filter: invert(1); cursor: pointer; }
+
+        #loading-screen { 
+            position: fixed; inset: 0; background: #000; z-index: 9999; 
+            display: flex; flex-direction: column; align-items: center; justify-content: center; 
+        }
     </style>
 </head>
-<body class="p-4 pb-24 max-w-md mx-auto">
+<body class="p-4 pb-24 max-w-md mx-auto select-none">
+
+    <div id="loading-screen">
+        <div class="w-10 h-10 border-2 border-gold/20 border-t-gold rounded-full animate-spin mb-4"></div>
+        <p class="text-gold text-[10px] font-black uppercase tracking-widest">Verificando Seguridad</p>
+    </div>
 
     <div id="ia-launcher" onclick="abrirIA()">
         <i class="fas fa-robot"></i>
@@ -48,7 +58,7 @@
             <button onclick="cerrarIA()" class="text-gray-500 text-xl"><i class="fas fa-times"></i></button>
         </header>
         <div id="chatBox" class="chat-container">
-            <div class="msg msg-ia">Hola Freddy. He corregido el error de los números saltarines. Ahora la analítica es estable y suma correctamente los abonos de préstamos como parte de tus egresos.</div>
+            <div class="msg msg-ia">Hola Jaddy. Acceso verificado. Los datos están sincronizados y el cálculo de egresos incluye los abonos de tus deudas activas.</div>
         </div>
         <div class="input-area">
             <input type="text" class="chat-input" id="chatInput" placeholder="Pregúntame algo..." onkeypress="if(event.key === 'Enter') enviarMsgIA()">
@@ -121,8 +131,9 @@
     </section>
 
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCrjjeOoXPOtJDXDfrHLOA4Ny0QW2zfVWk",
@@ -134,10 +145,13 @@
         };
 
         const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
         const db = getFirestore(app);
         const appId = 'jaddy-inc-finanzas';
         
-        // Almacenes de datos estables
+        let userId = null;
+        let filtroActual = 'hoy';
+
         let store = {
             ventas: [],
             productos: [],
@@ -145,32 +159,44 @@
             prestamos: []
         };
 
-        let filtroActual = 'hoy';
+        // --- PROTOCOLO DE SEGURIDAD ---
+        onAuthStateChanged(auth, (user) => {
+            if(user && !user.isAnonymous) {
+                userId = user.uid;
+                document.body.style.display = "block";
+                document.getElementById('loading-screen').style.display = "none";
+                iniciarSincronizacion(user.uid);
+            } else {
+                window.location.href = "login.html";
+            }
+        });
 
-        function iniciar() {
-            // Escuchar cada colección y guardar con ID único para evitar duplicados/parpadeo
+        function iniciarSincronizacion(uid) {
+            // Productos (Inventario General)
             onSnapshot(collection(db, "productos"), snap => {
                 store.productos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
                 renderizarConDebounce();
             });
 
-            onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'egresos'), snap => {
+            // Egresos del usuario actual
+            onSnapshot(collection(db, 'artifacts', appId, 'users', uid, 'egresos'), snap => {
                 store.egresos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
                 renderizarConDebounce();
             });
 
-            onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'prestamos'), snap => {
+            // Préstamos/Deudas del usuario actual (para sumar abonos)
+            onSnapshot(collection(db, 'artifacts', appId, 'users', uid, 'prestamos'), snap => {
                 store.prestamos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
                 renderizarConDebounce();
             });
 
+            // Ventas (Compartidas o del usuario según tu arquitectura anterior)
             onSnapshot(collection(db, "ventas_realizadas"), snap => {
                 store.ventas = snap.docs.map(d => ({ id: d.id, ...d.data() }));
                 renderizarConDebounce();
             });
         }
 
-        // Debounce para evitar que los números "bailen" cuando hay ráfagas de cambios
         let timeoutCalc;
         function renderizarConDebounce() {
             clearTimeout(timeoutCalc);
@@ -199,8 +225,11 @@
             const ahora = new Date();
             
             if (filtroActual === 'custom') {
-                const fInicio = new Date(document.getElementById('fecha-inicio').value + "T00:00:00");
-                const fFin = new Date(document.getElementById('fecha-fin').value + "T23:59:59");
+                const fInicioInput = document.getElementById('fecha-inicio').value;
+                const fFinInput = document.getElementById('fecha-fin').value;
+                if(!fInicioInput || !fFinInput) return false;
+                const fInicio = new Date(fInicioInput + "T00:00:00");
+                const fFin = new Date(fFinInput + "T23:59:59");
                 return fecha >= fInicio && fecha <= fFin;
             }
 
@@ -224,19 +253,18 @@
             let totalCredito = 0;
             let costoVendido = 0;
 
-            // 1. Egresos Directos (Tabla Egresos)
+            // 1. Egresos Directos
             store.egresos.forEach(e => {
-                if (esFechaEnPeriodo(e.createdAt || e.fecha)) {
+                if (esFechaEnPeriodo(e.fecha)) {
                     totalGastos += parseNum(e.monto);
                 }
             });
 
-            // 2. Abonos de Préstamos (Solo los abonos realizados en el periodo)
+            // 2. Abonos de Préstamos (Importante: Suma como egreso lo pagado a deudas)
             store.prestamos.forEach(p => {
                 if (p.abonos && Array.isArray(p.abonos)) {
                     p.abonos.forEach(abono => {
-                        // El abono.id suele ser el timestamp de cuando se hizo
-                        if (esFechaEnPeriodo(abono.id || abono.fecha)) {
+                        if (esFechaEnPeriodo(abono.fecha)) {
                             totalAbonos += parseNum(abono.monto);
                         }
                     });
@@ -254,7 +282,6 @@
                         totalCredito += monto;
                     }
 
-                    // Calcular inversión basada en costo del producto
                     const prod = store.productos.find(p => p.nombre === v.producto);
                     if (prod) {
                         costoVendido += (parseNum(prod.costo) * cant);
@@ -265,7 +292,6 @@
             const totalEgresosAbonos = totalGastos + totalAbonos;
             const utilidadFinal = totalVentas - costoVendido - totalEgresosAbonos;
 
-            // Actualización de UI Segura
             requestAnimationFrame(() => {
                 document.getElementById('total-ventas').innerText = `$${totalVentas.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
                 document.getElementById('total-egresos').innerText = `$${totalEgresosAbonos.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
@@ -275,8 +301,8 @@
                 
                 const meta = document.getElementById('mensaje-meta');
                 meta.innerHTML = utilidadFinal < 0 
-                    ? `⚠️ Estás por debajo del punto de equilibrio por <span class="text-white font-bold">$${Math.abs(utilidadFinal).toFixed(2)}</span>`
-                    : `✅ Tu beneficio neto real es de <span class="text-white font-bold">$${utilidadFinal.toFixed(2)}</span>`;
+                    ? `⚠️ Pérdida operativa de <span class="text-white font-bold">$${Math.abs(utilidadFinal).toFixed(2)}</span>`
+                    : `✅ Utilidad neta real de <span class="text-white font-bold">$${utilidadFinal.toFixed(2)}</span>`;
                 meta.className = `text-[9px] text-center italic mt-4 px-2 ${utilidadFinal < 0 ? 'text-red-400' : 'text-green-400'}`;
             });
         }
@@ -288,14 +314,10 @@
         };
 
         window.aplicarCalendario = () => {
-            const fInicio = document.getElementById('fecha-inicio').value;
-            const fFin = document.getElementById('fecha-fin').value;
-            if(fInicio && fFin) {
-                filtroActual = 'custom';
-                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-                document.getElementById('txt-periodo').innerText = `Personalizado`;
-                calcularTodo();
-            }
+            filtroActual = 'custom';
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById('txt-periodo').innerText = `Personalizado`;
+            calcularTodo();
         };
 
         window.cambiarFiltro = (filtro) => {
@@ -310,8 +332,6 @@
 
         window.abrirIA = () => { document.getElementById('ia-modal').style.display = 'flex'; };
         window.cerrarIA = () => { document.getElementById('ia-modal').style.display = 'none'; };
-
-        iniciar();
     </script>
 </body>
 </html>
