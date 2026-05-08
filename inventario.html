@@ -126,7 +126,6 @@
         let inventarioData = {};
         let userId = null;
 
-        // Mantener conexión con login.html
         onAuthStateChanged(auth, (user) => {
             if (user && !user.isAnonymous) {
                 userId = user.uid;
@@ -142,8 +141,8 @@
         });
 
         function vincularBaseDeDatos(uid) {
-            // CORRECCIÓN: Ruta correcta de productos maestros
-            onSnapshot(collection(db, 'users', uid, 'productos'), (snap) => {
+            // UNIFICADO: Escuchamos 'usuarios' para traer los productos y sus variantes
+            onSnapshot(collection(db, 'usuarios', uid, 'productos'), (snap) => {
                 productosMaestros = snap.docs.map(d => ({ id: d.id, ...d.data() }));
                 
                 if (productosMaestros.length === 0) {
@@ -152,11 +151,13 @@
                     const currentVal = selProd.value;
                     selProd.innerHTML = '<option value="">-- SELECCIONA PRODUCTO --</option>' + 
                         productosMaestros.map(p => `<option value="${p.id}">${p.nombre.toUpperCase()} (${p.codigo})</option>`).join('');
-                    if(currentVal) selProd.value = currentVal;
+                    if(currentVal) {
+                        selProd.value = currentVal;
+                    }
                 }
             });
 
-            // Sincroniza inventario registrado
+            // Sincronizamos el inventario maestro
             onSnapshot(collection(db, 'usuarios', uid, 'inventario_master'), (snap) => {
                 inventarioData = {};
                 snap.docs.forEach(d => { inventarioData[d.id] = { id_doc: d.id, ...d.data() }; });
@@ -164,7 +165,7 @@
             });
         }
 
-        // Lógica de variantes restaurada
+        // Evento para cargar variantes al seleccionar producto
         selProd.onchange = () => {
             const pId = selProd.value;
             if (!pId) {
