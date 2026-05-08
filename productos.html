@@ -1,4 +1,4 @@
-
+```html
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -8,105 +8,172 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        :root { --gold: #D4AF37; --bg: #050505; }
+        :root { --gold: #D4AF37; --gold-dark: #b8962e; --bg: #050505; }
         body { background: var(--bg); color: white; font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
-        .gold-border { border: 1px solid rgba(212, 175, 55, 0.3); }
-        .input-field { background: #111; border: 1px solid #222; border-radius: 14px; padding: 16px; width: 100%; color: white; font-size: 14px; text-transform: uppercase; font-weight: bold; transition: all 0.3s; }
-        .input-field:focus { border-color: var(--gold); outline: none; background: #151515; box-shadow: 0 0 15px rgba(212, 175, 55, 0.1); }
-        .btn-gold { background: var(--gold); color: black; font-weight: 900; border-radius: 14px; width: 100%; padding: 18px; text-transform: uppercase; transition: all 0.3s; box-shadow: 0 4px 15px rgba(212, 175, 55, 0.2); }
-        .btn-gold:active { transform: scale(0.98); }
         
-        .product-card { background: #0A0A0A; border: 1px solid #1a1a1a; border-radius: 24px; padding: 20px; margin-bottom: 12px; animation: slideUp 0.4s ease-out; }
+        .gold-border { border: 1px solid rgba(212, 175, 55, 0.2); }
         
-        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 1000; display: none; align-items: center; justify-content: center; backdrop-filter: blur(8px); padding: 20px; }
-        .modal-content { background: #0F0F0F; border: 1px solid #222; border-radius: 32px; width: 100%; max-width: 450px; padding: 24px; max-height: 85vh; overflow-y: auto; }
+        .input-field { 
+            background: #111; 
+            border: 1px solid #222; 
+            border-radius: 16px; 
+            padding: 18px; 
+            width: 100%; 
+            color: white; 
+            font-size: 14px; 
+            text-transform: uppercase; 
+            font-weight: bold; 
+            transition: all 0.3s; 
+        }
+        .input-field:focus { border-color: var(--gold); outline: none; background: #151515; }
 
-        .variant-pill { background: #151515; border: 1px solid #333; padding: 12px 16px; border-radius: 16px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        .btn-main { 
+            background: var(--gold); 
+            color: black; 
+            font-weight: 900; 
+            border-radius: 18px; 
+            width: 100%; 
+            padding: 20px; 
+            text-transform: uppercase; 
+            letter-spacing: 1px;
+            transition: all 0.3s; 
+            box-shadow: 0 4px 20px rgba(212, 175, 55, 0.2);
+        }
+        .btn-main:active { transform: scale(0.97); opacity: 0.8; }
+        
+        .product-card { 
+            background: #0A0A0A; 
+            border: 1px solid #1a1a1a; 
+            border-radius: 28px; 
+            padding: 24px; 
+            margin-bottom: 16px; 
+            animation: slideUp 0.4s ease-out; 
+        }
+        
+        .modal-overlay { 
+            position: fixed; 
+            inset: 0; 
+            background: rgba(0,0,0,0.95); 
+            z-index: 1000; 
+            display: none; 
+            align-items: center; 
+            justify-content: center; 
+            backdrop-filter: blur(10px); 
+            padding: 20px; 
+        }
+        .modal-content { 
+            background: #0F0F0F; 
+            border: 1px solid #222; 
+            border-radius: 35px; 
+            width: 100%; 
+            max-width: 400px; 
+            padding: 28px; 
+            box-shadow: 0 0 50px rgba(0,0,0,0.5);
+        }
 
-        @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        #blocker { position: fixed; inset: 0; background: #050505; z-index: 1100; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.5s ease; }
+        .variant-tag { 
+            background: #151515; 
+            border: 1px solid #333; 
+            padding: 14px 18px; 
+            border-radius: 18px; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            margin-bottom: 10px; 
+        }
+
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        
+        #loading-screen { 
+            position: fixed; 
+            inset: 0; 
+            background: #050505; 
+            z-index: 2000; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+        }
     </style>
 </head>
-<body class="p-4 pb-24">
+<body class="p-5 pb-28">
 
-    <!-- Modal de Edición de Producto -->
-    <div id="editModal" class="modal-overlay">
-        <div class="modal-content shadow-2xl">
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="text-lg font-black uppercase tracking-tighter">Editar <span class="text-gold">Producto</span></h2>
-                <button onclick="cerrarModal('editModal')" class="text-gray-500 hover:text-white"><i class="fas fa-times"></i></button>
-            </div>
-            <form id="formEdit" class="space-y-4">
-                <input type="hidden" id="editId">
-                <div class="grid grid-cols-3 gap-3">
-                    <input type="text" id="editCodigo" placeholder="CÓD" class="input-field" required>
-                    <input type="text" id="editNombre" placeholder="PRODUCTO" class="col-span-2 input-field" required>
-                </div>
-                <div class="grid grid-cols-2 gap-3">
-                    <input type="number" step="0.01" id="editCosto" placeholder="COSTO $" class="input-field">
-                    <input type="number" step="0.01" id="editDetal" placeholder="DETAL $" class="input-field text-green-400 font-bold">
-                </div>
-                <button type="submit" id="btnUpdate" class="btn-gold mt-2">Actualizar Datos</button>
-            </form>
-        </div>
+    <!-- PANTALLA DE CARGA -->
+    <div id="loading-screen">
+        <div class="w-10 h-10 border-2 border-gold/20 border-t-gold rounded-full animate-spin mb-4"></div>
+        <p class="text-gold text-[10px] font-black uppercase tracking-[0.5em]">JADDY INC</p>
     </div>
 
-    <!-- Modal de Gestión de Variantes -->
+    <!-- MODAL VARIANTES -->
     <div id="variantsModal" class="modal-overlay">
         <div class="modal-content">
-            <div class="flex justify-between items-center mb-6">
+            <div class="flex justify-between items-start mb-6">
                 <div>
-                    <h2 class="text-lg font-black uppercase tracking-tighter text-gold">Variantes</h2>
-                    <p id="varProdName" class="text-[10px] text-gray-500 font-bold uppercase"></p>
+                    <h2 class="text-xl font-black uppercase tracking-tighter text-white">VARIANTES</h2>
+                    <p id="varProdName" class="text-[10px] text-gold font-bold uppercase tracking-widest mt-1 opacity-70"></p>
                 </div>
-                <button onclick="cerrarModal('variantsModal')" class="text-gray-500 hover:text-white"><i class="fas fa-times"></i></button>
+                <button onclick="cerrarModalVariantes()" class="w-8 h-8 flex items-center justify-center rounded-full bg-white/5 text-gray-400 hover:text-white">
+                    <i class="fas fa-times text-xs"></i>
+                </button>
             </div>
             
-            <div class="flex gap-2 mb-6">
-                <input type="text" id="newVariantName" placeholder="TALLA O COLOR" class="input-field !py-3">
-                <button onclick="agregarVariante()" class="bg-gold text-black px-6 rounded-xl font-black transition-all active:scale-95">+</button>
+            <!-- Input para añadir -->
+            <div class="relative mb-6">
+                <input type="text" id="newVariantName" placeholder="TALLA O COLOR" class="input-field !pr-16">
+                <button onclick="sumarVarianteALista()" class="absolute right-2 top-2 bottom-2 w-12 bg-zinc-800 text-gold rounded-xl flex items-center justify-center active:bg-gold active:text-black transition-all">
+                    <i class="fas fa-plus"></i>
+                </button>
             </div>
 
-            <div id="listaVariantesModal" class="space-y-2">
+            <!-- Lista temporal en el modal -->
+            <div id="listaVariantesTemp" class="space-y-2 mb-8 max-height-[300px] overflow-y-auto">
                 <!-- Se llena dinámicamente -->
             </div>
+
+            <!-- Botón de Guardado Final -->
+            <button id="btnGuardarVariantes" onclick="guardarVariantesEnNube()" class="btn-main !py-4 flex items-center justify-center gap-3">
+                <i class="fas fa-cloud-upload-alt"></i>
+                GUARDAR CAMBIOS
+            </button>
         </div>
     </div>
 
-    <!-- Pantalla de Carga -->
-    <div id="blocker">
-        <div class="w-12 h-12 border-4 border-gold/20 border-t-gold rounded-full animate-spin mb-4"></div>
-        <p class="text-gold text-[10px] font-black uppercase tracking-[0.4em]">Acceso Elite...</p>
-    </div>
-
-    <header class="flex justify-between items-center py-6 mb-4">
+    <!-- CABECERA -->
+    <header class="flex justify-between items-center py-4 mb-6">
         <div>
-            <h1 class="text-2xl font-black italic uppercase tracking-tighter">PRODUCTOS <span class="text-gold">JADDY</span></h1>
-            <p id="userEmail" class="text-[9px] text-gold font-bold uppercase tracking-widest opacity-60">Sincronizando...</p>
+            <h1 class="text-3xl font-black italic uppercase tracking-tighter leading-none">PRODUCTOS <span class="text-gold">JADDY</span></h1>
+            <p id="userEmail" class="text-[10px] text-zinc-500 font-bold uppercase tracking-widest mt-1">CARGANDO SESIÓN...</p>
         </div>
-        <button onclick="window.location.href='index.html'" class="w-10 h-10 flex items-center justify-center rounded-full bg-gold/10 text-gold border border-gold/30 hover:bg-gold hover:text-black transition-all">
-            <i class="fas fa-arrow-left text-xs"></i>
+        <button onclick="window.location.href='index.html'" class="w-12 h-12 rounded-2xl bg-zinc-900 border border-zinc-800 text-zinc-400 flex items-center justify-center">
+            <i class="fas fa-sign-out-alt rotate-180"></i>
         </button>
     </header>
 
-    <!-- Formulario de Creación de Producto -->
-    <section class="bg-[#0A0A0A] p-6 rounded-[32px] gold-border mb-8 shadow-2xl">
+    <!-- FORMULARIO PRINCIPAL (Exacto a tu imagen) -->
+    <section class="product-card gold-border mb-10">
         <form id="formProd" class="space-y-4">
             <div class="grid grid-cols-3 gap-3">
                 <input type="text" id="codigo" placeholder="CÓD" class="input-field" required>
                 <input type="text" id="nombre" placeholder="PRODUCTO" class="col-span-2 input-field" required>
             </div>
             <div class="grid grid-cols-2 gap-3">
-                <input type="number" step="0.01" id="costo" placeholder="COSTO $" class="input-field">
-                <input type="number" step="0.01" id="detal" placeholder="DETAL $" class="input-field text-green-400 font-bold">
+                <input type="number" id="costo" placeholder="COSTO $" class="input-field">
+                <input type="number" id="detal" placeholder="DETAL $" class="input-field text-green-500">
             </div>
-            <button type="submit" id="btnEnvio" class="btn-gold">Registrar Producto</button>
+            <div class="grid grid-cols-2 gap-3">
+                <input type="number" id="credito" placeholder="CRÉDITO $" class="input-field">
+                <input type="number" id="mayor" placeholder="MAYOR $" class="input-field">
+            </div>
+            <button type="submit" id="btnEnvio" class="btn-main mt-2">GUARDAR EN LA NUBE</button>
         </form>
     </section>
 
+    <!-- LISTADO -->
     <div class="flex justify-between items-center mb-6 px-2">
-        <h2 class="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em]">Listado de Productos</h2>
-        <span id="contador" class="text-[10px] font-bold text-gold bg-gold/10 px-3 py-1 rounded-full border border-gold/20">0 ITEMS</span>
+        <h2 class="text-[11px] font-black text-zinc-500 uppercase tracking-[0.2em] flex items-center gap-2">
+            <i class="fas fa-database text-[10px]"></i> INVENTARIO REAL
+        </h2>
+        <span id="contador" class="text-[10px] font-bold text-white bg-white/5 border border-white/10 px-4 py-1.5 rounded-full">0 PRODUCTOS</span>
     </div>
     
     <div id="displayLista" class="space-y-4"></div>
@@ -129,21 +196,17 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        const blocker = document.getElementById('blocker');
-        const userEmailLabel = document.getElementById('userEmail');
-        const listaDiv = document.getElementById('displayLista');
-        const form = document.getElementById('formProd');
-
         let currentUID = null;
         let localProducts = [];
         let activeProductId = null;
+        let tempVariants = []; // Lista temporal para el modal
 
+        // AUTH
         onAuthStateChanged(auth, (user) => {
             if (user && !user.isAnonymous) {
                 currentUID = user.uid;
-                userEmailLabel.innerText = "USUARIO: " + user.email.split('@')[0].toUpperCase();
-                blocker.style.opacity = '0';
-                setTimeout(() => blocker.style.display = 'none', 500);
+                document.getElementById('userEmail').innerText = "USUARIO: " + user.email.split('@')[0].toUpperCase();
+                document.getElementById('loading-screen').style.display = 'none';
                 iniciarSincronizacion(user.uid);
             } else {
                 window.location.href = 'login.html';
@@ -153,164 +216,149 @@
         function iniciarSincronizacion(uid) {
             onSnapshot(collection(db, 'usuarios', uid, 'productos'), (snapshot) => {
                 localProducts = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-                document.getElementById('contador').innerText = `${localProducts.length} ITEMS`;
-                renderizar(localProducts);
-                
-                // Si el modal de variantes está abierto, refrescar su contenido
-                if (activeProductId) {
-                    actualizarListaVariantesModal();
-                }
+                document.getElementById('contador').innerText = `${localProducts.length} PRODUCTOS`;
+                renderizar();
             });
         }
 
-        function renderizar(productos) {
-            if (productos.length === 0) {
-                listaDiv.innerHTML = `<div class="text-center py-20 opacity-20 italic text-xs">Inventario vacío</div>`;
+        function renderizar() {
+            const listaDiv = document.getElementById('displayLista');
+            if (localProducts.length === 0) {
+                listaDiv.innerHTML = `<div class="text-center py-20 opacity-20 italic text-xs uppercase tracking-widest font-black">No hay productos registrados</div>`;
                 return;
             }
-            listaDiv.innerHTML = productos.sort((a,b) => b.creado - a.creado).map(p => `
+            listaDiv.innerHTML = localProducts.sort((a,b) => b.creado - a.creado).map(p => `
                 <div class="product-card gold-border">
                     <div class="flex justify-between items-start">
                         <div>
-                            <span class="text-[8px] font-black text-gold bg-gold/10 px-2 py-0.5 rounded border border-gold/20 uppercase tracking-widest">${p.codigo}</span>
-                            <h3 class="text-base font-black uppercase text-white mt-2 tracking-tight">${p.nombre}</h3>
+                            <span class="text-[9px] font-black text-white bg-zinc-800 px-3 py-1 rounded-lg uppercase tracking-widest">${p.codigo || '000'}</span>
+                            <h3 class="text-xl font-black uppercase text-white mt-3 tracking-tighter">${p.nombre}</h3>
                         </div>
                         <div class="text-right">
-                            <p class="text-xl font-black text-green-400 tracking-tighter">$${(p.precio_detal || 0).toLocaleString()}</p>
+                            <p class="text-[9px] text-zinc-500 font-black uppercase mb-1">PRECIO DETAL</p>
+                            <p class="text-2xl font-black text-green-500 tracking-tighter">$${(p.precio_detal || 0).toLocaleString()}</p>
                         </div>
                     </div>
                     
-                    <div class="mt-4 flex flex-wrap gap-1">
-                        ${(p.variantes || []).slice(0, 5).map(v => `<span class="text-[7px] text-zinc-500 border border-zinc-800 px-2 py-0.5 rounded uppercase font-bold">${v}</span>`).join('')}
-                        ${(p.variantes || []).length > 5 ? `<span class="text-[7px] text-gold font-bold">...</span>` : ''}
+                    <!-- Chips de variantes (Vista previa) -->
+                    <div class="mt-4 flex flex-wrap gap-1.5">
+                        ${(p.variantes || []).map(v => `<span class="text-[8px] text-zinc-400 bg-zinc-900 border border-zinc-800 px-2.5 py-1 rounded-md font-bold uppercase">${v}</span>`).join('')}
                     </div>
 
-                    <div class="flex justify-between items-center border-t border-white/5 pt-4 mt-4">
-                        <button onclick="abrirVariantes('${p.id}')" class="bg-gold/5 text-gold text-[9px] font-black px-4 py-2 rounded-xl border border-gold/20 flex items-center gap-2 hover:bg-gold hover:text-black transition-all">
-                            <i class="fas fa-layer-group"></i> VARIANTES
+                    <div class="flex justify-between items-center mt-6 pt-5 border-t border-white/5">
+                        <button onclick="abrirModalVariantes('${p.id}')" class="bg-zinc-900 text-white text-[10px] font-black px-5 py-3 rounded-xl border border-zinc-800 flex items-center gap-2 active:bg-white active:text-black transition-all">
+                            <i class="fas fa-plus-circle text-gold"></i> VARIANTES
                         </button>
-                        <div class="flex gap-2">
-                            <button onclick="prepararEdicion('${p.id}')" class="w-8 h-8 flex items-center justify-center rounded-lg bg-zinc-900 text-zinc-500 hover:text-gold transition-colors">
-                                <i class="fas fa-edit text-xs"></i>
-                            </button>
-                            <button onclick="borrarProducto('${p.id}')" class="w-8 h-8 flex items-center justify-center rounded-lg bg-zinc-900 text-zinc-500 hover:text-red-500 transition-colors">
-                                <i class="fas fa-trash-alt text-xs"></i>
-                            </button>
-                        </div>
+                        <button onclick="borrarProducto('${p.id}')" class="w-10 h-10 flex items-center justify-center rounded-xl bg-red-500/5 text-red-500/30">
+                            <i class="fas fa-trash-alt text-xs"></i>
+                        </button>
                     </div>
                 </div>
             `).join('');
         }
 
-        // --- GESTIÓN DE PRODUCTO ---
-        form.onsubmit = async (e) => {
+        // --- REGISTRO DE PRODUCTO ---
+        document.getElementById('formProd').onsubmit = async (e) => {
             e.preventDefault();
             const btn = document.getElementById('btnEnvio');
+            btn.innerHTML = '<i class="fas fa-circle-notch animate-spin"></i>';
             btn.disabled = true;
+
             try {
                 await addDoc(collection(db, 'usuarios', currentUID, 'productos'), {
-                    codigo: document.getElementById('codigo').value.toUpperCase().trim(),
-                    nombre: document.getElementById('nombre').value.toUpperCase().trim(),
+                    codigo: document.getElementById('codigo').value.toUpperCase(),
+                    nombre: document.getElementById('nombre').value.toUpperCase(),
                     costo: parseFloat(document.getElementById('costo').value) || 0,
                     precio_detal: parseFloat(document.getElementById('detal').value) || 0,
-                    variantes: [], // Inicializa vacío
+                    precio_credito: parseFloat(document.getElementById('credito').value) || 0,
+                    precio_mayor: parseFloat(document.getElementById('mayor').value) || 0,
+                    variantes: [],
                     creado: Date.now()
                 });
-                form.reset();
-            } catch (err) { alert("Error al guardar"); } finally { btn.disabled = false; }
-        };
-
-        window.borrarProducto = async (id) => {
-            if (confirm("¿Eliminar producto definitivamente?")) {
-                await deleteDoc(doc(db, 'usuarios', currentUID, 'productos', id));
+                document.getElementById('formProd').reset();
+            } catch (err) { alert("Error al guardar"); } finally { 
+                btn.innerHTML = 'GUARDAR EN LA NUBE';
+                btn.disabled = false; 
             }
         };
 
-        // --- MODAL EDICIÓN ---
-        window.prepararEdicion = (id) => {
-            const p = localProducts.find(prod => prod.id === id);
-            if (!p) return;
-            document.getElementById('editId').value = p.id;
-            document.getElementById('editCodigo').value = p.codigo;
-            document.getElementById('editNombre').value = p.nombre;
-            document.getElementById('editCosto').value = p.costo;
-            document.getElementById('editDetal').value = p.precio_detal;
-            document.getElementById('editModal').style.display = 'flex';
-        };
-
-        document.getElementById('formEdit').onsubmit = async (e) => {
-            e.preventDefault();
-            const id = document.getElementById('editId').value;
-            try {
-                await updateDoc(doc(db, 'usuarios', currentUID, 'productos', id), {
-                    codigo: document.getElementById('editCodigo').value.toUpperCase().trim(),
-                    nombre: document.getElementById('editNombre').value.toUpperCase().trim(),
-                    costo: parseFloat(document.getElementById('editCosto').value) || 0,
-                    precio_detal: parseFloat(document.getElementById('editDetal').value) || 0
-                });
-                cerrarModal('editModal');
-            } catch (err) { alert("Error"); }
-        };
-
-        // --- GESTIÓN DE VARIANTES (MODAL) ---
-        window.abrirVariantes = (id) => {
+        // --- LÓGICA DE VARIANTES EN EL MODAL ---
+        window.abrirModalVariantes = (id) => {
             activeProductId = id;
             const p = localProducts.find(prod => prod.id === id);
             document.getElementById('varProdName').innerText = p.nombre;
-            actualizarListaVariantesModal();
+            
+            // Cargar variantes actuales a la lista temporal
+            tempVariants = [...(p.variantes || [])];
+            actualizarListaVisualModal();
+            
             document.getElementById('variantsModal').style.display = 'flex';
         };
 
-        window.agregarVariante = async () => {
+        window.sumarVarianteALista = () => {
             const inp = document.getElementById('newVariantName');
             const val = inp.value.trim().toUpperCase();
             if (!val) return;
-
-            const p = localProducts.find(prod => prod.id === activeProductId);
-            const nuevasVariantes = [...(p.variantes || [])];
             
-            if (nuevasVariantes.includes(val)) {
-                alert("Esta variante ya existe");
+            if (tempVariants.includes(val)) {
+                alert("Ya agregaste esta variante");
                 return;
             }
 
-            nuevasVariantes.push(val);
-            await updateDoc(doc(db, 'usuarios', currentUID, 'productos', activeProductId), {
-                variantes: nuevasVariantes
-            });
+            tempVariants.push(val);
             inp.value = "";
+            actualizarListaVisualModal();
         };
 
-        window.eliminarVariante = async (index) => {
-            const p = localProducts.find(prod => prod.id === activeProductId);
-            const nuevasVariantes = [...(p.variantes || [])];
-            nuevasVariantes.splice(index, 1);
-            
-            await updateDoc(doc(db, 'usuarios', currentUID, 'productos', activeProductId), {
-                variantes: nuevasVariantes
-            });
+        window.quitarVarianteDeLista = (index) => {
+            tempVariants.splice(index, 1);
+            actualizarListaVisualModal();
         };
 
-        function actualizarListaVariantesModal() {
-            const p = localProducts.find(prod => prod.id === activeProductId);
-            const contenedor = document.getElementById('listaVariantesModal');
-            if (!p.variantes || p.variantes.length === 0) {
-                contenedor.innerHTML = `<p class="text-center py-6 text-zinc-600 text-[10px] uppercase font-black tracking-widest">Sin variantes añadidas</p>`;
+        function actualizarListaVisualModal() {
+            const contenedor = document.getElementById('listaVariantesTemp');
+            if (tempVariants.length === 0) {
+                contenedor.innerHTML = `<div class="py-10 text-center opacity-20 text-[10px] font-black uppercase tracking-widest">Sin variantes añadidas</div>`;
                 return;
             }
-            contenedor.innerHTML = p.variantes.map((v, i) => `
-                <div class="variant-pill">
-                    <span class="text-xs font-black uppercase tracking-tight text-white">${v}</span>
-                    <button onclick="eliminarVariante(${i})" class="text-red-500/40 hover:text-red-500 w-8 h-8">
-                        <i class="fas fa-trash-alt text-[10px]"></i>
+            contenedor.innerHTML = tempVariants.map((v, i) => `
+                <div class="variant-tag">
+                    <span class="text-sm font-black text-white">${v}</span>
+                    <button onclick="quitarVarianteDeLista(${i})" class="text-zinc-600 hover:text-red-500 w-8 h-8">
+                        <i class="fas fa-times"></i>
                     </button>
                 </div>
             `).join('');
         }
 
-        window.cerrarModal = (id) => {
-            document.getElementById(id).style.display = 'none';
-            if (id === 'variantsModal') activeProductId = null;
+        window.guardarVariantesEnNube = async () => {
+            const btn = document.getElementById('btnGuardarVariantes');
+            btn.innerHTML = '<i class="fas fa-sync animate-spin"></i> SINCRONIZANDO...';
+            btn.disabled = true;
+
+            try {
+                await updateDoc(doc(db, 'usuarios', currentUID, 'productos', activeProductId), {
+                    variantes: tempVariants
+                });
+                cerrarModalVariantes();
+            } catch (err) {
+                alert("Error al guardar cambios");
+            } finally {
+                btn.innerHTML = '<i class="fas fa-cloud-upload-alt"></i> GUARDAR CAMBIOS';
+                btn.disabled = false;
+            }
+        };
+
+        window.cerrarModalVariantes = () => {
+            document.getElementById('variantsModal').style.display = 'none';
+            activeProductId = null;
+            tempVariants = [];
+        };
+
+        window.borrarProducto = async (id) => {
+            if (confirm("¿Estás seguro de borrar este producto?")) {
+                await deleteDoc(doc(db, 'usuarios', currentUID, 'productos', id));
+            }
         };
 
     </script>
