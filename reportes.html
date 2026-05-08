@@ -4,64 +4,84 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Analítica Real | Jaddy INC</title>
+    <title>Reportes Luxury | Jaddy INC</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root { --gold: #D4AF37; --bg: #050505; }
         body { background: var(--bg); color: white; font-family: 'Inter', sans-serif; margin: 0; display: none; }
-        .card-stats { background: #0F0F0F; border: 1px solid #1A1A1A; border-radius: 24px; padding: 20px; }
-        .filter-btn { background: #111; border: 1px solid #222; color: #666; padding: 8px 4px; border-radius: 10px; font-size: 8px; font-weight: 900; text-transform: uppercase; flex: 1; }
-        .filter-btn.active { background: var(--gold); color: black; }
-        #loading-screen { position: fixed; inset: 0; background: #000; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .gold-border { border: 1px solid rgba(212, 175, 55, 0.2); }
+        .stat-card { background: #0A0A0A; border: 1px solid #1A1A1A; border-radius: 20px; padding: 15px; }
+        .input-field { background: #111; border: 1px solid #222; border-radius: 12px; padding: 10px; width: 100%; color: white; font-size: 12px; font-weight: bold; outline: none; }
+        #loading-screen { position: fixed; inset: 0; background: #050505; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); opacity: 0.5; }
     </style>
 </head>
-<body class="p-4 pb-24 max-w-md mx-auto">
+<body class="pb-24 max-w-md mx-auto">
 
     <div id="loading-screen">
         <div class="w-10 h-10 border-2 border-gold/20 border-t-gold rounded-full animate-spin mb-4"></div>
-        <p class="text-gold text-[10px] font-black uppercase tracking-widest">Sincronizando con Firestore...</p>
+        <p class="text-gold text-[10px] font-black uppercase tracking-[0.5em]">Generando Inteligencia</p>
     </div>
 
-    <header class="flex justify-between items-center mb-6">
-        <button onclick="window.history.back()" class="text-[10px] font-black border border-gold/30 px-4 py-2 rounded-full text-gold uppercase">← Regresar</button>
-        <h1 class="text-[10px] font-black text-white uppercase tracking-[4px]">Financial Intelligence</h1>
-    </header>
+    <div class="p-4">
+        <header class="flex justify-between items-center mb-6">
+            <button onclick="window.location.href='index.html'" class="text-[10px] font-black border border-gold/30 px-4 py-2 rounded-full text-gold uppercase">← Inicio</button>
+            <div class="text-right">
+                <p class="text-[8px] text-gray-500 font-black uppercase">Balance General</p>
+                <p class="text-gold font-black italic text-xs">JADDY INC</p>
+            </div>
+        </header>
 
-    <div class="flex justify-between gap-1 mb-6">
-        <button onclick="cambiarFiltro('hoy')" id="btn-hoy" class="filter-btn">Hoy</button>
-        <button onclick="cambiarFiltro('todo')" id="btn-todo" class="filter-btn active">Todo</button>
+        <!-- Filtro Temporal -->
+        <div class="mb-6 flex gap-2 items-center bg-[#0A0A0A] p-3 rounded-2xl gold-border">
+            <i class="fa-solid fa-calendar-day text-gold text-xs ml-2"></i>
+            <input type="date" id="filtro-fecha" class="input-field border-none text-gold uppercase tracking-widest bg-transparent">
+        </div>
+
+        <!-- Stats Principales -->
+        <div class="grid grid-cols-2 gap-3 mb-6">
+            <div class="stat-card">
+                <p class="text-[7px] text-gray-500 font-black uppercase mb-1 tracking-tighter">Total Recaudado</p>
+                <p id="total-monto" class="text-xl font-black text-green-400">$0.00</p>
+            </div>
+            <div class="stat-card">
+                <p class="text-[7px] text-gray-500 font-black uppercase mb-1 tracking-tighter">Volumen Ventas</p>
+                <p id="total-ventas" class="text-xl font-black text-white">0</p>
+            </div>
+            <div class="stat-card">
+                <p class="text-[7px] text-gray-500 font-black uppercase mb-1 tracking-tighter">Por Cobrar (Crédito)</p>
+                <p id="total-credito" class="text-xl font-black text-orange-400">$0.00</p>
+            </div>
+            <div class="stat-card">
+                <p class="text-[7px] text-gray-500 font-black uppercase mb-1 tracking-tighter">Promedio x Venta</p>
+                <p id="promedio-venta" class="text-xl font-black text-blue-400">$0.00</p>
+            </div>
+        </div>
+
+        <!-- Top Productos -->
+        <section class="bg-[#0A0A0A] p-5 rounded-[28px] gold-border mb-6">
+            <h3 class="text-[9px] font-black text-gold uppercase tracking-[3px] mb-4 italic flex items-center gap-2">
+                <i class="fa-solid fa-crown text-[8px]"></i> Desempeño de Inventario
+            </h3>
+            <div id="lista-top-productos" class="space-y-4">
+                <!-- Se llena dinamicamente -->
+            </div>
+        </section>
+
+        <!-- Desglose por Vendedor -->
+        <section class="bg-[#0A0A0A] p-5 rounded-[28px] gold-border">
+            <h3 class="text-[9px] font-black text-gray-500 uppercase tracking-[3px] mb-4 italic text-center">Ranking de Equipo</h3>
+            <div id="lista-vendedores" class="space-y-2">
+                <!-- Se llena dinamicamente -->
+            </div>
+        </section>
     </div>
-
-    <section class="mb-8 text-center">
-        <p class="text-[9px] font-black text-gold uppercase mb-2">Utilidad Neta Real</p>
-        <div class="card-stats bg-gradient-to-br from-[#1a1a1a] to-black border-gold/20">
-            <h3 id="ganancia-neta" class="text-3xl font-black text-green-400">$0.00</h3>
-            <p id="mensaje-status" class="text-[7px] text-gray-500 mt-2 uppercase tracking-widest"></p>
-        </div>
-    </section>
-
-    <section class="grid grid-cols-1 gap-4">
-        <div class="card-stats">
-            <p class="text-[8px] font-black text-gray-500 uppercase mb-1 text-center">Ventas Brutas</p>
-            <h2 id="total-ventas" class="text-4xl font-black text-white text-center">$0.00</h2>
-        </div>
-        <div class="grid grid-cols-2 gap-4">
-            <div class="card-stats border-red-900/30">
-                <p class="text-[7px] font-black text-red-500 uppercase mb-2">Gastos</p>
-                <h3 id="total-egresos" class="text-xl font-black text-white">$0.00</h3>
-            </div>
-            <div class="card-stats border-blue-900/30">
-                <p class="text-[7px] font-black text-blue-500 uppercase mb-2">Por Cobrar</p>
-                <h3 id="total-credito" class="text-xl font-black text-white">$0.00</h3>
-            </div>
-        </div>
-    </section>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, collection, onSnapshot, query, where } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCrjjeOoXPOtJDXDfrHLOA4Ny0QW2zfVWk",
@@ -75,73 +95,94 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        
-        let store = { ventas: [], productos: [], gastos: [], prestamos: [] };
-        let filtro = 'todo';
 
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-                document.getElementById('loading-screen').style.display = 'none';
-                document.body.style.display = 'block';
+        let userId = null;
+        let ventasData = [];
+
+        onAuthStateChanged(auth, (user) => { 
+            if(user && !user.isAnonymous){ 
+                userId = user.uid;
+                document.body.style.display = "block";
+                document.getElementById('loading-screen').style.display = "none";
                 
-                // NOMBRES CORREGIDOS SEGÚN TU CAPTURA DE PANTALLA
-                onSnapshot(collection(db, "ventas"), s => { store.ventas = s.docs.map(d => d.data()); calcular(); });
-                onSnapshot(collection(db, "productos"), s => { store.productos = s.docs.map(d => d.data()); calcular(); });
-                onSnapshot(collection(db, "gastos"), s => { store.gastos = s.docs.map(d => d.data()); calcular(); });
-                onSnapshot(collection(db, "deudas"), s => { store.prestamos = s.docs.map(d => d.data()); calcular(); });
+                // Fecha de hoy por defecto
+                document.getElementById('filtro-fecha').valueAsDate = new Date();
+                
+                escucharVentas(user.uid); 
+            } else {
+                window.location.href = "login.html";
             }
         });
 
-        function parse(v) {
-            if(!v) return 0;
-            return parseFloat(v.toString().replace(/[$,]/g, '')) || 0;
+        function escucharVentas(uid) {
+            // Escuchamos todas las ventas para poder filtrar dinámicamente en el cliente
+            onSnapshot(collection(db, 'usuarios', uid, 'ventas_realizadas'), snap => {
+                ventasData = snap.docs.map(d => ({id: d.id, ...d.data()}));
+                procesarReportes();
+            });
         }
 
-        function calcular() {
-            let tVentas = 0; let tGastos = 0; let tInversion = 0; let tCredito = 0;
-            const hoy = new Date().toDateString();
+        function procesarReportes() {
+            const fechaFiltro = new Date(document.getElementById('filtro-fecha').value + 'T00:00:00').toLocaleDateString();
+            
+            // Filtrar por la fecha seleccionada
+            const ventasFiltradas = ventasData.filter(v => v.fecha_venta === fechaFiltro);
 
-            store.ventas.forEach(v => {
-                // Si no hay fecha, permitimos que pase en el filtro "todo"
-                let fechaV = v.fecha?.seconds ? new Date(v.fecha.seconds * 1000).toDateString() : (v.fecha ? new Date(v.fecha).toDateString() : null);
+            let totalMonto = 0;
+            let totalCredito = 0;
+            let conteoVentas = ventasFiltradas.length;
+            let productosMap = {};
+            let vendedoresMap = {};
+
+            ventasFiltradas.forEach(v => {
+                totalMonto += v.total;
+                if(v.tipo === 'CREDITO') totalCredito += v.total;
+
+                // Agrupar por producto
+                productosMap[v.producto] = (productosMap[v.producto] || 0) + v.cantidad;
                 
-                if (filtro === 'todo' || fechaV === hoy) {
-                    const monto = parse(v.total || v.precio);
-                    tVentas += monto;
-
-                    // Costo
-                    const p = store.productos.find(prod => prod.nombre === v.producto);
-                    tInversion += (parse(p?.costo) * (v.cantidad || 1));
-
-                    // Crédito
-                    if ((v.metodo || v.tipo || "").toLowerCase().includes("credito")) {
-                        let abonos = 0;
-                        v.abonos?.forEach(a => abonos += parse(a.monto));
-                        tCredito += (monto - abonos);
-                    }
-                }
+                // Agrupar por vendedor
+                vendedoresMap[v.vendedor] = (vendedoresMap[v.vendedor] || 0) + v.total;
             });
 
-            store.gastos.forEach(g => {
-                let fechaG = g.fecha?.seconds ? new Date(g.fecha.seconds * 1000).toDateString() : (g.fecha ? new Date(g.fecha).toDateString() : null);
-                if (filtro === 'todo' || fechaG === hoy) tGastos += parse(g.monto);
-            });
+            // Renderizar Stats
+            document.getElementById('total-monto').innerText = `$${totalMonto.toLocaleString()}`;
+            document.getElementById('total-ventas').innerText = conteoVentas;
+            document.getElementById('total-credito').innerText = `$${totalCredito.toLocaleString()}`;
+            document.getElementById('promedio-venta').innerText = `$${(totalMonto / (conteoVentas || 1)).toLocaleString(undefined, {maximumFractionDigits: 2})}`;
 
-            const neta = tVentas - tGastos - tInversion;
+            // Renderizar Top Productos
+            const listaProd = document.getElementById('lista-top-productos');
+            const sortedProds = Object.entries(productosMap).sort((a,b) => b[1] - a[1]).slice(0, 5);
+            
+            if(sortedProds.length === 0) {
+                listaProd.innerHTML = '<p class="text-[10px] text-gray-600 text-center uppercase py-4">Sin datos hoy</p>';
+            } else {
+                listaProd.innerHTML = sortedProds.map(([name, cant]) => `
+                    <div class="flex justify-between items-center">
+                        <div class="flex items-center gap-3">
+                            <div class="w-2 h-2 rounded-full bg-gold"></div>
+                            <p class="text-[11px] font-black uppercase">${name}</p>
+                        </div>
+                        <p class="text-[11px] font-black text-gray-400">${cant} UNID.</p>
+                    </div>
+                `).join('');
+            }
 
-            document.getElementById('total-ventas').innerText = `$${tVentas.toLocaleString()}`;
-            document.getElementById('total-egresos').innerText = `$${tGastos.toLocaleString()}`;
-            document.getElementById('total-credito').innerText = `$${tCredito.toLocaleString()}`;
-            document.getElementById('ganancia-neta').innerText = `$${neta.toLocaleString()}`;
-            document.getElementById('mensaje-status').innerText = `${store.ventas.length} ventas procesadas`;
+            // Renderizar Vendedores
+            const listaVend = document.getElementById('lista-vendedores');
+            const sortedVend = Object.entries(vendedoresMap).sort((a,b) => b[1] - a[1]);
+            
+            listaVend.innerHTML = sortedVend.map(([name, monto]) => `
+                <div class="flex justify-between items-center bg-white/5 p-3 rounded-xl border border-white/5">
+                    <p class="text-[10px] font-black uppercase text-gold italic">${name || 'SIN NOMBRE'}</p>
+                    <p class="text-[10px] font-black text-green-400">$${monto.toLocaleString()}</p>
+                </div>
+            `).join('');
         }
 
-        window.cambiarFiltro = (f) => {
-            filtro = f;
-            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-            document.getElementById('btn-'+f).classList.add('active');
-            calcular();
-        }
+        document.getElementById('filtro-fecha').addEventListener('change', procesarReportes);
+
     </script>
 </body>
 </html>
