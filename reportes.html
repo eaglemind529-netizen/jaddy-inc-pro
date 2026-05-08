@@ -4,106 +4,75 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Analítica Maestra | Jaddy INC</title>
+    <title>Analítica Real | Jaddy INC</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root { --gold: #D4AF37; --bg: #050505; }
-        body { background: var(--bg); color: white; font-family: 'Inter', sans-serif; margin: 0; overflow-x: hidden; display: none; }
-        .gold-text { color: var(--gold); }
-        .card-stats { background: #0F0F0F; border: 1px solid #1A1A1A; border-radius: 24px; padding: 20px; position: relative; overflow: hidden; }
+        body { background: var(--bg); color: white; font-family: 'Inter', sans-serif; margin: 0; display: none; }
+        .card-stats { background: #0F0F0F; border: 1px solid #1A1A1A; border-radius: 24px; padding: 20px; }
         .premium-gradient { background: linear-gradient(135deg, #1a1a1a 0%, #050505 100%); border: 1px solid rgba(212, 175, 55, 0.1); }
-        
-        #ia-launcher { position: fixed; bottom: 20px; right: 20px; width: 60px; height: 60px; background: var(--gold); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; color: black; box-shadow: 0 10px 30px rgba(212, 175, 55, 0.4); z-index: 1000; cursor: pointer; border: 4px solid #050505; }
-        #ia-modal { position: fixed; inset: 0; background: #000; z-index: 1001; display: none; flex-direction: column; }
-        
-        .filter-btn { background: #111; border: 1px solid #222; color: #666; padding: 8px 4px; border-radius: 10px; font-size: 7px; font-weight: 900; text-transform: uppercase; transition: 0.3s; letter-spacing: 0.5px; }
-        .filter-btn.active { background: var(--gold); border-color: var(--gold); color: black; box-shadow: 0 4px 15px rgba(212, 175, 55, 0.2); }
-
-        .date-input-custom { background: #111; border: 1px solid #222; color: white; font-size: 10px; padding: 5px; border-radius: 8px; outline: none; width: 100%; }
-        .date-input-custom::-webkit-calendar-picker-indicator { filter: invert(1); cursor: pointer; }
-
-        #loading-screen { 
-            position: fixed; inset: 0; background: #000; z-index: 9999; 
-            display: flex; flex-direction: column; align-items: center; justify-content: center; 
-        }
-        .progress-bar { width: 150px; height: 2px; background: #111; border-radius: 10px; overflow: hidden; margin-top: 20px; }
-        .progress-fill { width: 0%; height: 100%; background: var(--gold); transition: width 0.5s; }
+        .filter-btn { background: #111; border: 1px solid #222; color: #666; padding: 8px 4px; border-radius: 10px; font-size: 8px; font-weight: 900; text-transform: uppercase; flex: 1; }
+        .filter-btn.active { background: var(--gold); color: black; box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3); }
+        #loading-screen { position: fixed; inset: 0; background: #000; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; }
     </style>
 </head>
 <body class="p-4 pb-24 max-w-md mx-auto select-none">
 
-    <!-- Pantalla de Carga -->
     <div id="loading-screen">
-        <div class="w-12 h-12 border-2 border-gold/10 border-t-gold rounded-full animate-spin mb-4"></div>
-        <p class="text-gold text-[10px] font-black uppercase tracking-[3px]">Seguridad Activa</p>
-        <div class="progress-bar"><div id="p-fill" class="progress-fill"></div></div>
+        <div class="w-10 h-10 border-2 border-gold/20 border-t-gold rounded-full animate-spin mb-4"></div>
+        <p class="text-gold text-[10px] font-black uppercase tracking-widest text-center">Conectando a Colecciones:<br>Ventas, Gastos y Productos</p>
     </div>
 
-    <!-- Lanzador IA -->
-    <div id="ia-launcher" onclick="abrirIA()">
-        <i class="fas fa-robot"></i>
-    </div>
-
-    <!-- Header Principal -->
     <header class="flex justify-between items-center mb-6">
-        <button onclick="window.history.back()" class="text-[10px] font-black border border-gold/30 px-4 py-2 rounded-full text-[#D4AF37] uppercase">← Regresar</button>
+        <button onclick="window.history.back()" class="text-[10px] font-black border border-gold/30 px-4 py-2 rounded-full text-gold uppercase">← Regresar</button>
         <h1 class="text-[10px] font-black text-white uppercase tracking-[4px]">Financial Intelligence</h1>
     </header>
 
-    <!-- Filtros -->
-    <div class="bg-[#0A0A0A] border border-white/5 p-3 rounded-2xl mb-4">
-        <div class="grid grid-cols-2 gap-3 mb-3">
-            <input type="date" id="fecha-inicio" onchange="aplicarCalendario()" class="date-input-custom">
-            <input type="date" id="fecha-fin" onchange="aplicarCalendario()" class="date-input-custom">
-        </div>
-        <div class="flex justify-between gap-1">
-            <button onclick="cambiarFiltro('hoy')" id="btn-hoy" class="filter-btn active flex-1">Hoy</button>
-            <button onclick="cambiarFiltro('semana')" id="btn-semana" class="filter-btn flex-1">Semana</button>
-            <button onclick="cambiarFiltro('mes')" id="btn-mes" class="filter-btn flex-1">Mes</button>
-            <button onclick="cambiarFiltro('todo')" id="btn-todo" class="filter-btn flex-1">Todo</button>
-        </div>
+    <div class="flex justify-between gap-1 mb-6">
+        <button onclick="cambiarFiltro('hoy')" id="btn-hoy" class="filter-btn active">Hoy</button>
+        <button onclick="cambiarFiltro('mes')" id="btn-mes" class="filter-btn">Mes</button>
+        <button onclick="cambiarFiltro('todo')" id="btn-todo" class="filter-btn">Historial</button>
     </div>
 
-    <!-- Métrica Maestra -->
-    <section class="mb-6">
-        <h2 class="text-[9px] font-black text-gold/80 uppercase tracking-[3px] mb-4 text-center">Balance Neto (<span id="txt-periodo">Hoy</span>)</h2>
+    <section class="mb-8">
+        <h2 class="text-[9px] font-black text-gold uppercase tracking-[3px] mb-4 text-center">Utilidad Final (Caja - Costos - Gastos)</h2>
         <div class="card-stats premium-gradient border-gold/20">
-            <div class="flex justify-between items-center mb-2">
-                <span class="text-[7px] font-black text-gray-500 uppercase">Utilidad Real</span>
-                <span id="pct-utilidad" class="text-[8px] font-bold text-green-500">+0%</span>
-            </div>
-            <h3 id="ganancia-neta" class="text-4xl font-black text-white mb-4">$0.00</h3>
-            <div class="h-[1px] bg-white/5 w-full mb-4"></div>
-            <div class="flex justify-between">
+            <div class="flex justify-between items-end mb-4">
                 <div>
-                    <p class="text-[7px] font-black text-gray-500 uppercase">Inversión</p>
-                    <p id="inversion-total" class="text-xs font-bold text-white">$0.00</p>
+                    <p class="text-[7px] font-black text-gray-400 uppercase mb-1">Inversión (Costos)</p>
+                    <h3 id="inversion-total" class="text-2xl font-black text-white">$0.00</h3>
                 </div>
                 <div class="text-right">
-                    <p class="text-[7px] font-black text-gray-500 uppercase">Retorno</p>
-                    <p id="total-ventas" class="text-xs font-bold text-green-400">$0.00</p>
+                    <p class="text-[7px] font-black text-green-500 uppercase mb-1">Ganancia Neta</p>
+                    <h3 id="ganancia-neta" class="text-xl font-black text-green-400">+$0.00</h3>
                 </div>
+            </div>
+            <p id="status-msg" class="text-[8px] text-center italic text-gray-500"></p>
+        </div>
+    </section>
+
+    <section class="grid grid-cols-1 gap-4">
+        <div class="card-stats">
+            <p class="text-[8px] font-black text-gray-500 uppercase tracking-[2px] mb-1 text-center">Dinero Ingresado (Caja)</p>
+            <h2 id="total-ventas" class="text-4xl font-black text-white text-center">$0.00</h2>
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+            <div class="card-stats border-red-900/30">
+                <p class="text-[7px] font-black text-red-500 uppercase mb-2">Gastos Totales</p>
+                <h3 id="total-egresos" class="text-xl font-black text-white">$0.00</h3>
+            </div>
+            <div class="card-stats border-blue-900/30">
+                <p class="text-[7px] font-black text-blue-500 uppercase mb-2">CxC (Por Cobrar)</p>
+                <h3 id="total-credito" class="text-xl font-black text-white">$0.00</h3>
             </div>
         </div>
     </section>
 
-    <!-- Secundarios -->
-    <div class="grid grid-cols-2 gap-4 mb-6">
-        <div class="card-stats border-red-900/20">
-            <p class="text-[7px] font-black text-red-500 uppercase mb-1">Gastos/Deudas</p>
-            <h4 id="total-egresos" class="text-lg font-black">$0.00</h4>
-        </div>
-        <div class="card-stats border-blue-900/20">
-            <p class="text-[7px] font-black text-blue-500 uppercase mb-1">CxC (Créditos)</p>
-            <h4 id="total-credito" class="text-lg font-black">$0.00</h4>
-        </div>
-    </div>
-
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getFirestore, collection, onSnapshot, query, where } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCrjjeOoXPOtJDXDfrHLOA4Ny0QW2zfVWk",
@@ -117,166 +86,95 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        const appId = 'jaddy-inc-finanzas';
         
-        let currentUserId = null;
-        let filtroActual = 'hoy';
-        let store = { ventas: [], productos: [], egresos: [], prestamos: [] };
+        let filtro = 'hoy';
+        let store = { ventas: [], productos: [], gastos: [] };
 
-        // 1. CONTROL DE ACCESO (Seguridad)
         onAuthStateChanged(auth, (user) => {
             if (user) {
-                currentUserId = user.uid;
-                document.getElementById('p-fill').style.width = '100%';
-                setTimeout(() => {
-                    document.getElementById('loading-screen').style.display = 'none';
-                    document.body.style.display = 'block';
-                    conectarBaseDeDatos();
-                }, 800);
+                document.getElementById('loading-screen').style.display = 'none';
+                document.body.style.display = 'block';
+                conectar();
             } else {
                 window.location.href = "login.html";
             }
         });
 
-        // 2. CONEXIÓN REAL CON FIRESTORE
-        function conectarBaseDeDatos() {
-            // Productos (Global)
-            onSnapshot(collection(db, "productos"), snap => {
-                store.productos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-                calcularTodo();
+        function conectar() {
+            // USANDO LOS NOMBRES DE TU CAPTURA DE PANTALLA
+            onSnapshot(collection(db, "ventas"), (snap) => {
+                store.ventas = snap.docs.map(d => d.data());
+                procesar();
             });
 
-            // Ventas Realizadas (Global del negocio)
-            onSnapshot(collection(db, "ventas_realizadas"), snap => {
-                store.ventas = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-                calcularTodo();
+            onSnapshot(collection(db, "productos"), (snap) => {
+                store.productos = snap.docs.map(d => d.data());
+                procesar();
             });
 
-            // Egresos Personales (Filtrado por usuario logueado)
-            onSnapshot(collection(db, 'artifacts', appId, 'users', currentUserId, 'egresos'), snap => {
-                store.egresos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-                calcularTodo();
-            });
-
-            // Préstamos/Abonos Personales (Filtrado por usuario logueado)
-            onSnapshot(collection(db, 'artifacts', appId, 'users', currentUserId, 'prestamos'), snap => {
-                store.prestamos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-                calcularTodo();
+            onSnapshot(collection(db, "gastos"), (snap) => {
+                store.gastos = snap.docs.map(d => d.data());
+                procesar();
             });
         }
 
-        // 3. LÓGICA DE PROCESAMIENTO
-        function parsear(val) {
-            if (!val) return 0;
-            return parseFloat(val.toString().replace(/[$,]/g, '')) || 0;
+        function parse(n) {
+            if (!n) return 0;
+            return parseFloat(n.toString().replace(/[$,]/g, '')) || 0;
         }
 
-        function validarFecha(f) {
-            if (filtroActual === 'todo') return true;
-            let d;
-            if (typeof f === 'number') d = new Date(f);
-            else if (f?.seconds) d = new Date(f.seconds * 1000);
-            else if (f?.includes('/')) {
-                const [day, month, year] = f.split('/');
-                d = new Date(year, month - 1, day);
-            } else d = new Date(f);
+        function procesar() {
+            let caja = 0; let inversion = 0; let cxc = 0; let egresos = 0;
+            const hoy = new Date().toDateString();
 
-            if (isNaN(d.getTime())) return false;
-            const hoy = new Date();
-
-            if (filtroActual === 'custom') {
-                const start = new Date(document.getElementById('fecha-inicio').value + "T00:00:00");
-                const end = new Date(document.getElementById('fecha-fin').value + "T23:59:59");
-                return d >= start && d <= end;
-            }
-            if (filtroActual === 'hoy') return d.toDateString() === hoy.toDateString();
-            if (filtroActual === 'semana') {
-                const diff = hoy.getDate() - hoy.getDay() + (hoy.getDay() === 0 ? -6 : 1);
-                return d >= new Date(new Date().setDate(diff)).setHours(0,0,0,0);
-            }
-            if (filtroActual === 'mes') return d.getMonth() === hoy.getMonth() && d.getFullYear() === hoy.getFullYear();
-            return true;
-        }
-
-        function calcularTodo() {
-            let cajaEfectivo = 0; 
-            let costoInversion = 0;
-            let cxc = 0;
-            let gastosTotal = 0;
-
-            // Procesar Ventas y Costos
             store.ventas.forEach(v => {
-                if (validarFecha(v.fecha)) {
-                    const total = parsear(v.total || v.precio);
-                    const prod = store.productos.find(p => p.nombre === v.producto);
-                    const costo = (prod ? parsear(prod.costo) : 0) * (parseInt(v.cantidad) || 1);
-                    
-                    costoInversion += costo;
+                // Verificar fecha
+                let d;
+                if (v.fecha?.seconds) d = new Date(v.fecha.seconds * 1000);
+                else d = new Date(v.fecha);
+                
+                if (filtro === 'todo' || d.toDateString() === hoy) {
+                    const monto = parse(v.total || v.precio);
+                    const p = store.productos.find(item => item.nombre === v.producto);
+                    inversion += (parse(p?.costo) * (v.cantidad || 1));
 
-                    const t = (v.metodo || v.tipo || "").toUpperCase();
-                    if (t.includes("CONTADO") || t.includes("EFECTIVO")) {
-                        cajaEfectivo += total;
+                    const metod = (v.metodo || "").toLowerCase();
+                    if (metod.includes("contado") || metod.includes("efectivo")) {
+                        caja += monto;
                     } else {
-                        // Crédito: Solo sumamos abonos que entren en la fecha
-                        let pagado = 0;
-                        if (v.abonos) {
-                            v.abonos.forEach(ab => {
-                                if (validarFecha(ab.fecha)) cajaEfectivo += parsear(ab.monto);
-                                pagado += parsear(ab.monto);
-                            });
-                        }
-                        cxc += (total - pagado);
+                        let abonado = 0;
+                        v.abonos?.forEach(a => { 
+                            let da = a.fecha?.seconds ? new Date(a.fecha.seconds * 1000) : new Date(a.fecha);
+                            if (filtro === 'todo' || da.toDateString() === hoy) caja += parse(a.monto);
+                            abonado += parse(a.monto);
+                        });
+                        cxc += (monto - abonado);
                     }
                 }
             });
 
-            // Procesar Egresos del Usuario
-            store.egresos.forEach(e => {
-                if (validarFecha(e.fecha || e.createdAt)) gastosTotal += parsear(e.monto);
+            store.gastos.forEach(g => {
+                let dg = g.fecha?.seconds ? new Date(g.fecha.seconds * 1000) : new Date(g.fecha);
+                if (filtro === 'todo' || dg.toDateString() === hoy) egresos += parse(g.monto);
             });
 
-            // Procesar Abonos a Préstamos del Usuario
-            store.prestamos.forEach(p => {
-                if (p.abonos) {
-                    p.abonos.forEach(ab => {
-                        if (validarFecha(ab.fecha)) gastosTotal += parsear(ab.monto);
-                    });
-                }
-            });
+            const neta = caja - egresos - inversion;
 
-            const neto = cajaEfectivo - gastosTotal - costoInversion;
-            const pct = costoInversion > 0 ? ((neto / costoInversion) * 100).toFixed(1) : 0;
-
-            // Renderizar
-            document.getElementById('total-ventas').innerText = `$${cajaEfectivo.toLocaleString()}`;
-            document.getElementById('inversion-total').innerText = `$${costoInversion.toLocaleString()}`;
-            document.getElementById('total-egresos').innerText = `$${gastosTotal.toLocaleString()}`;
+            document.getElementById('total-ventas').innerText = `$${caja.toLocaleString()}`;
+            document.getElementById('total-egresos').innerText = `$${egresos.toLocaleString()}`;
             document.getElementById('total-credito').innerText = `$${cxc.toLocaleString()}`;
-            document.getElementById('ganancia-neta').innerText = `$${neto.toLocaleString()}`;
-            document.getElementById('pct-utilidad').innerText = `${neto >= 0 ? '+' : ''}${pct}%`;
-            document.getElementById('ganancia-neta').style.color = neto >= 0 ? '#4ade80' : '#f87171';
+            document.getElementById('inversion-total').innerText = `$${inversion.toLocaleString()}`;
+            document.getElementById('ganancia-neta').innerText = `$${neta.toLocaleString()}`;
+            document.getElementById('ganancia-neta').style.color = neta >= 0 ? '#4ade80' : '#f87171';
+            document.getElementById('status-msg').innerText = `Sincronizado: ${store.ventas.length} ventas encontradas`;
         }
 
-        // Eventos Globales
         window.cambiarFiltro = (f) => {
-            filtroActual = f;
+            filtro = f;
             document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
             document.getElementById('btn-'+f).classList.add('active');
-            document.getElementById('txt-periodo').innerText = f.charAt(0).toUpperCase() + f.slice(1);
-            calcularTodo();
+            procesar();
         };
-
-        window.aplicarCalendario = () => {
-            if (document.getElementById('fecha-inicio').value && document.getElementById('fecha-fin').value) {
-                filtroActual = 'custom';
-                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-                document.getElementById('txt-periodo').innerText = "Personalizado";
-                calcularTodo();
-            }
-        };
-
-        window.abrirIA = () => alert("Asistente analizando tendencias... (Próxima actualización)");
-
     </script>
 </body>
 </html>
