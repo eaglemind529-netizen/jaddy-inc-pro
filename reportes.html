@@ -24,7 +24,7 @@
 
     <div id="loading-screen">
         <div class="w-10 h-10 border-2 border-gold/20 border-t-gold rounded-full animate-spin mb-4"></div>
-        <p class="text-gold text-[10px] font-black uppercase tracking-[0.5em]">Calculando Rango</p>
+        <p class="text-gold text-[10px] font-black uppercase tracking-[0.5em]">Sincronizando Datos</p>
     </div>
 
     <div class="p-4">
@@ -77,16 +77,16 @@
                 <p id="total-credito" class="text-lg font-black text-orange-400">$0.00</p>
             </div>
             <div class="stat-card">
-                <p class="text-[7px] text-gray-500 font-black uppercase mb-1">Ventas Realizadas</p>
+                <p class="text-[7px] text-gray-500 font-black uppercase mb-1">Operaciones</p>
                 <p id="total-ventas" class="text-lg font-black text-white">0</p>
             </div>
         </div>
 
-        <!-- Detalle de Movimientos del Periodo -->
+        <!-- Detalle de Movimientos -->
         <section class="mb-8">
-            <h3 class="text-[9px] font-black text-gray-500 uppercase tracking-[3px] mb-3 px-2">Historial Detallado</h3>
+            <h3 class="text-[9px] font-black text-gray-500 uppercase tracking-[3px] mb-3 px-2 italic">Historial del Periodo</h3>
             <div id="lista-movimientos" class="space-y-2">
-                <!-- Se llena dinamicamente con Ventas y Egresos -->
+                <!-- Sincronización dinámica de Ventas y Egresos -->
             </div>
         </section>
 
@@ -102,7 +102,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getFirestore, collection, onSnapshot, query } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCrjjeOoXPOtJDXDfrHLOA4Ny0QW2zfVWk",
@@ -138,13 +138,13 @@
         });
 
         function escucharDatos(uid) {
-            // Escuchar Ventas desde la colección unificada
+            // Escuchar la colección de Ventas (Información de ventas)
             onSnapshot(collection(db, 'artifacts', appId, 'users', uid, 'ventas'), snap => {
                 ventasData = snap.docs.map(d => ({id: d.id, ...d.data()}));
                 procesarTodo();
             });
 
-            // Escuchar Egresos desde la colección de egresos
+            // Escuchar la colección de Egresos (Información de egresos)
             onSnapshot(collection(db, 'artifacts', appId, 'users', uid, 'egresos'), snap => {
                 egresosData = snap.docs.map(d => ({id: d.id, ...d.data()}));
                 procesarTodo();
@@ -158,44 +158,64 @@
             if(!inicio || !fin) return;
 
             const filtrarRango = (itemFecha) => {
-                let fechaNormalizada = itemFecha;
-                if(itemFecha.includes('T')) fechaNormalizada = itemFecha.split('T')[0];
-                if(itemFecha.includes('/')) {
-                    const parts = itemFecha.split('/');
-                    fechaNormalizada = `${parts[2]}-${parts[1].padStart(2,'0')}-${parts[0].padStart(2,'0')}`;
+                let f = itemFecha;
+                if(f.includes('T')) f = f.split('T')[0];
+                if(f.includes('/')) {
+                    const p = f.split('/');
+                    f = `${p[2]}-${p[1].padStart(2,'0')}-${p[0].padStart(2,'0')}`;
                 }
-                return fechaNormalizada >= inicio && fechaNormalizada <= fin;
+                return f >= inicio && f <= fin;
             };
 
-            const ventasFiltradas = ventasData.filter(v => filtrarRango(v.fecha));
-            const egresosFiltrados = egresosData.filter(e => filtrarRango(e.fecha));
+            const vFiltradas = ventasData.filter(v => filtrarRango(v.fecha));
+            const eFiltrados = egresosData.filter(e => filtrarRango(e.fecha));
 
-            let totalVendido = ventasFiltradas.reduce((acc, v) => acc + (v.monto || v.total || 0), 0);
-            let totalCredito = ventasFiltradas.filter(v => v.tipo === 'CREDITO').reduce((acc, v) => acc + (v.monto || v.total || 0), 0);
-            let totalEgresos = egresosFiltrados.reduce((acc, e) => acc + (e.monto || 0), 0);
+            // Sumatorias
+            const totalV = vFiltradas.reduce((a, v) => a + (v.monto || 0), 0);
+            const totalC = vFiltradas.filter(v => v.tipo === 'CREDITO').reduce((a, v) => a + (v.monto || 0), 0);
+            const totalE = eFiltrados.reduce((a, e) => a + (e.monto || 0), 0);
 
-            // UI Resumen
-            document.getElementById('subtotal-ventas').innerText = `$${totalVendido.toLocaleString()}`;
-            document.getElementById('subtotal-egresos').innerText = `$${totalEgresos.toLocaleString()}`;
-            document.getElementById('total-utilidad').innerText = `$${(totalVendido - totalEgresos).toLocaleString()}`;
-            document.getElementById('total-credito').innerText = `$${totalCredito.toLocaleString()}`;
-            document.getElementById('total-ventas').innerText = ventasFiltradas.length;
+            // Actualizar Dash
+            document.getElementById('subtotal-ventas').innerText = `$${totalV.toLocaleString()}`;
+            document.getElementById('subtotal-egresos').innerText = `$${totalE.toLocaleString()}`;
+            document.getElementById('total-utilidad').innerText = `$${(totalV - totalE).toLocaleString()}`;
+            document.getElementById('total-credito').innerText = `$${totalC.toLocaleString()}`;
+            document.getElementById('total-ventas').innerText = vFiltradas.length + eFiltrados.length;
 
-            // Lista Movimientos (Ventas + Egresos combinados)
-            const listaM = document.getElementById('lista-movimientos');
-            const todos = [
-                ...ventasFiltradas.map(v => ({...v, label: v.cliente || 'Venta', valor: v.monto || v.total, color: 'text-green-400', sign: '+'})),
-                ...egresosFiltrados.map(e => ({...e, label: e.detalle || e.motivo || e.categoria, valor: e.monto, color: 'text-red-500', sign: '-'}))
+            // Lista Combinada
+            const lista = document.getElementById('lista-movimientos');
+            const combinados = [
+                ...vFiltradas.map(v => ({
+                    label: v.cliente || 'VENTA', 
+                    valor: v.monto, 
+                    tipo: 'VENTA', 
+                    fecha: v.fecha, 
+                    color: 'text-green-400', 
+                    sign: '+',
+                    detalle: v.tipo || ''
+                })),
+                ...eFiltrados.map(e => ({
+                    label: e.detalle || e.categoria || 'EGRESO', 
+                    valor: e.monto, 
+                    tipo: 'EGRESO', 
+                    fecha: e.fecha, 
+                    color: 'text-red-500', 
+                    sign: '-',
+                    detalle: e.categoria || ''
+                }))
             ].sort((a,b) => new Date(b.fecha) - new Date(a.fecha));
 
-            if(todos.length === 0) {
-                listaM.innerHTML = '<p class="text-[9px] text-gray-700 text-center uppercase py-10 italic">Sin movimientos en este periodo</p>';
+            if(combinados.length === 0) {
+                lista.innerHTML = '<p class="text-[9px] text-gray-700 text-center uppercase py-10 italic">Sin actividad en este rango</p>';
             } else {
-                listaM.innerHTML = todos.map(m => `
+                lista.innerHTML = combinados.map(m => `
                     <div class="flex justify-between items-center bg-[#0A0A0A] p-4 rounded-xl border border-white/5">
                         <div>
-                            <p class="text-[10px] font-black uppercase text-white tracking-tight">${m.label}</p>
-                            <p class="text-[7px] text-gray-500 font-bold uppercase mt-1">${new Date(m.fecha).toLocaleDateString()}</p>
+                            <div class="flex items-center gap-2">
+                                <span class="text-[6px] font-black px-1 rounded bg-white/5 text-gray-500 uppercase">${m.tipo}</span>
+                                <p class="text-[10px] font-black uppercase text-white tracking-tight">${m.label}</p>
+                            </div>
+                            <p class="text-[7px] text-gray-500 font-bold uppercase mt-1 italic">${new Date(m.fecha).toLocaleDateString()} - ${m.detalle}</p>
                         </div>
                         <p class="text-[11px] font-black ${m.color}">${m.sign}$${m.valor.toLocaleString()}</p>
                     </div>
@@ -206,28 +226,24 @@
         window.enviarWhatsApp = () => {
             const inicio = document.getElementById('fecha-inicio').value;
             const fin = document.getElementById('fecha-fin').value;
-            const utilidad = document.getElementById('total-utilidad').innerText;
-            const ventas = document.getElementById('subtotal-ventas').innerText;
-            const egresos = document.getElementById('subtotal-egresos').innerText;
-            const credito = document.getElementById('total-credito').innerText;
-            const cant = document.getElementById('total-ventas').innerText;
+            const u = document.getElementById('total-utilidad').innerText;
+            const v = document.getElementById('subtotal-ventas').innerText;
+            const e = document.getElementById('subtotal-egresos').innerText;
+            const c = document.getElementById('total-credito').innerText;
 
             const periodo = (inicio === fin) ? inicio : `${inicio} al ${fin}`;
 
             const mensaje = encodeURIComponent(
-                `🏆 *REPORTE DE NEGOCIO JADDY INC*\n` +
+                `🏆 *REPORTE JADDY INC*\n` +
                 `📅 Periodo: ${periodo}\n` +
                 `--------------------------------\n` +
-                `💰 *VENTAS TOTALES:* ${ventas}\n` +
-                `💸 *EGRESOS:* ${egresos}\n` +
-                `💳 *POR COBRAR:* ${credito}\n` +
-                `📦 *OPERACIONES:* ${cant}\n` +
+                `💰 *INGRESOS:* ${v}\n` +
+                `💸 *EGRESOS:* ${e}\n` +
+                `💳 *POR COBRAR:* ${c}\n` +
                 `--------------------------------\n` +
-                `💎 *UTILIDAD NETA: ${utilidad}*\n` +
-                `--------------------------------\n` +
-                `_Generado por Luxury Intelligence_`
+                `💎 *UTILIDAD NETA: ${u}*\n` +
+                `--------------------------------`
             );
-
             window.open(`https://wa.me/?text=${mensaje}`);
         }
 
