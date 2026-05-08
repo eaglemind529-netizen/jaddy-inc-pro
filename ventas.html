@@ -1,4 +1,4 @@
-```html
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -9,7 +9,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root { --gold: #D4AF37; --bg: #050505; }
-        /* Seguridad: El body empieza oculto */
         body { background: var(--bg); color: white; font-family: 'Inter', sans-serif; margin: 0; display: none; }
         .gold-border { border: 1px solid rgba(212, 175, 55, 0.2); }
         .input-field { background: #111; border: 1px solid #222; border-radius: 12px; padding: 14px; width: 100%; color: white; font-size: 13px; font-weight: bold; text-transform: uppercase; outline: none; }
@@ -18,11 +17,11 @@
         .tab-btn.active { background: white; color: black; border-color: white; }
         .sale-card { background: #0F0F0F; border: 1px solid #1A1A1A; border-radius: 20px; padding: 15px; margin-bottom: 12px; }
         #loading-screen { position: fixed; inset: 0; background: #050505; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); opacity: 0.5; }
     </style>
 </head>
 <body class="pb-24 max-w-md mx-auto">
 
-    <!-- Pantalla de Carga/Seguridad -->
     <div id="loading-screen">
         <div class="w-10 h-10 border-2 border-gold/20 border-t-gold rounded-full animate-spin mb-4"></div>
         <p class="text-gold text-[10px] font-black uppercase tracking-[0.5em]">Validando Credenciales</p>
@@ -40,7 +39,6 @@
             <div class="space-y-4">
                 <input type="hidden" id="edit-id">
 
-                <!-- Vendedor -->
                 <div class="relative">
                     <p class="text-[7px] text-gold font-black absolute -top-2 left-3 bg-[#0A0A0A] px-2 uppercase z-10">Vendedor:</p>
                     <select id="sel-vendedor" class="input-field border-gold/30 text-gold italic">
@@ -48,7 +46,6 @@
                     </select>
                 </div>
 
-                <!-- Cliente -->
                 <div class="flex gap-2">
                     <button id="btn-cli-reg" onclick="window.toggleCliente(true)" class="tab-btn active">Registrado</button>
                     <button id="btn-cli-ocu" onclick="window.toggleCliente(false)" class="tab-btn">Ocasional</button>
@@ -62,7 +59,6 @@
                     <input type="text" id="inp-cliente-nom" placeholder="NOMBRE DEL CLIENTE OCASIONAL" class="input-field">
                 </div>
 
-                <!-- Producto y Variante -->
                 <div class="grid grid-cols-1 gap-3">
                     <select id="sel-producto" class="input-field">
                         <option value="">-- SELECCIONAR PRODUCTO --</option>
@@ -75,14 +71,24 @@
                     </div>
                 </div>
 
-                <!-- Tipo de Venta -->
                 <div class="grid grid-cols-3 gap-2">
                     <button onclick="window.setTipo('CONTADO')" id="t-contado" class="tab-btn active">Detal</button>
                     <button onclick="window.setTipo('CREDITO')" id="t-credito" class="tab-btn">Crédito</button>
                     <button onclick="window.setTipo('MAYOR')" id="t-mayor" class="tab-btn">Mayor</button>
                 </div>
 
-                <!-- Cantidades y Precios -->
+                <!-- Panel de Fechas (Solo para Crédito) -->
+                <div id="panel-fechas-credito" class="hidden grid grid-cols-2 gap-2 p-3 bg-zinc-900/50 rounded-xl border border-white/5">
+                    <div class="relative">
+                        <p class="text-[7px] text-gold absolute -top-2 left-2 bg-[#0A0A0A] px-1 uppercase z-10">Entrega:</p>
+                        <input type="date" id="fecha-entrega" class="input-field py-2 text-[10px]">
+                    </div>
+                    <div class="relative">
+                        <p class="text-[7px] text-red-500 absolute -top-2 left-2 bg-[#0A0A0A] px-1 uppercase z-10">Límite Pago:</p>
+                        <input type="date" id="fecha-limite" class="input-field py-2 text-[10px]">
+                    </div>
+                </div>
+
                 <div class="grid grid-cols-3 gap-3">
                     <div class="relative">
                         <p class="text-[7px] text-gray-500 absolute -top-2 left-3 bg-[#0A0A0A] px-2 uppercase z-10">Cant:</p>
@@ -114,7 +120,6 @@
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, onSnapshot, collection, query, orderBy, deleteDoc, updateDoc, addDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-        // Mismo config que Clientes
         const firebaseConfig = {
             apiKey: "AIzaSyCrjjeOoXPOtJDXDfrHLOA4Ny0QW2zfVWk",
             authDomain: "apps-d45d6.firebaseapp.com",
@@ -134,7 +139,6 @@
         let pSeleccionado = null;
         let tipoVenta = 'CONTADO';
 
-        // --- MANEJO DE SESIÓN PRIVADA ---
         onAuthStateChanged(auth, (user) => { 
             if(user && !user.isAnonymous){ 
                 userId = user.uid;
@@ -148,21 +152,18 @@
         });
 
         function escucharDatos(uid) {
-            // Cargar Vendedores de la ruta del usuario
             onSnapshot(collection(db, 'usuarios', uid, 'vendedores'), snap => {
                 const sel = document.getElementById('sel-vendedor');
                 sel.innerHTML = '<option value="">-- VENDEDOR --</option>' + 
                     snap.docs.map(d => `<option value="${d.data().nombre}">${d.data().nombre.toUpperCase()}</option>`).join('');
             });
 
-            // Cargar Clientes de la ruta del usuario
             onSnapshot(collection(db, 'usuarios', uid, 'clientes'), snap => {
                 const sel = document.getElementById('sel-cliente');
                 sel.innerHTML = '<option value="">-- CLIENTE --</option>' + 
                     snap.docs.map(d => `<option value="${d.data().nombre}">${d.data().nombre.toUpperCase()}</option>`).join('');
             });
 
-            // Cargar Productos de la ruta del usuario
             onSnapshot(collection(db, 'usuarios', uid, 'productos'), snap => {
                 productosGlobal = snap.docs.map(d => ({id: d.id, ...d.data()}));
                 const sel = document.getElementById('sel-producto');
@@ -170,14 +171,12 @@
                     productosGlobal.map(p => `<option value="${p.id}">${p.nombre.toUpperCase()}</option>`).join('');
             });
 
-            // Cargar Ventas del usuario
             onSnapshot(query(collection(db, 'usuarios', uid, 'ventas_realizadas'), orderBy("timestamp", "desc")), snap => {
                 ventasGlobal = snap.docs.map(d => ({id: d.id, ...d.data()}));
                 renderizarVentas();
             });
         }
 
-        // --- LÓGICA DE UI ---
         window.toggleCliente = (reg) => {
             document.getElementById('btn-cli-reg').classList.toggle('active', reg);
             document.getElementById('btn-cli-ocu').classList.toggle('active', !reg);
@@ -190,6 +189,17 @@
             ['contado', 'credito', 'mayor'].forEach(id => {
                 document.getElementById('t-'+id)?.classList.toggle('active', id === t.toLowerCase());
             });
+            
+            // Mostrar u ocultar panel de fechas si es crédito
+            const panelFechas = document.getElementById('panel-fechas-credito');
+            if(t === 'CREDITO') {
+                panelFechas.classList.remove('hidden');
+                // Poner fecha de hoy por defecto
+                document.getElementById('fecha-entrega').valueAsDate = new Date();
+            } else {
+                panelFechas.classList.add('hidden');
+            }
+            
             calcularTotal();
         };
 
@@ -210,9 +220,9 @@
             const desc = parseFloat(document.getElementById('inp-descuento').value) || 0;
             
             let unit = 0;
-            if(tipoVenta === 'CONTADO') unit = pSeleccionado.precio_detal || 0;
-            else if(tipoVenta === 'CREDITO') unit = pSeleccionado.precio_credito || 0;
-            else if(tipoVenta === 'MAYOR') unit = pSeleccionado.precio_mayor || 0;
+            if(tipoVenta === 'CONTADO') unit = parseFloat(pSeleccionado.precio_detal || pSeleccionado.detal || 0);
+            else if(tipoVenta === 'CREDITO') unit = parseFloat(pSeleccionado.precio_credito || pSeleccionado.credito || 0);
+            else if(tipoVenta === 'MAYOR') unit = parseFloat(pSeleccionado.precio_mayor || pSeleccionado.mayor || 0);
             
             const total = (unit * cant) - desc;
             document.getElementById('inp-precio').value = (total < 0 ? 0 : total).toLocaleString();
@@ -238,7 +248,13 @@
                 fecha_venta: new Date().toLocaleDateString()
             };
 
-            if(!v.vendedor || !v.cliente) return;
+            if(tipoVenta === 'CREDITO') {
+                v.fecha_entrega = document.getElementById('fecha-entrega').value;
+                v.fecha_limite = document.getElementById('fecha-limite').value;
+                if(!v.fecha_limite) return alert("Indica la fecha de cobro");
+            }
+
+            if(!v.vendedor || !v.cliente) return alert("Faltan datos");
 
             try {
                 if(editId) {
@@ -259,10 +275,16 @@
             window.setTipo(v.tipo);
             document.getElementById('inp-cantidad').value = v.cantidad;
             document.getElementById('inp-descuento').value = v.descuento;
+            
+            if(v.tipo === 'CREDITO') {
+                document.getElementById('fecha-entrega').value = v.fecha_entrega || "";
+                document.getElementById('fecha-limite').value = v.fecha_limite || "";
+            }
+
             document.getElementById('btn-venta').innerText = "ACTUALIZAR VENTA";
             document.getElementById('btn-cancel').classList.remove('hidden');
             calcularTotal();
-            window.scrollTo(0,0);
+            window.scrollTo({top: 0, behavior: 'smooth'});
         };
 
         window.eliminarVenta = async (id) => {
@@ -278,6 +300,7 @@
             document.getElementById('inp-cantidad').value = 1;
             document.getElementById('inp-descuento').value = 0;
             document.getElementById('inp-precio').value = "0.00";
+            document.getElementById('panel-fechas-credito').classList.add('hidden');
         };
 
         function renderizarVentas() {
@@ -293,12 +316,18 @@
                             <span class="text-[7px] font-black bg-white/10 px-2 py-0.5 rounded text-gold uppercase">${v.tipo}</span>
                             <div class="text-[11px] font-black uppercase mt-1">${v.cliente}</div>
                             <div class="text-[9px] text-gray-500 italic mt-0.5">${v.producto} (${v.variante}) x${v.cantidad}</div>
+                            ${v.tipo === 'CREDITO' ? `
+                                <div class="mt-2 flex gap-2 text-[8px] font-bold uppercase">
+                                    <span class="text-gray-400">Entrega: ${v.fecha_entrega || 'N/A'}</span>
+                                    <span class="text-red-400">Cobro: ${v.fecha_limite || 'N/A'}</span>
+                                </div>
+                            ` : ''}
                         </div>
                         <div class="text-right">
                             <div class="text-green-400 font-black text-sm">$${v.total.toLocaleString()}</div>
                             <div class="flex gap-3 justify-end mt-2">
-                                <button onclick="window.editarVenta('${v.id}')" class="text-blue-500 text-[10px]"><i class="fa-solid fa-pen"></i></button>
-                                <button onclick="window.eliminarVenta('${v.id}')" class="text-red-900 text-[10px]"><i class="fa-solid fa-trash-can"></i></button>
+                                <button onclick="window.editarVenta('${v.id}')" class="text-blue-500 text-[10px] hover:scale-110 transition-transform"><i class="fa-solid fa-pen"></i></button>
+                                <button onclick="window.eliminarVenta('${v.id}')" class="text-red-900 text-[10px] hover:scale-110 transition-transform"><i class="fa-solid fa-trash-can"></i></button>
                             </div>
                         </div>
                     </div>
@@ -306,12 +335,11 @@
             `).join('');
         }
 
-        // Inputs dinámicos
         document.getElementById('inp-cantidad').addEventListener('input', calcularTotal);
         document.getElementById('inp-descuento').addEventListener('input', calcularTotal);
-
     </script>
 </body>
 </html>
 
 ```
+    
