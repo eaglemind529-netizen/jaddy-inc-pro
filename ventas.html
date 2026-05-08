@@ -1,4 +1,4 @@
-
+```html
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -39,6 +39,12 @@
             <div class="space-y-4">
                 <input type="hidden" id="edit-id">
 
+                <!-- Fecha de Venta (Para todas las ventas) -->
+                <div class="relative">
+                    <p class="text-[7px] text-gold font-black absolute -top-2 left-3 bg-[#0A0A0A] px-2 uppercase z-10">Fecha de Operación:</p>
+                    <input type="date" id="fecha-operacion" class="input-field border-gold/20 text-gold italic">
+                </div>
+
                 <div class="relative">
                     <p class="text-[7px] text-gold font-black absolute -top-2 left-3 bg-[#0A0A0A] px-2 uppercase z-10">Vendedor:</p>
                     <select id="sel-vendedor" class="input-field border-gold/30 text-gold italic">
@@ -77,7 +83,7 @@
                     <button onclick="window.setTipo('MAYOR')" id="t-mayor" class="tab-btn">Mayor</button>
                 </div>
 
-                <!-- Panel de Fechas (Solo para Crédito) -->
+                <!-- Panel de Fechas Adicionales (Solo para Crédito) -->
                 <div id="panel-fechas-credito" class="hidden grid grid-cols-2 gap-2 p-3 bg-zinc-900/50 rounded-xl border border-white/5">
                     <div class="relative">
                         <p class="text-[7px] text-gold absolute -top-2 left-2 bg-[#0A0A0A] px-1 uppercase z-10">Entrega:</p>
@@ -145,6 +151,10 @@
                 document.body.style.display = "block";
                 document.getElementById('loading-screen').style.display = "none";
                 document.getElementById('statusDot').classList.add('bg-green-500', 'shadow-green-500/50');
+                
+                // Establecer fecha de hoy por defecto para todas las ventas
+                document.getElementById('fecha-operacion').valueAsDate = new Date();
+                
                 escucharDatos(user.uid); 
             } else {
                 window.location.href = "login.html";
@@ -190,11 +200,9 @@
                 document.getElementById('t-'+id)?.classList.toggle('active', id === t.toLowerCase());
             });
             
-            // Mostrar u ocultar panel de fechas si es crédito
             const panelFechas = document.getElementById('panel-fechas-credito');
             if(t === 'CREDITO') {
                 panelFechas.classList.remove('hidden');
-                // Poner fecha de hoy por defecto
                 document.getElementById('fecha-entrega').valueAsDate = new Date();
             } else {
                 panelFechas.classList.add('hidden');
@@ -232,6 +240,9 @@
             if(!userId || !pSeleccionado) return;
             const editId = document.getElementById('edit-id').value;
             
+            // Capturar fecha seleccionada o usar la de hoy si está vacía
+            const fechaManual = document.getElementById('fecha-operacion').value;
+
             const v = {
                 vendedor: document.getElementById('sel-vendedor').value,
                 cliente: document.getElementById('btn-cli-reg').classList.contains('active') ? 
@@ -245,16 +256,17 @@
                 total: parseFloat(document.getElementById('inp-precio').value.replace(/,/g, '')),
                 tipo: tipoVenta,
                 timestamp: Date.now(),
-                fecha_venta: new Date().toLocaleDateString()
+                fecha_venta: fechaManual ? new Date(fechaManual + 'T00:00:00').toLocaleDateString() : new Date().toLocaleDateString(),
+                fecha_raw: fechaManual // Guardamos la ISO para facilitar edición posterior
             };
 
             if(tipoVenta === 'CREDITO') {
                 v.fecha_entrega = document.getElementById('fecha-entrega').value;
                 v.fecha_limite = document.getElementById('fecha-limite').value;
-                if(!v.fecha_limite) return alert("Indica la fecha de cobro");
+                if(!v.fecha_limite) return;
             }
 
-            if(!v.vendedor || !v.cliente) return alert("Faltan datos");
+            if(!v.vendedor || !v.cliente) return;
 
             try {
                 if(editId) {
@@ -276,6 +288,9 @@
             document.getElementById('inp-cantidad').value = v.cantidad;
             document.getElementById('inp-descuento').value = v.descuento;
             
+            // Cargar fecha que tenía la venta
+            if(v.fecha_raw) document.getElementById('fecha-operacion').value = v.fecha_raw;
+
             if(v.tipo === 'CREDITO') {
                 document.getElementById('fecha-entrega').value = v.fecha_entrega || "";
                 document.getElementById('fecha-limite').value = v.fecha_limite || "";
@@ -301,6 +316,7 @@
             document.getElementById('inp-descuento').value = 0;
             document.getElementById('inp-precio').value = "0.00";
             document.getElementById('panel-fechas-credito').classList.add('hidden');
+            document.getElementById('fecha-operacion').valueAsDate = new Date();
         };
 
         function renderizarVentas() {
@@ -313,11 +329,14 @@
                 <div class="sale-card">
                     <div class="flex justify-between items-start">
                         <div>
-                            <span class="text-[7px] font-black bg-white/10 px-2 py-0.5 rounded text-gold uppercase">${v.tipo}</span>
+                            <div class="flex items-center gap-2 mb-1">
+                                <span class="text-[7px] font-black bg-white/10 px-2 py-0.5 rounded text-gold uppercase">${v.tipo}</span>
+                                <span class="text-[7px] text-gray-500 font-bold italic">${v.fecha_venta}</span>
+                            </div>
                             <div class="text-[11px] font-black uppercase mt-1">${v.cliente}</div>
                             <div class="text-[9px] text-gray-500 italic mt-0.5">${v.producto} (${v.variante}) x${v.cantidad}</div>
                             ${v.tipo === 'CREDITO' ? `
-                                <div class="mt-2 flex gap-2 text-[8px] font-bold uppercase">
+                                <div class="mt-2 flex gap-2 text-[8px] font-bold uppercase border-t border-white/5 pt-2">
                                     <span class="text-gray-400">Entrega: ${v.fecha_entrega || 'N/A'}</span>
                                     <span class="text-red-400">Cobro: ${v.fecha_limite || 'N/A'}</span>
                                 </div>
@@ -342,4 +361,3 @@
 </html>
 
 ```
-    
