@@ -4,84 +4,117 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Reportes Luxury | Jaddy INC</title>
+    <title>Reportes & Egresos | Jaddy INC</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root { --gold: #D4AF37; --bg: #050505; }
-        body { background: var(--bg); color: white; font-family: 'Inter', sans-serif; margin: 0; display: none; }
+        body { background: var(--bg); color: white; font-family: 'Inter', sans-serif; margin: 0; }
         .gold-border { border: 1px solid rgba(212, 175, 55, 0.2); }
         .stat-card { background: #0A0A0A; border: 1px solid #1A1A1A; border-radius: 20px; padding: 15px; }
-        .input-field { background: #111; border: 1px solid #222; border-radius: 12px; padding: 10px; width: 100%; color: white; font-size: 12px; font-weight: bold; outline: none; }
+        .input-field { background: #111; border: 1px solid #222; border-radius: 12px; padding: 12px; width: 100%; color: white; font-size: 13px; outline: none; }
+        .btn-gold { background: linear-gradient(135deg, #D4AF37, #AA8928); color: black; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; border-radius: 12px; padding: 12px; transition: all 0.3s; }
+        .btn-gold:active { transform: scale(0.95); opacity: 0.8; }
         #loading-screen { position: fixed; inset: 0; background: #050505; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; }
         input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); opacity: 0.5; }
+        .date-label { font-size: 7px; color: #D4AF37; font-weight: 900; text-transform: uppercase; margin-bottom: 2px; display: block; letter-spacing: 1px;}
     </style>
 </head>
-<body class="pb-24 max-w-md mx-auto">
+<body class="pb-32 max-w-md mx-auto">
 
     <div id="loading-screen">
         <div class="w-10 h-10 border-2 border-gold/20 border-t-gold rounded-full animate-spin mb-4"></div>
-        <p class="text-gold text-[10px] font-black uppercase tracking-[0.5em]">Generando Inteligencia</p>
+        <p class="text-gold text-[10px] font-black uppercase tracking-[0.5em]">Calculando Rango</p>
     </div>
 
     <div class="p-4">
         <header class="flex justify-between items-center mb-6">
-            <button onclick="window.location.href='index.html'" class="text-[10px] font-black border border-gold/30 px-4 py-2 rounded-full text-gold uppercase">← Inicio</button>
+            <button onclick="window.location.href='index.html'" class="text-[10px] font-black border border-gold/30 px-4 py-2 rounded-full text-gold uppercase">← Menú</button>
             <div class="text-right">
-                <p class="text-[8px] text-gray-500 font-black uppercase">Balance General</p>
-                <p class="text-gold font-black italic text-xs">JADDY INC</p>
+                <p class="text-[8px] text-gray-500 font-black uppercase tracking-widest">Análisis de Rango</p>
+                <p class="text-gold font-black italic text-sm">JADDY INC</p>
             </div>
         </header>
 
-        <!-- Filtro Temporal -->
-        <div class="mb-6 flex gap-2 items-center bg-[#0A0A0A] p-3 rounded-2xl gold-border">
-            <i class="fa-solid fa-calendar-day text-gold text-xs ml-2"></i>
-            <input type="date" id="filtro-fecha" class="input-field border-none text-gold uppercase tracking-widest bg-transparent">
-        </div>
-
-        <!-- Stats Principales -->
-        <div class="grid grid-cols-2 gap-3 mb-6">
-            <div class="stat-card">
-                <p class="text-[7px] text-gray-500 font-black uppercase mb-1 tracking-tighter">Total Recaudado</p>
-                <p id="total-monto" class="text-xl font-black text-green-400">$0.00</p>
-            </div>
-            <div class="stat-card">
-                <p class="text-[7px] text-gray-500 font-black uppercase mb-1 tracking-tighter">Volumen Ventas</p>
-                <p id="total-ventas" class="text-xl font-black text-white">0</p>
-            </div>
-            <div class="stat-card">
-                <p class="text-[7px] text-gray-500 font-black uppercase mb-1 tracking-tighter">Por Cobrar (Crédito)</p>
-                <p id="total-credito" class="text-xl font-black text-orange-400">$0.00</p>
-            </div>
-            <div class="stat-card">
-                <p class="text-[7px] text-gray-500 font-black uppercase mb-1 tracking-tighter">Promedio x Venta</p>
-                <p id="promedio-venta" class="text-xl font-black text-blue-400">$0.00</p>
+        <!-- Filtro por Rango de Fechas -->
+        <div class="mb-6 bg-[#0A0A0A] p-4 rounded-2xl gold-border">
+            <p class="text-[9px] text-gray-500 font-black uppercase mb-3 tracking-[2px] text-center">Filtrar por Periodo</p>
+            <div class="flex gap-3">
+                <div class="flex-1">
+                    <label class="date-label">Desde</label>
+                    <input type="date" id="fecha-inicio" class="input-field border-none text-white bg-[#151515] font-bold p-2 h-10">
+                </div>
+                <div class="flex-1">
+                    <label class="date-label">Hasta</label>
+                    <input type="date" id="fecha-fin" class="input-field border-none text-white bg-[#151515] font-bold p-2 h-10">
+                </div>
             </div>
         </div>
 
-        <!-- Top Productos -->
-        <section class="bg-[#0A0A0A] p-5 rounded-[28px] gold-border mb-6">
-            <h3 class="text-[9px] font-black text-gold uppercase tracking-[3px] mb-4 italic flex items-center gap-2">
-                <i class="fa-solid fa-crown text-[8px]"></i> Desempeño de Inventario
+        <!-- Dashboard de Utilidad -->
+        <div class="stat-card mb-6 border-gold/40 relative overflow-hidden">
+            <div class="absolute top-0 right-0 p-2 opacity-10">
+                <i class="fa-solid fa-gem text-4xl text-gold"></i>
+            </div>
+            <p class="text-[9px] text-gold font-black uppercase mb-1 tracking-widest">Utilidad Neta del Periodo</p>
+            <p id="total-utilidad" class="text-3xl font-black text-white">$0.00</p>
+            <div class="flex gap-4 mt-3 pt-3 border-t border-white/5">
+                <div>
+                    <p class="text-[7px] text-gray-500 font-black uppercase">Ingresos (+)</p>
+                    <p id="subtotal-ventas" class="text-sm font-bold text-green-400">$0.00</p>
+                </div>
+                <div>
+                    <p class="text-[7px] text-gray-500 font-black uppercase">Egresos (-)</p>
+                    <p id="subtotal-egresos" class="text-sm font-bold text-red-500">$0.00</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Grid de Stats Secundarios -->
+        <div class="grid grid-cols-2 gap-3 mb-8">
+            <div class="stat-card">
+                <p class="text-[7px] text-gray-500 font-black uppercase mb-1">Cuentas por Cobrar</p>
+                <p id="total-credito" class="text-lg font-black text-orange-400">$0.00</p>
+            </div>
+            <div class="stat-card">
+                <p class="text-[7px] text-gray-500 font-black uppercase mb-1">Ventas Realizadas</p>
+                <p id="total-ventas" class="text-lg font-black text-white">0</p>
+            </div>
+        </div>
+
+        <!-- Sección de Egresos (Registro) -->
+        <section class="bg-[#0A0A0A] p-5 rounded-[28px] gold-border mb-8">
+            <h3 class="text-[10px] font-black text-gold uppercase tracking-[3px] mb-4 flex items-center gap-2">
+                <i class="fa-solid fa-file-invoice-dollar"></i> Registrar Egreso
             </h3>
-            <div id="lista-top-productos" class="space-y-4">
+            <div class="space-y-3">
+                <input type="text" id="egreso-motivo" placeholder="Motivo (Ej: Gasolina, Almuerzo)" class="input-field">
+                <input type="number" id="egreso-monto" placeholder="Monto $" class="input-field">
+                <button onclick="guardarEgreso()" class="btn-gold w-full text-[11px]">Guardar Gasto</button>
+            </div>
+        </section>
+
+        <!-- Detalle de Egresos -->
+        <section class="mb-8">
+            <h3 class="text-[9px] font-black text-gray-500 uppercase tracking-[3px] mb-3 px-2">Detalle de Gastos en Periodo</h3>
+            <div id="lista-egresos" class="space-y-2">
                 <!-- Se llena dinamicamente -->
             </div>
         </section>
 
-        <!-- Desglose por Vendedor -->
-        <section class="bg-[#0A0A0A] p-5 rounded-[28px] gold-border">
-            <h3 class="text-[9px] font-black text-gray-500 uppercase tracking-[3px] mb-4 italic text-center">Ranking de Equipo</h3>
-            <div id="lista-vendedores" class="space-y-2">
-                <!-- Se llena dinamicamente -->
-            </div>
-        </section>
+        <!-- Botones de Acción -->
+        <div class="fixed bottom-6 left-4 right-4 flex gap-2">
+            <button onclick="enviarWhatsApp()" class="flex-1 bg-[#25D366] text-black font-black py-4 rounded-2xl flex items-center justify-center gap-2 shadow-xl active:scale-95 transition-all">
+                <i class="fa-brands fa-whatsapp text-xl"></i>
+                <span class="text-[11px] uppercase tracking-tighter">Enviar Reporte por WhatsApp</span>
+            </button>
+        </div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getFirestore, collection, onSnapshot, query, where } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, collection, onSnapshot, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCrjjeOoXPOtJDXDfrHLOA4Ny0QW2zfVWk",
@@ -98,91 +131,140 @@
 
         let userId = null;
         let ventasData = [];
+        let egresosData = [];
 
         onAuthStateChanged(auth, (user) => { 
             if(user && !user.isAnonymous){ 
                 userId = user.uid;
-                document.body.style.display = "block";
                 document.getElementById('loading-screen').style.display = "none";
                 
-                // Fecha de hoy por defecto
-                document.getElementById('filtro-fecha').valueAsDate = new Date();
+                // Setear rango por defecto: Hoy
+                const hoy = new Date().toISOString().split('T')[0];
+                document.getElementById('fecha-inicio').value = hoy;
+                document.getElementById('fecha-fin').value = hoy;
                 
-                escucharVentas(user.uid); 
+                escucharDatos(user.uid); 
             } else {
                 window.location.href = "login.html";
             }
         });
 
-        function escucharVentas(uid) {
-            // Escuchamos todas las ventas para poder filtrar dinámicamente en el cliente
+        function escucharDatos(uid) {
             onSnapshot(collection(db, 'usuarios', uid, 'ventas_realizadas'), snap => {
                 ventasData = snap.docs.map(d => ({id: d.id, ...d.data()}));
-                procesarReportes();
+                procesarTodo();
+            });
+
+            onSnapshot(collection(db, 'usuarios', uid, 'egresos'), snap => {
+                egresosData = snap.docs.map(d => ({id: d.id, ...d.data()}));
+                procesarTodo();
             });
         }
 
-        function procesarReportes() {
-            const fechaFiltro = new Date(document.getElementById('filtro-fecha').value + 'T00:00:00').toLocaleDateString();
-            
-            // Filtrar por la fecha seleccionada
-            const ventasFiltradas = ventasData.filter(v => v.fecha_venta === fechaFiltro);
+        window.guardarEgreso = async () => {
+            const motivo = document.getElementById('egreso-motivo').value;
+            const monto = parseFloat(document.getElementById('egreso-monto').value);
+            const fechaObj = new Date();
+            // Formato YYYY-MM-DD para comparar fácilmente
+            const fecha = fechaObj.toISOString().split('T')[0];
+            // Formato DD/MM/YYYY para mostrar al usuario si fuera necesario
+            const fechaDisplay = fechaObj.toLocaleDateString();
 
-            let totalMonto = 0;
-            let totalCredito = 0;
-            let conteoVentas = ventasFiltradas.length;
-            let productosMap = {};
-            let vendedoresMap = {};
+            if(!motivo || !monto) return;
 
-            ventasFiltradas.forEach(v => {
-                totalMonto += v.total;
-                if(v.tipo === 'CREDITO') totalCredito += v.total;
+            try {
+                await addDoc(collection(db, 'usuarios', userId, 'egresos'), {
+                    motivo,
+                    monto,
+                    fecha, // Guardamos en formato ISO para el filtro
+                    fechaDisplay,
+                    createdAt: serverTimestamp()
+                });
+                document.getElementById('egreso-motivo').value = "";
+                document.getElementById('egreso-monto').value = "";
+            } catch (e) { console.error(e); }
+        }
 
-                // Agrupar por producto
-                productosMap[v.producto] = (productosMap[v.producto] || 0) + v.cantidad;
-                
-                // Agrupar por vendedor
-                vendedoresMap[v.vendedor] = (vendedoresMap[v.vendedor] || 0) + v.total;
-            });
+        function procesarTodo() {
+            const inicio = document.getElementById('fecha-inicio').value;
+            const fin = document.getElementById('fecha-fin').value;
 
-            // Renderizar Stats
-            document.getElementById('total-monto').innerText = `$${totalMonto.toLocaleString()}`;
-            document.getElementById('total-ventas').innerText = conteoVentas;
+            if(!inicio || !fin) return;
+
+            // Filtrar ventas por rango
+            // Nota: Las ventas se guardaban como DD/MM/YYYY, necesitamos convertirlas o asegurar consistencia.
+            // Para este sistema, asumimos que comparamos las strings de fecha o las convertimos.
+            const filtrarRango = (itemFecha) => {
+                // Convertir DD/MM/YYYY a YYYY-MM-DD si es necesario
+                let fechaNormalizada = itemFecha;
+                if(itemFecha.includes('/')) {
+                    const parts = itemFecha.split('/');
+                    fechaNormalizada = `${parts[2]}-${parts[1].padStart(2,'0')}-${parts[0].padStart(2,'0')}`;
+                }
+                return fechaNormalizada >= inicio && fechaNormalizada <= fin;
+            };
+
+            const ventasFiltradas = ventasData.filter(v => filtrarRango(v.fecha_venta));
+            const egresosFiltrados = egresosData.filter(e => filtrarRango(e.fecha));
+
+            let totalVendido = ventasFiltradas.reduce((acc, v) => acc + v.total, 0);
+            let totalCredito = ventasFiltradas.filter(v => v.tipo === 'CREDITO').reduce((acc, v) => acc + v.total, 0);
+            let totalEgresos = egresosFiltrados.reduce((acc, e) => acc + e.monto, 0);
+
+            // UI
+            document.getElementById('subtotal-ventas').innerText = `$${totalVendido.toLocaleString()}`;
+            document.getElementById('subtotal-egresos').innerText = `$${totalEgresos.toLocaleString()}`;
+            document.getElementById('total-utilidad').innerText = `$${(totalVendido - totalEgresos).toLocaleString()}`;
             document.getElementById('total-credito').innerText = `$${totalCredito.toLocaleString()}`;
-            document.getElementById('promedio-venta').innerText = `$${(totalMonto / (conteoVentas || 1)).toLocaleString(undefined, {maximumFractionDigits: 2})}`;
+            document.getElementById('total-ventas').innerText = ventasFiltradas.length;
 
-            // Renderizar Top Productos
-            const listaProd = document.getElementById('lista-top-productos');
-            const sortedProds = Object.entries(productosMap).sort((a,b) => b[1] - a[1]).slice(0, 5);
-            
-            if(sortedProds.length === 0) {
-                listaProd.innerHTML = '<p class="text-[10px] text-gray-600 text-center uppercase py-4">Sin datos hoy</p>';
+            // Lista Egresos
+            const listaE = document.getElementById('lista-egresos');
+            if(egresosFiltrados.length === 0) {
+                listaE.innerHTML = '<p class="text-[9px] text-gray-700 text-center uppercase py-2 italic">Sin gastos en este periodo</p>';
             } else {
-                listaProd.innerHTML = sortedProds.map(([name, cant]) => `
-                    <div class="flex justify-between items-center">
-                        <div class="flex items-center gap-3">
-                            <div class="w-2 h-2 rounded-full bg-gold"></div>
-                            <p class="text-[11px] font-black uppercase">${name}</p>
+                listaE.innerHTML = egresosFiltrados.map(e => `
+                    <div class="flex justify-between items-center bg-[#111] p-3 rounded-xl border border-white/5">
+                        <div>
+                            <p class="text-[10px] font-bold uppercase">${e.motivo}</p>
+                            <p class="text-[7px] text-gray-500">${e.fecha}</p>
                         </div>
-                        <p class="text-[11px] font-black text-gray-400">${cant} UNID.</p>
+                        <p class="text-[10px] font-black text-red-400">-$${e.monto.toLocaleString()}</p>
                     </div>
                 `).join('');
             }
-
-            // Renderizar Vendedores
-            const listaVend = document.getElementById('lista-vendedores');
-            const sortedVend = Object.entries(vendedoresMap).sort((a,b) => b[1] - a[1]);
-            
-            listaVend.innerHTML = sortedVend.map(([name, monto]) => `
-                <div class="flex justify-between items-center bg-white/5 p-3 rounded-xl border border-white/5">
-                    <p class="text-[10px] font-black uppercase text-gold italic">${name || 'SIN NOMBRE'}</p>
-                    <p class="text-[10px] font-black text-green-400">$${monto.toLocaleString()}</p>
-                </div>
-            `).join('');
         }
 
-        document.getElementById('filtro-fecha').addEventListener('change', procesarReportes);
+        window.enviarWhatsApp = () => {
+            const inicio = document.getElementById('fecha-inicio').value;
+            const fin = document.getElementById('fecha-fin').value;
+            const utilidad = document.getElementById('total-utilidad').innerText;
+            const ventas = document.getElementById('subtotal-ventas').innerText;
+            const egresos = document.getElementById('subtotal-egresos').innerText;
+            const credito = document.getElementById('total-credito').innerText;
+            const cant = document.getElementById('total-ventas').innerText;
 
+            const periodo = (inicio === fin) ? inicio : `${inicio} al ${fin}`;
+
+            const mensaje = encodeURIComponent(
+                `🏆 *REPORTE DE NEGOCIO JADDY INC*\n` +
+                `📅 Periodo: ${periodo}\n` +
+                `--------------------------------\n` +
+                `💰 *VENTAS TOTALES:* ${ventas}\n` +
+                `💸 *EGRESOS:* ${egresos}\n` +
+                `💳 *POR COBRAR:* ${credito}\n` +
+                `📦 *OPERACIONES:* ${cant}\n` +
+                `--------------------------------\n` +
+                `💎 *UTILIDAD NETA: ${utilidad}*\n` +
+                `--------------------------------\n` +
+                `_Generado por Luxury Intelligence_`
+            );
+
+            window.open(`https://wa.me/?text=${mensaje}`);
+        }
+
+        document.getElementById('fecha-inicio').addEventListener('change', procesarTodo);
+        document.getElementById('fecha-fin').addEventListener('change', procesarTodo);
     </script>
 </body>
 </html>
