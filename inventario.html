@@ -1,4 +1,4 @@
-
+```html
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -50,15 +50,26 @@
         <section class="bg-[#0A0A0A] p-5 rounded-[24px] gold-border mb-8 shadow-2xl">
             <h2 class="text-center text-gold font-black uppercase text-[10px] tracking-[3px] mb-6 italic">Ingreso de Mercancía</h2>
             <div class="space-y-4">
-                <select id="sel-producto" class="input-field">
-                    <option value="">CARGANDO TUS PRODUCTOS...</option>
-                </select>
+                <!-- SELECT DE PRODUCTOS CONECTADO -->
+                <div class="relative">
+                    <p class="text-[7px] text-gray-500 absolute -top-2 left-3 bg-[#0A0A0A] px-2 uppercase z-10">Producto Maestro:</p>
+                    <select id="sel-producto" class="input-field border-gold/20">
+                        <option value="">CARGANDO TUS PRODUCTOS...</option>
+                    </select>
+                </div>
                 
-                <select id="sel-variante" class="input-field">
-                    <option value="">SELECCIONA VARIANTE</option>
-                </select>
+                <!-- SELECT DE VARIANTES CONECTADO -->
+                <div class="relative">
+                    <p class="text-[7px] text-gray-500 absolute -top-2 left-3 bg-[#0A0A0A] px-2 uppercase z-10">Variante / Talla:</p>
+                    <select id="sel-variante" class="input-field">
+                        <option value="">SELECCIONA VARIANTE</option>
+                    </select>
+                </div>
                 
-                <input type="number" id="inp-cantidad" placeholder="CANTIDAD" class="input-field font-black text-xl text-center text-gold">
+                <div class="relative">
+                    <p class="text-[7px] text-gray-500 absolute -top-2 left-3 bg-[#0A0A0A] px-2 uppercase z-10">Cantidad a sumar:</p>
+                    <input type="number" id="inp-cantidad" placeholder="0" class="input-field font-black text-xl text-center text-gold">
+                </div>
                 
                 <button id="btnGuardar" class="w-full bg-white text-black font-black py-4 rounded-xl uppercase tracking-widest text-sm active:scale-95 transition-transform">
                     REGISTRAR ENTRADA
@@ -75,7 +86,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAuth, onAuthStateChanged, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, onSnapshot, collection, increment } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, onSnapshot, collection, increment, query, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCrjjeOoXPOtJDXDfrHLOA4Ny0QW2zfVWk",
@@ -101,48 +112,41 @@
         let inventarioData = {};
         let userId = null;
 
-        // 1. INTENTAR AUTENTICACIÓN CON EL TOKEN DEL LOGIN (LOGIC)
         const initAuth = async () => {
             if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
                 await signInWithCustomToken(auth, __initial_auth_token);
             } else {
-                // Si no hay token, intentamos anónimo, pero el guard no se quitará hasta confirmar UID
                 await signInAnonymously(auth);
             }
         };
         initAuth();
 
-        // 2. EL GUARDIÁN: Solo libera la interfaz si el usuario es REAL
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 userId = user.uid;
-                console.log("Usuario Autenticado con UID:", userId);
-                
-                // Quitamos el bloqueo
                 authGuard.style.opacity = "0";
                 setTimeout(() => {
                     authGuard.style.display = "none";
                     mainContent.classList.add('authorized');
                 }, 500);
-
-                // Solo aquí empezamos a pedir datos a Firebase
                 vincularBaseDeDatos(user.uid);
-            } else {
-                // Si no hay usuario, redirigir al login o mantener bloqueo
-                console.error("Acceso denegado: No hay sesión activa.");
             }
         });
 
         function vincularBaseDeDatos(uid) {
-            // Cargar tus productos (los que creaste en la otra pantalla)
-            onSnapshot(collection(db, 'users', uid, 'productos'), (snap) => {
+            // CONEXIÓN REAL A PRODUCTOS: Trae lo que creaste en el otro archivo
+            onSnapshot(query(collection(db, 'users', uid, 'productos'), orderBy("nombre", "asc")), (snap) => {
                 productosMaestros = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-                selProd.innerHTML = productosMaestros.length ? 
-                    '<option value="">-- SELECCIONA --</option>' + productosMaestros.map(p => `<option value="${p.id}">${p.nombre.toUpperCase()}</option>`).join('') :
-                    '<option value="">CREA PRODUCTOS PRIMERO</option>';
+                
+                if (productosMaestros.length === 0) {
+                    selProd.innerHTML = '<option value="">NO TIENES PRODUCTOS CREADOS</option>';
+                } else {
+                    selProd.innerHTML = '<option value="">-- SELECCIONA PRODUCTO --</option>' + 
+                        productosMaestros.map(p => `<option value="${p.id}">${p.nombre.toUpperCase()}</option>`).join('');
+                }
             });
 
-            // Cargar tu inventario histórico (el que tienes guardado de antes)
+            // CONEXIÓN REAL A INVENTARIO
             onSnapshot(collection(db, 'users', uid, 'inventario_master'), (snap) => {
                 inventarioData = {};
                 snap.docs.forEach(d => { inventarioData[d.id] = d.data(); });
@@ -150,12 +154,13 @@
             });
         }
 
+        // Al cambiar de producto, cargamos sus variantes reales
         selProd.onchange = (e) => {
             const prod = productosMaestros.find(p => p.id === e.target.value);
-            if (prod && prod.variantes?.length > 0) {
+            if (prod && prod.variantes && prod.variantes.length > 0) {
                 selVar.innerHTML = prod.variantes.map(v => `<option value="${v}">${v.toUpperCase()}</option>`).join('');
             } else {
-                selVar.innerHTML = '<option value="GENERAL">ESTANDAR</option>';
+                selVar.innerHTML = '<option value="GENERAL">ESTANDAR (SIN VARIANTES)</option>';
             }
         };
 
@@ -164,16 +169,19 @@
             const variante = selVar.value;
             const cant = parseInt(document.getElementById('inp-cantidad').value);
 
-            if (!userId || !prodId || isNaN(cant) || cant <= 0) return;
+            if (!userId || !prodId || isNaN(cant) || cant <= 0) {
+                alert("Verifica el producto y la cantidad");
+                return;
+            }
 
             const prod = productosMaestros.find(p => p.id === prodId);
             const docId = `${prodId}_${variante.replace(/\s+/g, '_')}`;
 
             try {
-                btnGuardar.innerText = "GUARDANDO EN NUBE...";
+                btnGuardar.innerText = "SINCRONIZANDO...";
                 btnGuardar.disabled = true;
 
-                // Guardado directo en TU espacio de base de datos
+                // GUARDADO EN TU RUTA PRIVADA
                 await setDoc(doc(db, 'users', userId, 'inventario_master', docId), {
                     prodId, variante,
                     nombreProducto: prod.nombre,
@@ -185,9 +193,13 @@
 
                 document.getElementById('inp-cantidad').value = "";
                 btnGuardar.innerText = "¡SINCRONIZADO!";
-                setTimeout(() => { btnGuardar.disabled = false; btnGuardar.innerText = "REGISTRAR ENTRADA"; }, 1000);
+                setTimeout(() => { 
+                    btnGuardar.disabled = false; 
+                    btnGuardar.innerText = "REGISTRAR ENTRADA"; 
+                }, 1000);
             } catch (e) {
-                alert("Error de conexión con la base de datos.");
+                console.error(e);
+                alert("Error al guardar en la nube");
                 btnGuardar.disabled = false;
             }
         };
@@ -203,7 +215,7 @@
             });
 
             if (Object.keys(grupos).length === 0) {
-                displayStock.innerHTML = '<div class="text-center py-10 opacity-20 text-[10px] font-black uppercase">No tienes inventario registrado todavía</div>';
+                displayStock.innerHTML = '<div class="text-center py-10 opacity-20 text-[10px] font-black uppercase">No hay stock en tu base de datos</div>';
                 return;
             }
 
@@ -215,10 +227,10 @@
                         <button onclick="toggleDetalle('${id}')" class="w-full flex justify-between items-center p-5 bg-[#0D0D0D] active:bg-[#151515]">
                             <div class="text-left">
                                 <h3 class="text-xs font-black uppercase text-white">${g.nombre}</h3>
-                                <span class="text-[7px] text-gold font-bold uppercase">${g.items.length} Variantes</span>
+                                <span class="text-[7px] text-gold font-bold uppercase tracking-widest">${g.items.length} VARIANTES ACTIVAS</span>
                             </div>
                             <div class="text-right">
-                                <div class="text-white font-black text-lg">${total}</div>
+                                <div class="text-white font-black text-lg leading-none">${total}</div>
                                 <div class="label-stat">Existencia</div>
                             </div>
                         </button>
@@ -240,4 +252,4 @@
 </body>
 </html>
 
-
+```
