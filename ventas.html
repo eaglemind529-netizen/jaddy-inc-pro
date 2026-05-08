@@ -4,125 +4,117 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Ventas CRM | Jaddy INC</title>
+    <title>Ventas Luxury | Jaddy INC</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root { --gold: #D4AF37; --bg: #050505; }
-        body { background: var(--bg); color: white; font-family: 'Inter', sans-serif; margin: 0; }
+        /* Seguridad: El body empieza oculto */
+        body { background: var(--bg); color: white; font-family: 'Inter', sans-serif; margin: 0; display: none; }
         .gold-border { border: 1px solid rgba(212, 175, 55, 0.2); }
-        .input-field { background: #111; border: 1px solid #222; border-radius: 12px; padding: 14px; width: 100%; color: white; font-size: 14px; font-weight: bold; text-transform: uppercase; appearance: none; outline: none; }
+        .input-field { background: #111; border: 1px solid #222; border-radius: 12px; padding: 14px; width: 100%; color: white; font-size: 13px; font-weight: bold; text-transform: uppercase; outline: none; }
         .input-field:focus { border-color: var(--gold); }
-        .tab-btn { flex: 1; padding: 12px; font-size: 10px; font-weight: 900; text-transform: uppercase; border-radius: 10px; border: 1px solid #222; color: #555; transition: 0.3s; background: transparent; }
+        .tab-btn { flex: 1; padding: 12px; font-size: 10px; font-weight: 900; text-transform: uppercase; border-radius: 10px; border: 1px solid #222; color: #555; background: transparent; transition: 0.3s; }
         .tab-btn.active { background: white; color: black; border-color: white; }
-        .sale-card { background: #0F0F0F; border: 1px solid #1A1A1A; border-radius: 20px; padding: 15px; margin-bottom: 12px; animation: fadeIn 0.4s ease; position: relative; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        #statusDot { width: 12px; height: 12px; border-radius: 50%; }
-        input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); }
-        
-        .editing-mode { border-color: #3b82f6 !important; box-shadow: 0 0 20px rgba(59, 130, 246, 0.2); }
+        .sale-card { background: #0F0F0F; border: 1px solid #1A1A1A; border-radius: 20px; padding: 15px; margin-bottom: 12px; }
+        #loading-screen { position: fixed; inset: 0; background: #050505; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; }
     </style>
 </head>
-<body class="p-4 pb-24 max-w-md mx-auto">
+<body class="pb-24 max-w-md mx-auto">
 
-    <header class="flex justify-between items-center mb-6">
-        <button onclick="window.history.back()" class="text-[10px] font-black border border-gold/30 px-4 py-2 rounded-full text-gold uppercase">← Volver</button>
-        <div id="statusDot" class="bg-zinc-800"></div>
-    </header>
+    <!-- Pantalla de Carga/Seguridad -->
+    <div id="loading-screen">
+        <div class="w-10 h-10 border-2 border-gold/20 border-t-gold rounded-full animate-spin mb-4"></div>
+        <p class="text-gold text-[10px] font-black uppercase tracking-[0.5em]">Validando Credenciales</p>
+    </div>
 
-    <section id="form-container" class="bg-[#0A0A0A] p-5 rounded-[28px] gold-border mb-8 shadow-2xl transition-all duration-300">
-        <h2 id="form-title" class="text-center text-gold font-black uppercase text-[10px] tracking-[4px] mb-6 italic">Panel de Despacho</h2>
-        
-        <div class="space-y-4">
-            <input type="hidden" id="edit-id" value="">
+    <div class="p-4">
+        <header class="flex justify-between items-center mb-6">
+            <button onclick="window.location.href='index.html'" class="text-[10px] font-black border border-gold/30 px-4 py-2 rounded-full text-gold uppercase">← Inicio</button>
+            <div id="statusDot" class="w-3 h-3 rounded-full bg-zinc-800 shadow-lg"></div>
+        </header>
 
-            <!-- Selección de Vendedor -->
-            <div class="relative">
-                <p class="text-[7px] text-gold font-black absolute -top-2 left-3 bg-[#0A0A0A] px-2 uppercase z-10">Despachado por:</p>
-                <select id="sel-vendedor" class="input-field border-gold/30 text-gold">
-                    <option value="">-- CARGANDO EQUIPO --</option>
-                </select>
-            </div>
-
-            <!-- Selección de Cliente -->
-            <div class="flex gap-2">
-                <button id="btn-cli-reg" onclick="toggleCliente(true)" class="tab-btn active">Registrado</button>
-                <button id="btn-cli-ocu" onclick="toggleCliente(false)" class="tab-btn">Ocasional</button>
-            </div>
+        <section class="bg-[#0A0A0A] p-5 rounded-[28px] gold-border mb-8 shadow-2xl">
+            <h2 class="text-center text-gold font-black uppercase text-[10px] tracking-[4px] mb-6 italic">Nuevo Despacho</h2>
             
-            <div id="area-cliente-reg">
-                <select id="sel-cliente" class="input-field">
-                    <option value="">-- CLIENTES --</option>
-                </select>
-            </div>
-            
-            <div id="area-cliente-ocu" class="hidden">
-                <input type="text" id="inp-cliente-nom" placeholder="NOMBRE DEL CLIENTE" class="input-field">
-            </div>
+            <div class="space-y-4">
+                <input type="hidden" id="edit-id">
 
-            <!-- Productos y Variantes -->
-            <div class="grid grid-cols-1 gap-3">
+                <!-- Vendedor -->
                 <div class="relative">
-                    <p class="text-[7px] text-gray-500 absolute -top-2 left-3 bg-[#0A0A0A] px-2 uppercase z-10">Producto:</p>
+                    <p class="text-[7px] text-gold font-black absolute -top-2 left-3 bg-[#0A0A0A] px-2 uppercase z-10">Vendedor:</p>
+                    <select id="sel-vendedor" class="input-field border-gold/30 text-gold italic">
+                        <option value="">-- CARGANDO EQUIPO --</option>
+                    </select>
+                </div>
+
+                <!-- Cliente -->
+                <div class="flex gap-2">
+                    <button id="btn-cli-reg" onclick="window.toggleCliente(true)" class="tab-btn active">Registrado</button>
+                    <button id="btn-cli-ocu" onclick="window.toggleCliente(false)" class="tab-btn">Ocasional</button>
+                </div>
+                <div id="area-cliente-reg">
+                    <select id="sel-cliente" class="input-field">
+                        <option value="">-- SELECCIONAR CLIENTE --</option>
+                    </select>
+                </div>
+                <div id="area-cliente-ocu" class="hidden">
+                    <input type="text" id="inp-cliente-nom" placeholder="NOMBRE DEL CLIENTE OCASIONAL" class="input-field">
+                </div>
+
+                <!-- Producto y Variante -->
+                <div class="grid grid-cols-1 gap-3">
                     <select id="sel-producto" class="input-field">
                         <option value="">-- SELECCIONAR PRODUCTO --</option>
                     </select>
+                    <div class="relative">
+                        <p class="text-[7px] text-gray-500 absolute -top-2 left-3 bg-[#0A0A0A] px-2 uppercase z-10">Variante:</p>
+                        <select id="sel-variante" class="input-field border-gold/10 text-gold">
+                            <option value="ESTANDAR">ESTANDAR / UNICA</option>
+                        </select>
+                    </div>
                 </div>
-                <div class="relative">
-                    <p class="text-[7px] text-gray-500 absolute -top-2 left-3 bg-[#0A0A0A] px-2 uppercase z-10">Variante Elegida:</p>
-                    <select id="sel-variante" class="input-field border-gold/20 text-gold">
-                        <option value="">-- ELIGE VARIANTE --</option>
-                    </select>
+
+                <!-- Tipo de Venta -->
+                <div class="grid grid-cols-3 gap-2">
+                    <button onclick="window.setTipo('CONTADO')" id="t-contado" class="tab-btn active">Detal</button>
+                    <button onclick="window.setTipo('CREDITO')" id="t-credito" class="tab-btn">Crédito</button>
+                    <button onclick="window.setTipo('MAYOR')" id="t-mayor" class="tab-btn">Mayor</button>
+                </div>
+
+                <!-- Cantidades y Precios -->
+                <div class="grid grid-cols-3 gap-3">
+                    <div class="relative">
+                        <p class="text-[7px] text-gray-500 absolute -top-2 left-3 bg-[#0A0A0A] px-2 uppercase z-10">Cant:</p>
+                        <input type="number" id="inp-cantidad" value="1" min="1" class="input-field text-center text-lg">
+                    </div>
+                    <div class="relative">
+                        <p class="text-[7px] text-orange-400 absolute -top-2 left-3 bg-[#0A0A0A] px-2 uppercase z-10">Desc. $:</p>
+                        <input type="number" id="inp-descuento" value="0" min="0" class="input-field text-center text-lg text-orange-400">
+                    </div>
+                    <div class="relative">
+                        <p class="text-[7px] text-green-500 absolute -top-2 left-3 bg-[#0A0A0A] px-2 uppercase z-10">Total:</p>
+                        <input type="text" id="inp-precio" value="0.00" readonly class="input-field text-center text-lg text-green-400 border-green-900/30">
+                    </div>
+                </div>
+
+                <div class="flex gap-2 pt-2">
+                    <button id="btn-cancel" onclick="window.cancelarEdicion()" class="hidden flex-1 bg-zinc-900 text-white font-black py-4 rounded-xl uppercase text-[10px]">Cancelar</button>
+                    <button id="btn-venta" onclick="window.registrarVenta()" class="flex-[2] bg-white text-black font-black py-4 rounded-xl uppercase text-xs">Procesar Venta</button>
                 </div>
             </div>
+        </section>
 
-            <!-- Tipo de Venta -->
-            <div class="grid grid-cols-3 gap-2">
-                <button onclick="setTipo('CONTADO')" id="t-contado" class="tab-btn active">Detal</button>
-                <button onclick="setTipo('CREDITO')" id="t-credito" class="tab-btn">Crédito</button>
-                <button onclick="setTipo('MAYOR')" id="t-mayor" class="tab-btn">Mayor</button>
-            </div>
-
-            <!-- Fechas para Crédito -->
-            <div id="panel-fechas-credito" class="hidden grid grid-cols-2 gap-3 p-3 bg-[#111] rounded-xl border border-gold/10">
-                <div class="relative">
-                    <p class="text-[7px] text-gray-500 absolute -top-2 left-2 bg-[#111] px-2 uppercase z-10">F. Despacho:</p>
-                    <input type="date" id="fecha-despacho" class="input-field text-xs py-2">
-                </div>
-                <div class="relative">
-                    <p class="text-[7px] text-red-500 absolute -top-2 left-2 bg-[#111] px-2 uppercase z-10">F. Pago:</p>
-                    <input type="date" id="fecha-pago" class="input-field text-xs py-2">
-                </div>
-            </div>
-
-            <!-- Cantidad y Total -->
-            <div class="grid grid-cols-2 gap-3">
-                <div class="relative">
-                    <p class="text-[7px] text-gray-500 absolute -top-2 left-3 bg-[#0A0A0A] px-2 uppercase z-10">Cant:</p>
-                    <input type="number" id="inp-cantidad" value="1" min="1" oninput="calcularTotal()" class="input-field text-center text-xl">
-                </div>
-                <div class="relative">
-                    <p class="text-[7px] text-gray-500 absolute -top-2 left-3 bg-[#0A0A0A] px-2 uppercase z-10">Total:</p>
-                    <input type="text" id="inp-precio" value="0.00" readonly class="input-field text-center text-xl text-green-400">
-                </div>
-            </div>
-
-            <!-- Botones de Acción -->
-            <div class="flex gap-2">
-                <button id="btn-cancelar-edit" onclick="cancelarEdicion()" class="hidden flex-1 bg-zinc-800 text-white font-black py-4 rounded-xl uppercase text-[10px]">Cancelar</button>
-                <button id="btn-venta" onclick="registrarVenta()" class="flex-[2] bg-white text-black font-black py-5 rounded-xl uppercase text-sm">Procesar Venta</button>
-            </div>
-        </div>
-    </section>
-
-    <h3 class="text-[9px] font-black text-gray-600 uppercase tracking-[3px] mb-4 text-center">Historial de Operaciones</h3>
-    <div id="listaVentas" class="space-y-3 pb-10"></div>
+        <h3 class="text-[9px] font-black text-gray-600 uppercase tracking-[3px] mb-4 text-center italic">Operaciones de Usuario</h3>
+        <div id="listaVentas" class="space-y-3"></div>
+    </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getFirestore, collection, onSnapshot, addDoc, doc, updateDoc, deleteDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, onSnapshot, collection, query, orderBy, deleteDoc, updateDoc, addDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
+        // Mismo config que Clientes
         const firebaseConfig = {
             apiKey: "AIzaSyCrjjeOoXPOtJDXDfrHLOA4Ny0QW2zfVWk",
             authDomain: "apps-d45d6.firebaseapp.com",
@@ -138,79 +130,54 @@
 
         let productosGlobal = [];
         let ventasGlobal = [];
+        let userId = null;
         let pSeleccionado = null;
         let tipoVenta = 'CONTADO';
-        let userId = null;
 
-        const initAuth = async () => {
-            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                await signInWithCustomToken(auth, __initial_auth_token);
-            } else {
-                await signInAnonymously(auth);
-            }
-        };
-        initAuth();
-
-        onAuthStateChanged(auth, (user) => {
-            if(user) {
+        // --- MANEJO DE SESIÓN PRIVADA ---
+        onAuthStateChanged(auth, (user) => { 
+            if(user && !user.isAnonymous){ 
                 userId = user.uid;
-                document.getElementById('statusDot').style.backgroundColor = "#22c55e";
-                document.getElementById('statusDot').style.boxShadow = "0 0 15px rgba(34, 197, 94, 0.6)";
-                cargarDatos(user.uid);
+                document.body.style.display = "block";
+                document.getElementById('loading-screen').style.display = "none";
+                document.getElementById('statusDot').classList.add('bg-green-500', 'shadow-green-500/50');
+                escucharDatos(user.uid); 
+            } else {
+                window.location.href = "login.html";
             }
         });
 
-        function cargarDatos(uid) {
-            // CARGAR VENDEDORES (Desde ruta privada)
-            onSnapshot(query(collection(db, "users", uid, "vendedores"), orderBy("nombre", "asc")), (snap) => {
-                const selVendedor = document.getElementById('sel-vendedor');
-                const vendedores = snap.docs.map(d => d.data());
-                selVendedor.innerHTML = '<option value="">-- SELECCIONAR VENDEDOR --</option>' + 
-                    vendedores.map(v => `<option value="${v.nombre}">${v.nombre.toUpperCase()}</option>`).join('');
+        function escucharDatos(uid) {
+            // Cargar Vendedores de la ruta del usuario
+            onSnapshot(collection(db, 'usuarios', uid, 'vendedores'), snap => {
+                const sel = document.getElementById('sel-vendedor');
+                sel.innerHTML = '<option value="">-- VENDEDOR --</option>' + 
+                    snap.docs.map(d => `<option value="${d.data().nombre}">${d.data().nombre.toUpperCase()}</option>`).join('');
             });
 
-            // CARGAR PRODUCTOS (Desde ruta privada para persistencia)
-            onSnapshot(collection(db, "users", uid, "productos"), (snap) => {
+            // Cargar Clientes de la ruta del usuario
+            onSnapshot(collection(db, 'usuarios', uid, 'clientes'), snap => {
+                const sel = document.getElementById('sel-cliente');
+                sel.innerHTML = '<option value="">-- CLIENTE --</option>' + 
+                    snap.docs.map(d => `<option value="${d.data().nombre}">${d.data().nombre.toUpperCase()}</option>`).join('');
+            });
+
+            // Cargar Productos de la ruta del usuario
+            onSnapshot(collection(db, 'usuarios', uid, 'productos'), snap => {
                 productosGlobal = snap.docs.map(d => ({id: d.id, ...d.data()}));
-                document.getElementById('sel-producto').innerHTML = '<option value="">-- SELECCIONAR PRODUCTO --</option>' + 
-                    productosGlobal.map(p => `<option value="${p.id}">${p.nombre}</option>`).join('');
+                const sel = document.getElementById('sel-producto');
+                sel.innerHTML = '<option value="">-- PRODUCTO --</option>' + 
+                    productosGlobal.map(p => `<option value="${p.id}">${p.nombre.toUpperCase()}</option>`).join('');
             });
 
-            // CARGAR CLIENTES (Corregido a ruta privada users/uid/clientes)
-            onSnapshot(collection(db, "users", uid, "clientes"), (snap) => {
-                const data = snap.docs.map(d => d.data());
-                const selCliente = document.getElementById('sel-cliente');
-                if (data.length === 0) {
-                    selCliente.innerHTML = '<option value="">-- SIN CLIENTES --</option>';
-                } else {
-                    selCliente.innerHTML = '<option value="">-- CLIENTES --</option>' + 
-                        data.map(c => `<option value="${c.nombre}">${c.nombre.toUpperCase()}</option>`).join('');
-                }
-            });
-
-            // CARGAR VENTAS (Desde ruta privada)
-            onSnapshot(collection(db, "users", uid, "ventas_realizadas"), (snap) => {
-                ventasGlobal = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-                renderVentas(ventasGlobal.sort((a,b) => b.timestamp - a.timestamp));
+            // Cargar Ventas del usuario
+            onSnapshot(query(collection(db, 'usuarios', uid, 'ventas_realizadas'), orderBy("timestamp", "desc")), snap => {
+                ventasGlobal = snap.docs.map(d => ({id: d.id, ...d.data()}));
+                renderizarVentas();
             });
         }
 
-        document.getElementById('sel-producto').onchange = (e) => {
-            pSeleccionado = productosGlobal.find(x => x.id === e.target.value);
-            actualizarVariantes();
-            calcularTotal();
-        };
-
-        function actualizarVariantes(valorPreseleccionado = null) {
-            const selVar = document.getElementById('sel-variante');
-            if (pSeleccionado && pSeleccionado.variantes && pSeleccionado.variantes.length > 0) {
-                selVar.innerHTML = pSeleccionado.variantes.map(v => `<option value="${v}">${v}</option>`).join('');
-            } else {
-                selVar.innerHTML = '<option value="ESTANDAR">ESTANDAR / UNICA</option>';
-            }
-            if(valorPreseleccionado) selVar.value = valorPreseleccionado;
-        }
-
+        // --- LÓGICA DE UI ---
         window.toggleCliente = (reg) => {
             document.getElementById('btn-cli-reg').classList.toggle('active', reg);
             document.getElementById('btn-cli-ocu').classList.toggle('active', !reg);
@@ -220,157 +187,129 @@
 
         window.setTipo = (t) => {
             tipoVenta = t;
-            ['contado', 'credito', 'mayor'].forEach(id => document.getElementById('t-'+id).classList.toggle('active', id === t.toLowerCase()));
-            document.getElementById('panel-fechas-credito').classList.toggle('hidden', t !== 'CREDITO');
+            ['contado', 'credito', 'mayor'].forEach(id => {
+                document.getElementById('t-'+id)?.classList.toggle('active', id === t.toLowerCase());
+            });
             calcularTotal();
         };
 
-        window.calcularTotal = () => {
-            const cant = parseInt(document.getElementById('inp-cantidad').value) || 0;
+        document.getElementById('sel-producto').addEventListener('change', (e) => {
+            pSeleccionado = productosGlobal.find(x => x.id === e.target.value);
+            const selVar = document.getElementById('sel-variante');
+            if (pSeleccionado?.variantes?.length > 0) {
+                selVar.innerHTML = pSeleccionado.variantes.map(v => `<option value="${v}">${v}</option>`).join('');
+            } else {
+                selVar.innerHTML = '<option value="ESTANDAR">ESTANDAR / UNICA</option>';
+            }
+            calcularTotal();
+        });
+
+        function calcularTotal() {
             if(!pSeleccionado) return;
-            let precio = 0;
-            if(tipoVenta === 'CONTADO') precio = pSeleccionado.precio_detal || 0;
-            else if(tipoVenta === 'CREDITO') precio = pSeleccionado.precio_credito || 0;
-            else if(tipoVenta === 'MAYOR') precio = pSeleccionado.precio_mayor || 0;
-            document.getElementById('inp-precio').value = (precio * cant).toLocaleString();
-        };
+            const cant = parseInt(document.getElementById('inp-cantidad').value) || 0;
+            const desc = parseFloat(document.getElementById('inp-descuento').value) || 0;
+            
+            let unit = 0;
+            if(tipoVenta === 'CONTADO') unit = pSeleccionado.precio_detal || 0;
+            else if(tipoVenta === 'CREDITO') unit = pSeleccionado.precio_credito || 0;
+            else if(tipoVenta === 'MAYOR') unit = pSeleccionado.precio_mayor || 0;
+            
+            const total = (unit * cant) - desc;
+            document.getElementById('inp-precio').value = (total < 0 ? 0 : total).toLocaleString();
+        }
 
         window.registrarVenta = async () => {
             if(!userId || !pSeleccionado) return;
-            
-            const vendedor = document.getElementById('sel-vendedor').value;
             const editId = document.getElementById('edit-id').value;
-            if(!vendedor) return alert("Seleccione un vendedor");
-
-            const cliente = document.getElementById('btn-cli-reg').classList.contains('active') ? 
-                            document.getElementById('sel-cliente').value : 
-                            document.getElementById('inp-cliente-nom').value;
-
-            if(!cliente) return alert("Debe indicar un cliente");
-
-            const data = {
-                vendedor: vendedor,
-                cliente: cliente,
+            
+            const v = {
+                vendedor: document.getElementById('sel-vendedor').value,
+                cliente: document.getElementById('btn-cli-reg').classList.contains('active') ? 
+                          document.getElementById('sel-cliente').value : 
+                          document.getElementById('inp-cliente-nom').value.toUpperCase(),
                 producto: pSeleccionado.nombre,
-                productoId: pSeleccionado.id, 
+                productoId: pSeleccionado.id,
                 variante: document.getElementById('sel-variante').value,
                 cantidad: parseInt(document.getElementById('inp-cantidad').value),
+                descuento: parseFloat(document.getElementById('inp-descuento').value) || 0,
                 total: parseFloat(document.getElementById('inp-precio').value.replace(/,/g, '')),
                 tipo: tipoVenta,
-                timestamp: editId ? (ventasGlobal.find(v => v.id === editId).timestamp) : Date.now(),
+                timestamp: Date.now(),
                 fecha_venta: new Date().toLocaleDateString()
             };
 
-            if(tipoVenta === 'CREDITO') {
-                data.fecha_despacho = document.getElementById('fecha-despacho').value;
-                data.fecha_pago_limite = document.getElementById('fecha-pago').value;
-            }
+            if(!v.vendedor || !v.cliente) return;
 
             try {
                 if(editId) {
-                    await updateDoc(doc(db, "users", userId, "ventas_realizadas", editId), data);
+                    await updateDoc(doc(db, 'usuarios', userId, 'ventas_realizadas', editId), v);
                 } else {
-                    await addDoc(collection(db, "users", userId, "ventas_realizadas"), data);
+                    await addDoc(collection(db, 'usuarios', userId, 'ventas_realizadas'), v);
                 }
-                cancelarEdicion();
-            } catch(e) {
-                alert("Error de conexión");
-            }
+                window.cancelarEdicion();
+            } catch (e) { console.error(e); }
         };
 
         window.editarVenta = (id) => {
             const v = ventasGlobal.find(x => x.id === id);
-            if(!v) return;
-
             document.getElementById('edit-id').value = id;
-            document.getElementById('form-container').classList.add('editing-mode');
-            document.getElementById('btn-venta').innerText = "ACTUALIZAR Venta";
-            document.getElementById('btn-cancelar-edit').classList.remove('hidden');
-            
             document.getElementById('sel-vendedor').value = v.vendedor;
-            
-            const selCli = document.getElementById('sel-cliente');
-            const esRegistrado = Array.from(selCli.options).some(opt => opt.value === v.cliente);
-            
-            toggleCliente(esRegistrado);
-            if(esRegistrado) selCli.value = v.cliente;
-            else document.getElementById('inp-cliente-nom').value = v.cliente;
-
-            document.getElementById('sel-producto').value = v.productoId || "";
+            document.getElementById('sel-producto').value = v.productoId;
             pSeleccionado = productosGlobal.find(p => p.id === v.productoId);
-            actualizarVariantes(v.variante);
-
-            setTipo(v.tipo);
+            window.setTipo(v.tipo);
             document.getElementById('inp-cantidad').value = v.cantidad;
-            
-            if(v.tipo === 'CREDITO') {
-                document.getElementById('fecha-despacho').value = v.fecha_despacho || "";
-                document.getElementById('fecha-pago').value = v.fecha_pago_limite || "";
-            }
-
+            document.getElementById('inp-descuento').value = v.descuento;
+            document.getElementById('btn-venta').innerText = "ACTUALIZAR VENTA";
+            document.getElementById('btn-cancel').classList.remove('hidden');
             calcularTotal();
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+            window.scrollTo(0,0);
         };
 
         window.eliminarVenta = async (id) => {
-            if(confirm("¿Eliminar registro de venta?")) {
-                try {
-                    await deleteDoc(doc(db, "users", userId, "ventas_realizadas", id));
-                } catch(e) { alert("Error"); }
+            if(confirm('¿ELIMINAR VENTA?')) {
+                await deleteDoc(doc(db, 'usuarios', userId, 'ventas_realizadas', id));
             }
         };
 
         window.cancelarEdicion = () => {
             document.getElementById('edit-id').value = "";
-            document.getElementById('form-container').classList.remove('editing-mode');
             document.getElementById('btn-venta').innerText = "PROCESAR VENTA";
-            document.getElementById('btn-cancelar-edit').classList.add('hidden');
-            limpiar();
+            document.getElementById('btn-cancel').classList.add('hidden');
+            document.getElementById('inp-cantidad').value = 1;
+            document.getElementById('inp-descuento').value = 0;
+            document.getElementById('inp-precio').value = "0.00";
         };
 
-        function limpiar() {
-            document.getElementById('sel-producto').value = "";
-            document.getElementById('inp-cantidad').value = 1;
-            document.getElementById('inp-precio').value = "0.00";
-            document.getElementById('fecha-despacho').value = "";
-            document.getElementById('fecha-pago').value = "";
-            document.getElementById('inp-cliente-nom').value = "";
-            pSeleccionado = null;
-        }
-
-        function renderVentas(ventas) {
-            if (ventas.length === 0) {
-                document.getElementById('listaVentas').innerHTML = '<div class="text-center py-10 opacity-20 text-[10px]">No hay ventas registradas</div>';
+        function renderizarVentas() {
+            const container = document.getElementById('listaVentas');
+            if(ventasGlobal.length === 0) {
+                container.innerHTML = '<div class="text-center py-10 opacity-20 text-[10px] font-black uppercase italic">Historial Vacío</div>';
                 return;
             }
-            document.getElementById('listaVentas').innerHTML = ventas.map(v => `
+            container.innerHTML = ventasGlobal.map(v => `
                 <div class="sale-card">
-                    <div class="flex justify-between items-start mb-2">
-                        <div class="flex flex-col gap-1">
-                            <span class="text-[9px] font-black text-gold px-2 py-0.5 border border-gold/30 rounded uppercase w-fit">${v.tipo}</span>
-                            <div class="text-[11px] font-black uppercase">${v.cliente}</div>
-                        </div>
-                        <div class="flex flex-col items-end">
-                            <span class="text-green-400 font-black tracking-tighter text-sm">$${v.total.toLocaleString()}</span>
-                            <div class="flex gap-3 mt-2">
-                                <button onclick="editarVenta('${v.id}')" class="text-blue-400 text-[10px] uppercase font-bold"><i class="fa-solid fa-pen"></i></button>
-                                <button onclick="eliminarVenta('${v.id}')" class="text-red-500 text-[10px] uppercase font-bold"><i class="fa-solid fa-trash"></i></button>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="text-[9px] text-gray-400 border-t border-white/5 pt-2 flex justify-between items-end">
+                    <div class="flex justify-between items-start">
                         <div>
-                            ${v.producto} (${v.variante}) x${v.cantidad}<br>
-                            <span class="text-[8px] text-gray-600 italic">Despachado por: ${v.vendedor}</span>
+                            <span class="text-[7px] font-black bg-white/10 px-2 py-0.5 rounded text-gold uppercase">${v.tipo}</span>
+                            <div class="text-[11px] font-black uppercase mt-1">${v.cliente}</div>
+                            <div class="text-[9px] text-gray-500 italic mt-0.5">${v.producto} (${v.variante}) x${v.cantidad}</div>
                         </div>
                         <div class="text-right">
-                             ${v.tipo === 'CREDITO' ? `<span class="text-red-500 block">VENCE: ${v.fecha_pago_limite || '---'}</span>` : ''}
-                             <span class="text-[7px] text-gray-700">${v.fecha_venta}</span>
+                            <div class="text-green-400 font-black text-sm">$${v.total.toLocaleString()}</div>
+                            <div class="flex gap-3 justify-end mt-2">
+                                <button onclick="window.editarVenta('${v.id}')" class="text-blue-500 text-[10px]"><i class="fa-solid fa-pen"></i></button>
+                                <button onclick="window.eliminarVenta('${v.id}')" class="text-red-900 text-[10px]"><i class="fa-solid fa-trash-can"></i></button>
+                            </div>
                         </div>
                     </div>
                 </div>
             `).join('');
         }
+
+        // Inputs dinámicos
+        document.getElementById('inp-cantidad').addEventListener('input', calcularTotal);
+        document.getElementById('inp-descuento').addEventListener('input', calcularTotal);
+
     </script>
 </body>
 </html>
