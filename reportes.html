@@ -82,18 +82,6 @@
             </div>
         </div>
 
-        <!-- Sección de Egresos (Registro) -->
-        <section class="bg-[#0A0A0A] p-5 rounded-[28px] gold-border mb-8">
-            <h3 class="text-[10px] font-black text-gold uppercase tracking-[3px] mb-4 flex items-center gap-2">
-                <i class="fa-solid fa-file-invoice-dollar"></i> Registrar Egreso
-            </h3>
-            <div class="space-y-3">
-                <input type="text" id="egreso-motivo" placeholder="Motivo (Ej: Gasolina, Almuerzo)" class="input-field">
-                <input type="number" id="egreso-monto" placeholder="Monto $" class="input-field">
-                <button onclick="guardarEgreso()" class="btn-gold w-full text-[11px]">Guardar Gasto</button>
-            </div>
-        </section>
-
         <!-- Detalle de Egresos -->
         <section class="mb-8">
             <h3 class="text-[9px] font-black text-gray-500 uppercase tracking-[3px] mb-3 px-2">Detalle de Gastos en Periodo</h3>
@@ -114,7 +102,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getFirestore, collection, onSnapshot, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCrjjeOoXPOtJDXDfrHLOA4Ny0QW2zfVWk",
@@ -138,7 +126,6 @@
                 userId = user.uid;
                 document.getElementById('loading-screen').style.display = "none";
                 
-                // Setear rango por defecto: Hoy
                 const hoy = new Date().toISOString().split('T')[0];
                 document.getElementById('fecha-inicio').value = hoy;
                 document.getElementById('fecha-fin').value = hoy;
@@ -161,41 +148,13 @@
             });
         }
 
-        window.guardarEgreso = async () => {
-            const motivo = document.getElementById('egreso-motivo').value;
-            const monto = parseFloat(document.getElementById('egreso-monto').value);
-            const fechaObj = new Date();
-            // Formato YYYY-MM-DD para comparar fácilmente
-            const fecha = fechaObj.toISOString().split('T')[0];
-            // Formato DD/MM/YYYY para mostrar al usuario si fuera necesario
-            const fechaDisplay = fechaObj.toLocaleDateString();
-
-            if(!motivo || !monto) return;
-
-            try {
-                await addDoc(collection(db, 'usuarios', userId, 'egresos'), {
-                    motivo,
-                    monto,
-                    fecha, // Guardamos en formato ISO para el filtro
-                    fechaDisplay,
-                    createdAt: serverTimestamp()
-                });
-                document.getElementById('egreso-motivo').value = "";
-                document.getElementById('egreso-monto').value = "";
-            } catch (e) { console.error(e); }
-        }
-
         function procesarTodo() {
             const inicio = document.getElementById('fecha-inicio').value;
             const fin = document.getElementById('fecha-fin').value;
 
             if(!inicio || !fin) return;
 
-            // Filtrar ventas por rango
-            // Nota: Las ventas se guardaban como DD/MM/YYYY, necesitamos convertirlas o asegurar consistencia.
-            // Para este sistema, asumimos que comparamos las strings de fecha o las convertimos.
             const filtrarRango = (itemFecha) => {
-                // Convertir DD/MM/YYYY a YYYY-MM-DD si es necesario
                 let fechaNormalizada = itemFecha;
                 if(itemFecha.includes('/')) {
                     const parts = itemFecha.split('/');
@@ -211,14 +170,12 @@
             let totalCredito = ventasFiltradas.filter(v => v.tipo === 'CREDITO').reduce((acc, v) => acc + v.total, 0);
             let totalEgresos = egresosFiltrados.reduce((acc, e) => acc + e.monto, 0);
 
-            // UI
             document.getElementById('subtotal-ventas').innerText = `$${totalVendido.toLocaleString()}`;
             document.getElementById('subtotal-egresos').innerText = `$${totalEgresos.toLocaleString()}`;
             document.getElementById('total-utilidad').innerText = `$${(totalVendido - totalEgresos).toLocaleString()}`;
             document.getElementById('total-credito').innerText = `$${totalCredito.toLocaleString()}`;
             document.getElementById('total-ventas').innerText = ventasFiltradas.length;
 
-            // Lista Egresos
             const listaE = document.getElementById('lista-egresos');
             if(egresosFiltrados.length === 0) {
                 listaE.innerHTML = '<p class="text-[9px] text-gray-700 text-center uppercase py-2 italic">Sin gastos en este periodo</p>';
