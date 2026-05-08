@@ -69,6 +69,7 @@
             border: none;
             transition: all 0.2s;
         }
+        .btn-auth:disabled { opacity: 0.5; cursor: wait; }
         .btn-auth:active { transform: scale(0.96); }
 
         #loading-overlay {
@@ -94,7 +95,7 @@
 
     <div id="loading-overlay">
         <div class="w-10 h-10 border-2 border-oro/20 border-t-oro rounded-full animate-spin mb-4"></div>
-        <p id="loading-text" class="text-[10px] text-oro tracking-[0.3em] font-black uppercase">Sincronizando Identidad</p>
+        <p id="loading-text" class="text-[10px] text-oro tracking-[0.3em] font-black uppercase">Validando Acceso Elite</p>
     </div>
 
     <section class="flex flex-col items-center w-full">
@@ -122,7 +123,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, setPersistence, browserLocalPersistence, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCrjjeOoXPOtJDXDfrHLOA4Ny0QW2zfVWk",
@@ -137,7 +138,6 @@
         const auth = getAuth(app);
 
         let isLogin = true;
-        let isRedirecting = false; // Control para evitar bucles
 
         window.toggleAuthMode = function() {
             isLogin = !isLogin;
@@ -152,6 +152,7 @@
             const email = document.getElementById('email-input').value.trim();
             const pass = document.getElementById('pass-input').value.trim();
             const loader = document.getElementById('loading-overlay');
+            const btn = document.getElementById('auth-btn');
 
             if (!email || !pass) {
                 showMsg("Complete los datos");
@@ -159,29 +160,38 @@
             }
 
             loader.style.display = 'flex';
+            btn.disabled = true;
             
             try {
-                // Aseguramos que la sesión sea persistente (Local)
+                // 1. FORZAMOS PERSISTENCIA LOCAL (Inmortalidad de la sesión)
                 await setPersistence(auth, browserLocalPersistence);
                 
                 if (isLogin) {
-                    const result = await signInWithEmailAndPassword(auth, email, pass);
-                    console.log("Usuario identificado:", result.user.uid);
-                    // IMPORTANTE: Redirección manual inmediata para evitar esperas del listener
-                    isRedirecting = true;
-                    window.location.replace('index.html');
+                    // 2. Si ya había una sesión anónima abierta por error, la cerramos antes de entrar con la Real
+                    if (auth.currentUser && auth.currentUser.isAnonymous) {
+                        await signOut(auth);
+                    }
+                    
+                    await signInWithEmailAndPassword(auth, email, pass);
+                    
+                    // 3. Redirección forzada tras confirmar que la sesión se grabó
+                    window.location.href = 'index.html';
                 } else {
                     await createUserWithEmailAndPassword(auth, email, pass);
-                    showMsg("¡Cuenta creada!", true);
+                    showMsg("¡Credencial Creada!", true);
                     setTimeout(() => toggleAuthMode(), 1500);
+                    loader.style.display = 'none';
+                    btn.disabled = false;
                 }
             } catch (error) {
                 console.error(error);
-                let errorMsg = "Error de acceso";
-                if (error.code === 'auth/invalid-credential') errorMsg = "Credenciales incorrectas";
-                if (error.code === 'auth/email-already-in-use') errorMsg = "El correo ya existe";
+                let errorMsg = "Error de Acceso";
+                if (error.code === 'auth/invalid-credential') errorMsg = "Clave o Correo Incorrectos";
+                if (error.code === 'auth/email-already-in-use') errorMsg = "Este correo ya está registrado";
+                if (error.code === 'auth/weak-password') errorMsg = "Clave demasiado débil";
                 showMsg(errorMsg);
                 loader.style.display = 'none';
+                btn.disabled = false;
             }
         }
 
@@ -192,10 +202,10 @@
             msg.classList.remove('hidden');
         }
 
-        // Listener de seguridad: Si ya hay sesión, mandarlo al index solo si NO estamos en proceso de login
+        // Bloqueo de seguridad: Si ya estás logueado con correo, no te deja quedarte en el login
         onAuthStateChanged(auth, (user) => {
-            if (user && !isRedirecting) {
-                window.location.replace('index.html');
+            if (user && !user.isAnonymous) {
+                window.location.href = 'index.html';
             }
         });
     </script>
