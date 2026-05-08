@@ -1,4 +1,4 @@
-```html
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -39,7 +39,7 @@
     <!-- Pantalla de Carga de Seguridad -->
     <div id="loading-screen">
         <div class="w-10 h-10 border-2 border-gold/20 border-t-gold rounded-full animate-spin mb-4"></div>
-        <p class="text-gold text-[10px] font-black uppercase tracking-widest">Sincronizando con Servidor</p>
+        <p class="text-gold text-[10px] font-black uppercase tracking-widest">Iniciando Sesión Segura</p>
     </div>
 
     <!-- Lanzador IA -->
@@ -60,7 +60,7 @@
             <button onclick="cerrarIA()" class="text-gray-500 text-xl"><i class="fas fa-times"></i></button>
         </header>
         <div id="chatBox" class="chat-container">
-            <div class="msg msg-ia">Bienvenido al reporte maestro. He verificado tus ventas, cobros de crédito y gastos personales. Todo está actualizado.</div>
+            <div class="msg msg-ia">Hola. Estoy procesando todas las ventas y egresos vinculados a tu cuenta. ¿Qué deseas saber sobre tu rentabilidad?</div>
         </div>
         <div class="input-area">
             <input type="text" class="chat-input" id="chatInput" placeholder="Pregúntame algo..." onkeypress="if(event.key === 'Enter') enviarMsgIA()">
@@ -70,7 +70,7 @@
 
     <!-- Header Principal -->
     <header class="flex justify-between items-center mb-6">
-        <button onclick="window.history.back()" class="text-[10px] font-black border border-gold/30 px-4 py-2 rounded-full text-[#D4AF37] uppercase">← Salir</button>
+        <button onclick="window.location.href='index.html'" class="text-[10px] font-black border border-gold/30 px-4 py-2 rounded-full text-[#D4AF37] uppercase">← Panel</button>
         <h1 class="text-[10px] font-black text-white uppercase tracking-[4px]">Financial Intelligence</h1>
     </header>
 
@@ -140,7 +140,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getFirestore, collection, onSnapshot, query } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCrjjeOoXPOtJDXDfrHLOA4Ny0QW2zfVWk",
@@ -166,42 +166,45 @@
             prestamos: []
         };
 
-        // Identificación por Login
+        // INTEGRACIÓN DE SEGURIDAD: Identificación por Login
         onAuthStateChanged(auth, (user) => {
-            if(user && !user.isAnonymous) {
+            if(user) {
                 currentUserId = user.uid;
                 document.body.style.display = "block";
                 document.getElementById('loading-screen').style.display = "none";
                 iniciarSincronizacionTotal();
             } else {
+                // Si no hay login, manda al login
                 window.location.href = "login.html";
             }
         });
 
         function iniciarSincronizacionTotal() {
-            // 1. Escuchar PRODUCTOS (Para calcular costos de inversión)
+            if(!currentUserId) return;
+
+            // 1. PRODUCTOS: Para costos
             onSnapshot(collection(db, "productos"), snap => {
                 store.productos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
                 procesarCalculos();
             });
 
-            // 2. Escuchar VENTAS (Contado, Crédito, Detalle)
+            // 2. VENTAS: Globales
             onSnapshot(collection(db, "ventas_realizadas"), snap => {
                 store.ventas = snap.docs.map(d => ({ id: d.id, ...d.data() }));
                 procesarCalculos();
             });
 
-            // 3. Escuchar EGRESOS (Filtrados por el usuario actual)
+            // 3. EGRESOS: Filtrados por la ruta del usuario logueado (SEGURIDAD)
             onSnapshot(collection(db, 'artifacts', appId, 'users', currentUserId, 'egresos'), snap => {
                 store.egresos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
                 procesarCalculos();
-            });
+            }, (err) => console.log("Error egresos:", err));
 
-            // 4. Escuchar PRÉSTAMOS / DEUDAS (Filtrados por el usuario actual)
+            // 4. PRÉSTAMOS / DEUDAS: Filtrados por el usuario logueado
             onSnapshot(collection(db, 'artifacts', appId, 'users', currentUserId, 'prestamos'), snap => {
                 store.prestamos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
                 procesarCalculos();
-            });
+            }, (err) => console.log("Error prestamos:", err));
         }
 
         function parseNum(val) {
@@ -218,7 +221,7 @@
             let fecha;
             if (typeof fInput === 'number') {
                 fecha = new Date(fInput);
-            } else if (fInput.includes('/')) {
+            } else if (typeof fInput === 'string' && fInput.includes('/')) {
                 const parts = fInput.split('/');
                 fecha = new Date(parts[2], parts[1]-1, parts[0]);
             } else {
@@ -247,53 +250,50 @@
         }
 
         function procesarCalculos() {
-            let ingresosEfectivo = 0; // Ventas Contado + Abonos Recibidos de Clientes
-            let egresosTotales = 0;   // Gastos + Abonos Pagados a deudas
-            let costoInversion = 0;   // Costo de la mercancía que ya no está
-            let cxcPendiente = 0;     // Saldo que los clientes deben
+            let ingresosEfectivo = 0; 
+            let egresosTotales = 0;   
+            let costoInversion = 0;   
+            let cxcPendiente = 0;     
 
-            // PROCESO DE VENTAS (Toda la información)
+            // Análisis de Ventas
             store.ventas.forEach(v => {
                 const totalVenta = parseNum(v.precio || v.total);
                 const cant = parseInt(v.cantidad || 1);
                 const metodo = (v.metodo || v.tipo || '').toUpperCase();
                 
-                // Buscar costo para inversión
+                // Buscar costo
                 const pInfo = store.productos.find(p => p.nombre === v.producto);
                 const costoUnitario = pInfo ? parseNum(pInfo.costo) : 0;
 
-                // Si la venta está en el rango
                 if (esFechaEnRango(v.fecha)) {
                     costoInversion += (costoUnitario * cant);
 
-                    if (metodo.includes('CONTADO') || metodo.includes('EFECTIVO')) {
+                    if (metodo.includes('CONTADO') || metodo.includes('EFECTIVO') || metodo.includes('LETAL')) {
                         ingresosEfectivo += totalVenta;
                     } 
                     else if (metodo.includes('CREDITO')) {
-                        // Buscar abonos recibidos en este rango para esta venta crédito
-                        let pagadoHistorial = 0;
+                        let pagadoEnVenta = 0;
                         if (v.abonos && Array.isArray(v.abonos)) {
                             v.abonos.forEach(ab => {
                                 if (esFechaEnRango(ab.fecha)) {
                                     ingresosEfectivo += parseNum(ab.monto);
                                 }
-                                pagadoHistorial += parseNum(ab.monto);
+                                pagadoEnVenta += parseNum(ab.monto);
                             });
                         }
-                        // Lo que falta por cobrar
-                        cxcPendiente += (totalVenta - pagadoHistorial);
+                        cxcPendiente += (totalVenta - pagadoEnVenta);
                     }
                 }
             });
 
-            // PROCESO DE EGRESOS (Gastos directos del usuario)
+            // Análisis de Egresos Propios
             store.egresos.forEach(e => {
                 if (esFechaEnRango(e.fecha || e.createdAt)) {
                     egresosTotales += parseNum(e.monto);
                 }
             });
 
-            // PROCESO DE DEUDAS (Pagos que tú hiciste a otros)
+            // Análisis de Pagos de Deudas Propias
             store.prestamos.forEach(p => {
                 if (p.abonos && Array.isArray(p.abonos)) {
                     p.abonos.forEach(ab => {
@@ -306,23 +306,21 @@
 
             const utilidadNeta = ingresosEfectivo - egresosTotales - costoInversion;
 
-            // Actualizar Interfaz
-            requestAnimationFrame(() => {
-                document.getElementById('total-ventas').innerText = `$${ingresosEfectivo.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
-                document.getElementById('total-egresos').innerText = `$${egresosTotales.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
-                document.getElementById('total-credito').innerText = `$${cxcPendiente.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
-                document.getElementById('inversion-total').innerText = `$${costoInversion.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
-                document.getElementById('ganancia-neta').innerText = `${utilidadNeta >= 0 ? '+' : ''}$${utilidadNeta.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
-                
-                const meta = document.getElementById('mensaje-meta');
-                if (utilidadNeta < 0) {
-                    meta.innerHTML = `⚠️ Operando en negativo por <span class="text-white font-bold">$${Math.abs(utilidadNeta).toFixed(2)}</span>`;
-                    meta.className = "text-[9px] text-center italic mt-4 px-2 text-red-400";
-                } else {
-                    meta.innerHTML = `✅ Beneficio neto de <span class="text-white font-bold">$${utilidadNeta.toFixed(2)}</span> logrado`;
-                    meta.className = "text-[9px] text-center italic mt-4 px-2 text-green-400";
-                }
-            });
+            // Actualizar UI
+            document.getElementById('total-ventas').innerText = `$${ingresosEfectivo.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
+            document.getElementById('total-egresos').innerText = `$${egresosTotales.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
+            document.getElementById('total-credito').innerText = `$${cxcPendiente.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
+            document.getElementById('inversion-total').innerText = `$${costoInversion.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
+            document.getElementById('ganancia-neta').innerText = `${utilidadNeta >= 0 ? '+' : ''}$${utilidadNeta.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
+            
+            const meta = document.getElementById('mensaje-meta');
+            if (utilidadNeta < 0) {
+                meta.innerHTML = `⚠️ Operando en negativo por <span class="text-white font-bold">$${Math.abs(utilidadNeta).toFixed(2)}</span>`;
+                meta.className = "text-[9px] text-center italic mt-4 px-2 text-red-400";
+            } else {
+                meta.innerHTML = `✅ Beneficio neto de <span class="text-white font-bold">$${utilidadNeta.toFixed(2)}</span> logrado`;
+                meta.className = "text-[9px] text-center italic mt-4 px-2 text-green-400";
+            }
         }
 
         window.limpiarCalendario = () => {
@@ -352,6 +350,11 @@
 
         window.abrirIA = () => { document.getElementById('ia-modal').style.display = 'flex'; };
         window.cerrarIA = () => { document.getElementById('ia-modal').style.display = 'none'; };
+
+        // Exponer funciones al scope global para los onclick del HTML
+        window.cambiarFiltro = cambiarFiltro;
+        window.aplicarCalendario = aplicarCalendario;
+        window.limpiarCalendario = limpiarCalendario;
     </script>
 </body>
 </html>
