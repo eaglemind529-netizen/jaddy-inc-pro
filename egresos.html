@@ -1,4 +1,4 @@
-
+```html
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -9,8 +9,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
-        :root { --gold: #D4AF37; --bg: #050505; }
-        /* Seguridad: oculto hasta login */
         body { font-family: 'Inter', sans-serif; background-color: black; color: #d4d4d8; display: none; }
         input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
         .active-tab { background-color: #f59e0b; color: black; box-shadow: 0 4px 158px rgba(245, 158, 11, 0.2); }
@@ -25,26 +23,23 @@
             background-color: rgba(0, 0, 0, 0.95);
             backdrop-filter: blur(10px);
         }
-
         #loading-screen { 
             position: fixed; inset: 0; background: #000; z-index: 9999; 
             display: flex; flex-direction: column; align-items: center; justify-content: center; 
         }
-        .texto-dorado { background: linear-gradient(to bottom, #CF9E1D 22%, #F1D37E 45%, #CF9E1D 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
     </style>
 </head>
 <body class="select-none">
 
-    <!-- Pantalla de Carga/Seguridad -->
     <div id="loading-screen">
         <div class="w-10 h-10 border-2 border-amber-500/20 border-t-amber-500 rounded-full animate-spin mb-4"></div>
-        <p class="text-amber-500 text-[10px] font-black uppercase tracking-[0.5em]">Verificando Acceso</p>
+        <p class="text-amber-500 text-[10px] font-black uppercase tracking-widest">Verificando Acceso</p>
     </div>
 
     <div id="app">
         <header class="p-6 flex justify-between items-center border-b border-zinc-900 sticky top-0 bg-black/90 backdrop-blur-md z-50">
             <div class="flex items-center gap-4">
-                <button onclick="window.location.href='index.html'" class="w-10 h-10 rounded-xl bg-zinc-900 flex items-center justify-center text-amber-500">
+                <button onclick="window.history.back()" class="w-10 h-10 rounded-xl bg-zinc-900 flex items-center justify-center text-amber-500">
                     <i class="fas fa-arrow-left"></i>
                 </button>
                 <div class="flex items-center gap-2">
@@ -56,7 +51,10 @@
                 <button onclick="toggleHistory(true)" class="w-9 h-9 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center text-amber-500 hover:bg-zinc-800 transition-all">
                     <i class="fas fa-history text-xs"></i>
                 </button>
-                <div id="statusDot" class="w-2 h-2 rounded-full bg-zinc-800"></div>
+                <div id="connection-badge" class="flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-[8px] font-black uppercase border-zinc-800 text-zinc-500">
+                    <div id="connection-dot" class="w-1.5 h-1.5 rounded-full bg-zinc-700 transition-all duration-500"></div>
+                    <span id="connection-text">Offline</span>
+                </div>
             </div>
         </header>
 
@@ -140,6 +138,7 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
+        const appId = "jaddy-inc-finanzas";
 
         let userId = null;
         let activeCategory = 'otros';
@@ -147,19 +146,21 @@
 
         const categories = [
             { id: 'alquiler', label: 'Alquiler', icon: '🏠' },
-            { id: 'servicios', label: 'Servic.', icon: '⚡' },
-            { id: 'personal', label: 'Person.', icon: '👥' },
+            { id: 'servicios', label: 'Servicios', icon: '⚡' },
+            { id: 'personal', label: 'Personal', icon: '👥' },
             { id: 'otros', label: 'Otros', icon: '📦' },
-            { id: 'inversion', label: 'Invers.', icon: '💎' }
+            { id: 'inversion', label: 'Inversión', icon: '💎' }
         ];
 
-        // SEGURIDAD: Solo acceso si hay login real de correo (Como en Cobranza)
+        // SEGURIDAD: Solo acceso si hay login real
         onAuthStateChanged(auth, (user) => {
             if(user && !user.isAnonymous) {
                 userId = user.uid;
                 document.body.style.display = "block";
                 document.getElementById('loading-screen').style.display = "none";
-                document.getElementById('statusDot').classList.add('dot-online');
+                document.getElementById('connection-badge').className = "flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-[8px] font-black uppercase border-emerald-500/30 text-emerald-500";
+                document.getElementById('connection-dot').className = "w-1.5 h-1.5 rounded-full dot-online animate-pulse";
+                document.getElementById('connection-text').innerText = "Online";
                 startListening(user.uid);
                 renderCategories();
             } else {
@@ -168,14 +169,12 @@
         });
 
         function startListening(uid) {
-            // Egresos privados
-            onSnapshot(collection(db, 'usuarios', uid, 'finanzas_egresos'), (snap) => {
+            onSnapshot(collection(db, 'artifacts', appId, 'users', uid, 'egresos'), (snap) => {
                 const list = snap.docs.map(d => ({ ...d.data(), id: d.id }));
                 renderEgresos(list);
             });
 
-            // Deudas privadas
-            onSnapshot(collection(db, 'usuarios', uid, 'finanzas_deudas'), (snap) => {
+            onSnapshot(collection(db, 'artifacts', appId, 'users', uid, 'prestamos'), (snap) => {
                 const list = snap.docs.map(d => ({ ...d.data(), id: d.id }));
                 const activas = list.filter(l => l.estado !== 'pagado');
                 const pagadas = list.filter(l => l.estado === 'pagado');
@@ -184,7 +183,6 @@
             });
         }
 
-        // --- Lógica de Interfaz Manteniendo tu Diseño ---
         window.toggleHistory = (show) => { document.getElementById('history-modal').classList.toggle('hidden', !show); };
         window.switchTab = (tab) => {
             document.getElementById('content-egresos').classList.toggle('hidden', tab !== 'egresos');
@@ -198,7 +196,7 @@
         function renderCategories() {
             const grid = document.getElementById('categories-grid');
             grid.innerHTML = categories.map(cat => `
-                <button type="button" onclick="window.selectCategory('${cat.id}')" class="p-2 rounded-xl border text-[8px] font-black flex flex-col items-center gap-1 transition-all ${activeCategory === cat.id ? 'category-selected' : 'border-zinc-800 text-zinc-600'}">
+                <button type="button" onclick="window.selectCategory('${cat.id}')" id="cat-${cat.id}" class="p-2 rounded-xl border text-[8px] font-black flex flex-col items-center gap-1 transition-all ${activeCategory === cat.id ? 'category-selected' : 'border-zinc-800 text-zinc-600'}">
                     <span class="text-lg">${cat.icon}</span>${cat.label.toUpperCase()}
                 </button>
             `).join('');
@@ -231,15 +229,26 @@
                 const saldo = parseFloat(p.montoTotalConInteres || 0) - pagado;
                 totalD += (saldo > 0 ? saldo : 0);
                 return `
-                <div class="bg-zinc-900 border border-zinc-800 rounded-3xl overflow-hidden group">
+                <div class="bg-zinc-900 border border-zinc-800 rounded-3xl overflow-hidden mb-4">
                     <div class="p-5 bg-zinc-800/10 relative">
                         <p class="text-white font-black text-sm uppercase italic">${p.acreedor}</p>
                         <p class="text-amber-500 font-black text-3xl italic mt-1">$${saldo.toLocaleString()}</p>
                     </div>
-                    <div class="p-4 bg-black/40 space-y-3">
+                    
+                    <div class="p-4 bg-black/40 space-y-4">
+                        <!-- ABONAR -->
                         <div class="flex gap-2">
                             <input type="number" placeholder="Abonar $" id="abono-${p.id}" class="flex-1 bg-black border border-zinc-800 rounded-xl p-3 text-[11px] font-black text-white outline-none">
                             <button onclick="window.handleAbono('${p.id}')" class="bg-white text-black text-[9px] font-black px-4 rounded-xl italic uppercase">Abonar</button>
+                        </div>
+
+                        <!-- PRÓRROGA -->
+                        <div class="pt-3 border-t border-zinc-800/50 flex gap-2">
+                            <div class="flex-1 grid grid-cols-2 gap-2">
+                                <input type="number" placeholder="Días" id="pro-dias-${p.id}" class="bg-black/50 border border-zinc-800 rounded-lg p-2 text-[10px] text-white">
+                                <input type="number" placeholder="%" id="pro-porc-${p.id}" class="bg-black/50 border border-zinc-800 rounded-lg p-2 text-[10px] text-white">
+                            </div>
+                            <button onclick="window.handleProrroga('${p.id}')" class="bg-zinc-800 text-amber-500 text-[8px] font-black px-3 rounded-lg uppercase">Prórroga</button>
                         </div>
                     </div>
                 </div>`;
@@ -266,7 +275,7 @@
             const input = document.getElementById(`abono-${id}`);
             const monto = parseFloat(input.value);
             if(!monto) return;
-            const docRef = doc(db, 'usuarios', userId, 'finanzas_deudas', id);
+            const docRef = doc(db, 'artifacts', appId, 'users', userId, 'prestamos', id);
             const snap = await getDoc(docRef);
             if(snap.exists()) {
                 const data = snap.data();
@@ -279,9 +288,34 @@
             }
         };
 
+        window.handleProrroga = async (id) => {
+            const diasInput = document.getElementById(`pro-dias-${id}`);
+            const porcInput = document.getElementById(`pro-porc-${id}`);
+            const dias = parseInt(diasInput.value);
+            const porc = parseFloat(porcInput.value);
+            
+            if(!dias || !porc) return;
+
+            const docRef = doc(db, 'artifacts', appId, 'users', userId, 'prestamos', id);
+            const snap = await getDoc(docRef);
+            if(snap.exists()){
+                const data = snap.data();
+                const extra = data.montoTotalConInteres * (porc / 100);
+                const nuevoTotal = data.montoTotalConInteres + extra;
+                
+                await updateDoc(docRef, {
+                    montoTotalConInteres: nuevoTotal,
+                    prorrogaAplicada: true,
+                    ultimaProrroga: { dias, porc, fecha: new Date().toLocaleDateString() }
+                });
+                diasInput.value = '';
+                porcInput.value = '';
+            }
+        };
+
         document.getElementById('egreso-form').onsubmit = async (e) => {
             e.preventDefault();
-            await addDoc(collection(db, 'usuarios', userId, 'finanzas_egresos'), {
+            await addDoc(collection(db, 'artifacts', appId, 'users', userId, 'egresos'), {
                 categoria: activeCategory,
                 monto: parseFloat(document.getElementById('egreso-monto').value),
                 detalle: document.getElementById('egreso-detalle').value.toUpperCase(),
@@ -295,7 +329,7 @@
             const mBase = parseFloat(document.getElementById('deuda-monto').value);
             const porc = parseFloat(document.getElementById('deuda-interes-valor').value || 0);
             const mTotal = mBase + (mBase * (porc / 100));
-            await addDoc(collection(db, 'usuarios', userId, 'finanzas_deudas'), {
+            await addDoc(collection(db, 'artifacts', appId, 'users', userId, 'prestamos'), {
                 acreedor: document.getElementById('deuda-acreedor').value.toUpperCase(),
                 montoBase: mBase,
                 montoTotalConInteres: mTotal,
@@ -319,4 +353,4 @@
 </body>
 </html>
 
-    
+```
