@@ -1,4 +1,4 @@
-```html
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -11,7 +11,6 @@
         :root { --gold: #D4AF37; --bg: #050505; }
         body { background: var(--bg); color: white; font-family: 'Inter', sans-serif; overflow-x: hidden; }
         
-        /* Bloqueo de Interfaz hasta Login */
         #auth-guard { 
             position: fixed; inset: 0; background: #000; z-index: 999; 
             display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -27,20 +26,18 @@
         .detalle-variante { display: none; max-height: 0; overflow: hidden; }
         .detalle-variante.active { display: block; max-height: 1000px; }
         
-        /* Loader */
+        input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); opacity: 0.5; }
         .loader { width: 40px; height: 40px; border: 3px solid #111; border-top-color: var(--gold); border-radius: 50%; animation: spin 1s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
     </style>
 </head>
 <body class="p-4 pb-24 max-w-md mx-auto">
 
-    <!-- PROTECCIÓN DE DATOS: Solo desaparece con Login Real -->
     <div id="auth-guard">
         <div class="loader mb-4"></div>
-        <p class="text-[10px] font-black tracking-[4px] text-gold uppercase animate-pulse">Verificando Credenciales...</p>
+        <p class="text-[10px] font-black tracking-[4px] text-gold uppercase animate-pulse">Sincronizando Base de Datos...</p>
     </div>
 
-    <!-- INTERFAZ REAL: Oculta por defecto -->
     <main id="main-content">
         <header class="flex justify-between items-center mb-6">
             <button onclick="window.location.href='index.html'" class="text-[10px] font-black border border-gold/30 px-4 py-2 rounded-full text-gold uppercase">← Panel Ventas</button>
@@ -50,25 +47,30 @@
         <section class="bg-[#0A0A0A] p-5 rounded-[24px] gold-border mb-8 shadow-2xl">
             <h2 class="text-center text-gold font-black uppercase text-[10px] tracking-[3px] mb-6 italic">Ingreso de Mercancía</h2>
             <div class="space-y-4">
-                <!-- SELECT DE PRODUCTOS CONECTADO -->
+                
                 <div class="relative">
                     <p class="text-[7px] text-gray-500 absolute -top-2 left-3 bg-[#0A0A0A] px-2 uppercase z-10">Producto Maestro:</p>
                     <select id="sel-producto" class="input-field border-gold/20">
-                        <option value="">CARGANDO TUS PRODUCTOS...</option>
+                        <option value="">CONECTANDO CON PRODUCTOS...</option>
                     </select>
                 </div>
                 
-                <!-- SELECT DE VARIANTES CONECTADO -->
                 <div class="relative">
                     <p class="text-[7px] text-gray-500 absolute -top-2 left-3 bg-[#0A0A0A] px-2 uppercase z-10">Variante / Talla:</p>
                     <select id="sel-variante" class="input-field">
-                        <option value="">SELECCIONA VARIANTE</option>
+                        <option value="">ESPERANDO PRODUCTO...</option>
                     </select>
                 </div>
-                
-                <div class="relative">
-                    <p class="text-[7px] text-gray-500 absolute -top-2 left-3 bg-[#0A0A0A] px-2 uppercase z-10">Cantidad a sumar:</p>
-                    <input type="number" id="inp-cantidad" placeholder="0" class="input-field font-black text-xl text-center text-gold">
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="relative">
+                        <p class="text-[7px] text-gold font-black absolute -top-2 left-3 bg-[#0A0A0A] px-2 uppercase z-10">Fecha Ingreso:</p>
+                        <input type="date" id="inp-fecha" class="input-field text-xs">
+                    </div>
+                    <div class="relative">
+                        <p class="text-[7px] text-gray-500 absolute -top-2 left-3 bg-[#0A0A0A] px-2 uppercase z-10">Cantidad:</p>
+                        <input type="number" id="inp-cantidad" placeholder="0" class="input-field font-black text-xl text-center text-gold">
+                    </div>
                 </div>
                 
                 <button id="btnGuardar" class="w-full bg-white text-black font-black py-4 rounded-xl uppercase tracking-widest text-sm active:scale-95 transition-transform">
@@ -77,9 +79,9 @@
             </div>
         </section>
 
-        <h2 class="text-[10px] font-black text-gray-500 uppercase tracking-[2px] mb-4 ml-2 italic">Inventario en tu Nube</h2>
+        <h2 class="text-[10px] font-black text-gray-500 uppercase tracking-[2px] mb-4 ml-2 italic">Stock en Tiempo Real</h2>
         <div id="displayStock" class="space-y-4">
-            <div class="text-center py-10 opacity-30 italic text-xs uppercase font-bold">Consultando base de datos...</div>
+            <div class="text-center py-10 opacity-30 italic text-xs uppercase font-bold">Iniciando conexión...</div>
         </div>
     </main>
 
@@ -105,9 +107,12 @@
         const mainContent = document.getElementById('main-content');
         const selProd = document.getElementById('sel-producto');
         const selVar = document.getElementById('sel-variante');
+        const inpFecha = document.getElementById('inp-fecha');
         const btnGuardar = document.getElementById('btnGuardar');
         const displayStock = document.getElementById('displayStock');
         
+        inpFecha.valueAsDate = new Date();
+
         let productosMaestros = [];
         let inventarioData = {};
         let userId = null;
@@ -134,43 +139,48 @@
         });
 
         function vincularBaseDeDatos(uid) {
-            // CONEXIÓN REAL A PRODUCTOS: Trae lo que creaste en el otro archivo
+            // CARGA DE PRODUCTOS EXISTENTES
             onSnapshot(query(collection(db, 'users', uid, 'productos'), orderBy("nombre", "asc")), (snap) => {
                 productosMaestros = snap.docs.map(d => ({ id: d.id, ...d.data() }));
                 
                 if (productosMaestros.length === 0) {
-                    selProd.innerHTML = '<option value="">NO TIENES PRODUCTOS CREADOS</option>';
+                    selProd.innerHTML = '<option value="">NO HAY PRODUCTOS EN BASE DE DATOS</option>';
+                    selVar.innerHTML = '<option value="">---</option>';
                 } else {
                     selProd.innerHTML = '<option value="">-- SELECCIONA PRODUCTO --</option>' + 
                         productosMaestros.map(p => `<option value="${p.id}">${p.nombre.toUpperCase()}</option>`).join('');
                 }
-            });
+            }, (error) => console.error("Error productos:", error));
 
-            // CONEXIÓN REAL A INVENTARIO
+            // CARGA DE INVENTARIO
             onSnapshot(collection(db, 'users', uid, 'inventario_master'), (snap) => {
                 inventarioData = {};
                 snap.docs.forEach(d => { inventarioData[d.id] = d.data(); });
                 renderizarTabla();
-            });
+            }, (error) => console.error("Error inventario:", error));
         }
 
-        // Al cambiar de producto, cargamos sus variantes reales
         selProd.onchange = (e) => {
             const prod = productosMaestros.find(p => p.id === e.target.value);
-            if (prod && prod.variantes && prod.variantes.length > 0) {
-                selVar.innerHTML = prod.variantes.map(v => `<option value="${v}">${v.toUpperCase()}</option>`).join('');
+            if (prod) {
+                if (prod.variantes && prod.variantes.length > 0) {
+                    selVar.innerHTML = prod.variantes.map(v => `<option value="${v}">${v.toUpperCase()}</option>`).join('');
+                } else {
+                    selVar.innerHTML = '<option value="GENERAL">ESTÁNDAR / ÚNICA</option>';
+                }
             } else {
-                selVar.innerHTML = '<option value="GENERAL">ESTANDAR (SIN VARIANTES)</option>';
+                selVar.innerHTML = '<option value="">ESPERANDO PRODUCTO...</option>';
             }
         };
 
         btnGuardar.onclick = async () => {
             const prodId = selProd.value;
             const variante = selVar.value;
+            const fecha = inpFecha.value;
             const cant = parseInt(document.getElementById('inp-cantidad').value);
 
-            if (!userId || !prodId || isNaN(cant) || cant <= 0) {
-                alert("Verifica el producto y la cantidad");
+            if (!userId || !prodId || isNaN(cant) || cant <= 0 || !fecha) {
+                alert("Completa Producto, Cantidad y Fecha");
                 return;
             }
 
@@ -178,28 +188,27 @@
             const docId = `${prodId}_${variante.replace(/\s+/g, '_')}`;
 
             try {
-                btnGuardar.innerText = "SINCRONIZANDO...";
+                btnGuardar.innerText = "ACTUALIZANDO NUBE...";
                 btnGuardar.disabled = true;
 
-                // GUARDADO EN TU RUTA PRIVADA
                 await setDoc(doc(db, 'users', userId, 'inventario_master', docId), {
                     prodId, variante,
                     nombreProducto: prod.nombre,
                     entradas: increment(cant),
                     ventas: increment(0),
                     stock: increment(cant),
+                    ultimaFechaIngreso: fecha,
                     lastUpdate: Date.now()
                 }, { merge: true });
 
                 document.getElementById('inp-cantidad').value = "";
-                btnGuardar.innerText = "¡SINCRONIZADO!";
+                btnGuardar.innerText = "¡LISTO!";
                 setTimeout(() => { 
                     btnGuardar.disabled = false; 
                     btnGuardar.innerText = "REGISTRAR ENTRADA"; 
                 }, 1000);
             } catch (e) {
-                console.error(e);
-                alert("Error al guardar en la nube");
+                alert("Error de conexión");
                 btnGuardar.disabled = false;
             }
         };
@@ -215,19 +224,21 @@
             });
 
             if (Object.keys(grupos).length === 0) {
-                displayStock.innerHTML = '<div class="text-center py-10 opacity-20 text-[10px] font-black uppercase">No hay stock en tu base de datos</div>';
+                displayStock.innerHTML = '<div class="text-center py-10 opacity-20 text-[10px] font-black uppercase">Inventario vacío</div>';
                 return;
             }
 
             for (let id in grupos) {
                 const g = grupos[id];
                 const total = g.items.reduce((acc, s) => acc + (s.stock || 0), 0);
+                const ultFecha = g.items.reduce((max, item) => !max || (item.ultimaFechaIngreso > max) ? item.ultimaFechaIngreso : max, "");
+
                 displayStock.innerHTML += `
                     <div class="card-master">
                         <button onclick="toggleDetalle('${id}')" class="w-full flex justify-between items-center p-5 bg-[#0D0D0D] active:bg-[#151515]">
                             <div class="text-left">
                                 <h3 class="text-xs font-black uppercase text-white">${g.nombre}</h3>
-                                <span class="text-[7px] text-gold font-bold uppercase tracking-widest">${g.items.length} VARIANTES ACTIVAS</span>
+                                <p class="text-[6px] text-gray-500 font-bold uppercase mt-1">LOTE MÁS RECIENTE: ${ultFecha || '---'}</p>
                             </div>
                             <div class="text-right">
                                 <div class="text-white font-black text-lg leading-none">${total}</div>
@@ -237,7 +248,10 @@
                         <div id="det-${id}" class="detalle-variante bg-black/40 border-t border-white/5">
                             ${g.items.map(s => `
                                 <div class="p-4 border-b border-white/5 last:border-0 flex justify-between items-center">
-                                    <span class="text-[10px] font-black text-gray-300 uppercase">${s.variante}</span>
+                                    <div>
+                                        <p class="text-[10px] font-black text-gray-300 uppercase">${s.variante}</p>
+                                        <p class="text-[6px] text-zinc-600 font-bold uppercase italic">F. Ingreso: ${s.ultimaFechaIngreso || '---'}</p>
+                                    </div>
                                     <div class="flex gap-4">
                                         <div class="text-center"><p class="label-stat">In</p><p class="text-[10px] font-bold text-blue-400">${s.entradas}</p></div>
                                         <div class="text-center"><p class="label-stat">Stock</p><p class="text-[10px] font-black text-gold">${s.stock}</p></div>
