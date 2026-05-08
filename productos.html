@@ -19,12 +19,11 @@
         
         .product-card { background: #0A0A0A; border: 1px solid #1a1a1a; border-radius: 24px; padding: 20px; margin-bottom: 12px; animation: slideUp 0.4s ease-out; }
         
-        /* Modal Styles */
         #editModal { position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 1000; display: none; align-items: center; justify-content: center; backdrop-filter: blur(5px); padding: 20px; }
         .modal-content { background: #0F0F0F; border: 1px solid #222; border-radius: 32px; width: 100%; max-width: 450px; padding: 24px; }
 
         @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        #blocker { position: fixed; inset: 0; background: #050505; z-index: 999; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        #blocker { position: fixed; inset: 0; background: #050505; z-index: 999; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.5s ease; }
     </style>
 </head>
 <body class="p-4 pb-24">
@@ -55,10 +54,10 @@
         </div>
     </div>
 
-    <!-- Pantalla de Bloqueo de Seguridad -->
+    <!-- Pantalla de Bloqueo de Seguridad (Optimizada) -->
     <div id="blocker">
         <div class="w-12 h-12 border-4 border-gold/20 border-t-gold rounded-full animate-spin mb-4"></div>
-        <p class="text-gold text-[10px] font-black uppercase tracking-[0.4em]">Verificando Acceso Elite...</p>
+        <p class="text-gold text-[10px] font-black uppercase tracking-[0.4em]">Acceso Elite...</p>
     </div>
 
     <header class="flex justify-between items-center py-6 mb-4">
@@ -66,13 +65,11 @@
             <h1 class="text-2xl font-black italic uppercase tracking-tighter">PRODUCTOS <span class="text-gold">JADDY</span></h1>
             <p id="userEmail" class="text-[9px] text-gold font-bold uppercase tracking-widest opacity-60">Sincronizando...</p>
         </div>
-        <!-- Botón de Volver Actualizado -->
         <button onclick="irAlPanel()" class="w-10 h-10 flex items-center justify-center rounded-full bg-gold/10 text-gold border border-gold/30 hover:bg-gold hover:text-black transition-all">
             <i class="fas fa-arrow-left text-xs"></i>
         </button>
     </header>
 
-    <!-- Formulario Principal de Registro -->
     <section class="bg-[#0A0A0A] p-6 rounded-[32px] gold-border mb-8 shadow-2xl">
         <form id="formProd" class="space-y-4">
             <div class="grid grid-cols-3 gap-3">
@@ -102,7 +99,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getAuth, onAuthStateChanged, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
         import { getFirestore, collection, addDoc, onSnapshot, doc, deleteDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         const firebaseConfig = {
@@ -122,22 +119,28 @@
         const userEmailLabel = document.getElementById('userEmail');
         const listaDiv = document.getElementById('displayLista');
         const form = document.getElementById('formProd');
-        const editModal = document.getElementById('editModal');
-        const formEdit = document.getElementById('formEdit');
 
         let currentUID = null;
         let localProducts = [];
 
-        onAuthStateChanged(auth, (user) => {
-            if (user && !user.isAnonymous) {
-                currentUID = user.uid;
-                userEmailLabel.innerText = "USUARIO: " + user.email.split('@')[0].toUpperCase();
-                blocker.style.display = 'none';
-                iniciarSincronizacion(user.uid);
-            } else {
-                window.location.href = 'login.html';
-            }
-        });
+        // Lógica de Autenticación Rápida
+        const initSession = async () => {
+            onAuthStateChanged(auth, (user) => {
+                if (user && !user.isAnonymous) {
+                    currentUID = user.uid;
+                    userEmailLabel.innerText = "USUARIO: " + user.email.split('@')[0].toUpperCase();
+                    // Ocultar bloqueador con transición
+                    blocker.style.opacity = '0';
+                    setTimeout(() => blocker.style.display = 'none', 500);
+                    iniciarSincronizacion(user.uid);
+                } else {
+                    // Si realmente no hay sesión, al login
+                    window.location.href = 'login.html';
+                }
+            });
+        };
+
+        initSession();
 
         function iniciarSincronizacion(uid) {
             const q = collection(db, 'usuarios', uid, 'productos');
@@ -145,6 +148,8 @@
                 localProducts = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
                 document.getElementById('contador').innerText = `${localProducts.length} PRODUCTOS`;
                 renderizar(localProducts);
+            }, (error) => {
+                console.error("Error en sincronización:", error);
             });
         }
 
@@ -189,11 +194,11 @@
             `).join('');
         }
 
-        // --- Funciones de Edición ---
+        window.irAlPanel = () => { window.location.href = 'index.html'; };
+
         window.prepararEdicion = (id) => {
             const p = localProducts.find(prod => prod.id === id);
             if (!p) return;
-
             document.getElementById('editId').value = p.id;
             document.getElementById('editCodigo').value = p.codigo;
             document.getElementById('editNombre').value = p.nombre;
@@ -201,77 +206,51 @@
             document.getElementById('editDetal').value = p.precio_detal;
             document.getElementById('editCredito').value = p.precio_credito;
             document.getElementById('editMayor').value = p.precio_mayor;
-
-            editModal.style.display = 'flex';
+            document.getElementById('editModal').style.display = 'flex';
         };
 
-        window.cerrarModal = () => { editModal.style.display = 'none'; };
+        window.cerrarModal = () => { document.getElementById('editModal').style.display = 'none'; };
 
-        formEdit.onsubmit = async (e) => {
+        document.getElementById('formEdit').onsubmit = async (e) => {
             e.preventDefault();
             const id = document.getElementById('editId').value;
             const btn = document.getElementById('btnUpdate');
             btn.disabled = true;
-
-            const nuevosDatos = {
-                codigo: document.getElementById('editCodigo').value.toUpperCase().trim(),
-                nombre: document.getElementById('editNombre').value.toUpperCase().trim(),
-                costo: parseFloat(document.getElementById('editCosto').value) || 0,
-                precio_detal: parseFloat(document.getElementById('editDetal').value) || 0,
-                precio_credito: parseFloat(document.getElementById('editCredito').value) || 0,
-                precio_mayor: parseFloat(document.getElementById('editMayor').value) || 0
-            };
-
             try {
-                await updateDoc(doc(db, 'usuarios', currentUID, 'productos', id), nuevosDatos);
+                await updateDoc(doc(db, 'usuarios', currentUID, 'productos', id), {
+                    codigo: document.getElementById('editCodigo').value.toUpperCase().trim(),
+                    nombre: document.getElementById('editNombre').value.toUpperCase().trim(),
+                    costo: parseFloat(document.getElementById('editCosto').value) || 0,
+                    precio_detal: parseFloat(document.getElementById('editDetal').value) || 0,
+                    precio_credito: parseFloat(document.getElementById('editCredito').value) || 0,
+                    precio_mayor: parseFloat(document.getElementById('editMayor').value) || 0
+                });
                 cerrarModal();
-            } catch (err) {
-                alert("Error al actualizar");
-            } finally {
-                btn.disabled = false;
-            }
+            } catch (err) { alert("Error al actualizar"); } finally { btn.disabled = false; }
         };
 
-        // --- Guardar Nuevo ---
         form.onsubmit = async (e) => {
             e.preventDefault();
             const btn = document.getElementById('btnEnvio');
             btn.disabled = true;
-
-            const datos = {
-                codigo: document.getElementById('codigo').value.toUpperCase().trim(),
-                nombre: document.getElementById('nombre').value.toUpperCase().trim(),
-                costo: parseFloat(document.getElementById('costo').value) || 0,
-                precio_detal: parseFloat(document.getElementById('detal').value) || 0,
-                precio_credito: parseFloat(document.getElementById('credito').value) || 0,
-                precio_mayor: parseFloat(document.getElementById('mayor').value) || 0,
-                creado: Date.now()
-            };
-
             try {
-                await addDoc(collection(db, 'usuarios', currentUID, 'productos'), datos);
+                await addDoc(collection(db, 'usuarios', currentUID, 'productos'), {
+                    codigo: document.getElementById('codigo').value.toUpperCase().trim(),
+                    nombre: document.getElementById('nombre').value.toUpperCase().trim(),
+                    costo: parseFloat(document.getElementById('costo').value) || 0,
+                    precio_detal: parseFloat(document.getElementById('detal').value) || 0,
+                    precio_credito: parseFloat(document.getElementById('credito').value) || 0,
+                    precio_mayor: parseFloat(document.getElementById('mayor').value) || 0,
+                    creado: Date.now()
+                });
                 form.reset();
-                document.getElementById('codigo').focus();
-            } catch (err) {
-                alert("Error de red");
-            } finally {
-                btn.disabled = false;
-            }
+            } catch (err) { alert("Error al guardar"); } finally { btn.disabled = false; }
         };
 
         window.borrarProducto = async (id) => {
-            if (confirm("¿Eliminar este producto permanentemente?")) {
+            if (confirm("¿Eliminar producto?")) {
                 await deleteDoc(doc(db, 'usuarios', currentUID, 'productos', id));
             }
-        };
-
-        // Redirección al Index
-        window.irAlPanel = () => {
-            window.location.href = 'index.html';
-        };
-
-        window.cerrarSesion = () => {
-            signOut(auth).then(() => window.location.href = 'login.html');
         };
     </script>
 </body>
