@@ -126,7 +126,7 @@
         let inventarioData = {};
         let userId = null;
 
-        // Mantenemos tu conexión de login real
+        // Mantener conexión con login.html
         onAuthStateChanged(auth, (user) => {
             if (user && !user.isAnonymous) {
                 userId = user.uid;
@@ -142,16 +142,21 @@
         });
 
         function vincularBaseDeDatos(uid) {
-            // Sincroniza productos (users)
+            // CORRECCIÓN: Ruta correcta de productos maestros
             onSnapshot(collection(db, 'users', uid, 'productos'), (snap) => {
                 productosMaestros = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-                const currentVal = selProd.value;
-                selProd.innerHTML = '<option value="">-- SELECCIONA PRODUCTO --</option>' + 
-                    productosMaestros.map(p => `<option value="${p.id}">${p.nombre.toUpperCase()} (${p.codigo})</option>`).join('');
-                if(currentVal) selProd.value = currentVal;
+                
+                if (productosMaestros.length === 0) {
+                    selProd.innerHTML = '<option value="">SIN PRODUCTOS REGISTRADOS</option>';
+                } else {
+                    const currentVal = selProd.value;
+                    selProd.innerHTML = '<option value="">-- SELECCIONA PRODUCTO --</option>' + 
+                        productosMaestros.map(p => `<option value="${p.id}">${p.nombre.toUpperCase()} (${p.codigo})</option>`).join('');
+                    if(currentVal) selProd.value = currentVal;
+                }
             });
 
-            // Sincroniza inventario real (usuarios)
+            // Sincroniza inventario registrado
             onSnapshot(collection(db, 'usuarios', uid, 'inventario_master'), (snap) => {
                 inventarioData = {};
                 snap.docs.forEach(d => { inventarioData[d.id] = { id_doc: d.id, ...d.data() }; });
@@ -159,17 +164,22 @@
             });
         }
 
+        // Lógica de variantes restaurada
         selProd.onchange = () => {
             const pId = selProd.value;
             if (!pId) {
-                selVar.innerHTML = '<option value="GENERAL">SELECCIONE PRODUCTO</option>';
+                selVar.innerHTML = '<option value="GENERAL">SELECCIONE PRODUCTO PRIMERO</option>';
                 return;
             }
             const producto = productosMaestros.find(p => p.id === pId);
+            if (!producto) return;
+
             const variantes = producto.variantes || [];
-            selVar.innerHTML = variantes.length === 0 ? 
-                '<option value="GENERAL">GENERAL / ÚNICA</option>' : 
-                variantes.map(v => `<option value="${v}">${v}</option>`).join('');
+            if (variantes.length === 0) {
+                selVar.innerHTML = '<option value="GENERAL">GENERAL / ÚNICA</option>';
+            } else {
+                selVar.innerHTML = variantes.map(v => `<option value="${v}">${v}</option>`).join('');
+            }
         };
 
         btnGuardar.onclick = async () => {
@@ -190,10 +200,9 @@
 
             try {
                 btnGuardar.disabled = true;
-                btnGuardar.innerText = "GUARDANDO...";
+                btnGuardar.innerText = "PROCESANDO...";
 
                 if (editId) {
-                    // Actualización (Editar)
                     await updateDoc(doc(db, 'usuarios', userId, 'inventario_master', docId), {
                         entradas: cant,
                         stock: cant - (inventarioData[docId]?.ventas || 0),
@@ -201,7 +210,6 @@
                         lastUpdate: Date.now()
                     });
                 } else {
-                    // Nuevo registro (Incremento)
                     await setDoc(doc(db, 'usuarios', userId, 'inventario_master', docId), {
                         prodId, variante,
                         nombreProducto: prod.nombre,
@@ -215,7 +223,7 @@
                 }
 
                 cancelarEdicion();
-                btnGuardar.innerText = "¡LISTO!";
+                btnGuardar.innerText = "¡ÉXITO!";
                 setTimeout(() => { 
                     btnGuardar.disabled = false; 
                     btnGuardar.innerText = "REGISTRAR ENTRADA"; 
