@@ -36,15 +36,18 @@
 </head>
 <body class="p-4 pb-24 max-w-md mx-auto select-none">
 
+    <!-- Pantalla de Carga de Seguridad -->
     <div id="loading-screen">
         <div class="w-10 h-10 border-2 border-gold/20 border-t-gold rounded-full animate-spin mb-4"></div>
-        <p class="text-gold text-[10px] font-black uppercase tracking-widest">Sincronizando Reportes</p>
+        <p class="text-gold text-[10px] font-black uppercase tracking-widest">Sincronizando con Servidor</p>
     </div>
 
+    <!-- Lanzador IA -->
     <div id="ia-launcher" onclick="abrirIA()">
         <i class="fas fa-robot"></i>
     </div>
 
+    <!-- Modal de IA -->
     <div id="ia-modal">
         <header class="p-4 border-b border-white/10 flex items-center justify-between bg-black">
             <div class="flex items-center gap-3">
@@ -57,7 +60,7 @@
             <button onclick="cerrarIA()" class="text-gray-500 text-xl"><i class="fas fa-times"></i></button>
         </header>
         <div id="chatBox" class="chat-container">
-            <div class="msg msg-ia">Hola Jaddy. He recalculado todo. Ahora los abonos que recibes de tus clientes (CxC) se suman a tus ingresos, y los egresos se descuentan correctamente.</div>
+            <div class="msg msg-ia">Bienvenido al reporte maestro. He verificado tus ventas, cobros de crédito y gastos personales. Todo está actualizado.</div>
         </div>
         <div class="input-area">
             <input type="text" class="chat-input" id="chatInput" placeholder="Pregúntame algo..." onkeypress="if(event.key === 'Enter') enviarMsgIA()">
@@ -65,15 +68,17 @@
         </div>
     </div>
 
+    <!-- Header Principal -->
     <header class="flex justify-between items-center mb-6">
-        <button onclick="window.history.back()" class="text-[10px] font-black border border-gold/30 px-4 py-2 rounded-full text-[#D4AF37] uppercase">← Regresar</button>
+        <button onclick="window.history.back()" class="text-[10px] font-black border border-gold/30 px-4 py-2 rounded-full text-[#D4AF37] uppercase">← Salir</button>
         <h1 class="text-[10px] font-black text-white uppercase tracking-[4px]">Financial Intelligence</h1>
     </header>
 
+    <!-- Filtro de Fecha Personalizado -->
     <div class="bg-[#0A0A0A] border border-white/5 p-3 rounded-2xl mb-4">
         <div class="flex items-center justify-between mb-2">
-            <p class="text-[7px] font-black text-gold/60 uppercase tracking-widest"><i class="fas fa-calendar-alt mr-1"></i> Filtro de Tiempo</p>
-            <button onclick="limpiarCalendario()" class="text-[7px] font-black text-gray-500 uppercase">Reset</button>
+            <p class="text-[7px] font-black text-gold/60 uppercase tracking-widest"><i class="fas fa-calendar-alt mr-1"></i> Rango Especial</p>
+            <button onclick="limpiarCalendario()" class="text-[7px] font-black text-gray-500 uppercase">Reiniciar</button>
         </div>
         <div class="grid grid-cols-2 gap-3">
             <div>
@@ -87,6 +92,7 @@
         </div>
     </div>
 
+    <!-- Botonera de Filtros Rápidos -->
     <div class="flex justify-between gap-1 mb-6">
         <button onclick="cambiarFiltro('hoy')" id="btn-hoy" class="filter-btn active flex-1">Hoy</button>
         <button onclick="cambiarFiltro('semana')" id="btn-semana" class="filter-btn flex-1">Semana</button>
@@ -95,16 +101,17 @@
         <button onclick="cambiarFiltro('todo')" id="btn-todo" class="filter-btn flex-1 border-gold/40">Todo</button>
     </div>
 
+    <!-- Tarjeta de Salud de Negocio -->
     <section class="mb-8">
-        <h2 class="text-[9px] font-black text-green-400 uppercase tracking-[3px] mb-4 ml-2 text-center">Utilidad Final (<span id="txt-periodo">Hoy</span>)</h2>
+        <h2 class="text-[9px] font-black text-green-400 uppercase tracking-[3px] mb-4 ml-2 text-center">Utilidad Final Neta (<span id="txt-periodo">Hoy</span>)</h2>
         <div class="card-stats premium-gradient border-green-500/20">
             <div class="flex justify-between items-end mb-4">
                 <div>
-                    <p class="text-[7px] font-black text-gray-400 uppercase mb-1">Inversión (Costo Inventario)</p>
+                    <p class="text-[7px] font-black text-gray-400 uppercase mb-1">Costo de lo Vendido (Inversión)</p>
                     <h3 id="inversion-total" class="text-2xl font-black text-white">$0.00</h3>
                 </div>
                 <div class="text-right">
-                    <p class="text-[7px] font-black text-green-500 uppercase mb-1">Ganancia Real</p>
+                    <p class="text-[7px] font-black text-green-500 uppercase mb-1">Capital Limpio</p>
                     <h3 id="ganancia-neta" class="text-xl font-black text-green-400">+$0.00</h3>
                 </div>
             </div>
@@ -112,18 +119,19 @@
         </div>
     </section>
 
+    <!-- Grid de Métricas Secundarias -->
     <section class="grid grid-cols-1 gap-4 mb-8">
         <div class="card-stats">
-            <p class="text-[8px] font-black text-gray-500 uppercase tracking-[2px] mb-1 text-center">Ingresos de Caja (Ventas + Abonos Recibidos)</p>
+            <p class="text-[8px] font-black text-gray-500 uppercase tracking-[2px] mb-1 text-center">Dinero Recibido (Caja Real)</p>
             <h2 id="total-ventas" class="text-4xl font-black text-white text-center">$0.00</h2>
         </div>
         <div class="grid grid-cols-2 gap-4">
             <div class="card-stats border-red-900/30">
-                <p class="text-[7px] font-black text-red-500 uppercase mb-2">Egresos (Gastos + Deudas)</p>
+                <p class="text-[7px] font-black text-red-500 uppercase mb-2">Salidas (Gastos + Deudas)</p>
                 <h3 id="total-egresos" class="text-xl font-black text-white">$0.00</h3>
             </div>
             <div class="card-stats border-blue-900/30">
-                <p class="text-[7px] font-black text-blue-500 uppercase mb-2">Saldo CxC (Pendiente)</p>
+                <p class="text-[7px] font-black text-blue-500 uppercase mb-2">Por Cobrar (CxC)</p>
                 <h3 id="total-credito" class="text-xl font-black text-white">$0.00</h3>
             </div>
         </div>
@@ -132,7 +140,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, collection, onSnapshot, query } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCrjjeOoXPOtJDXDfrHLOA4Ny0QW2zfVWk",
@@ -148,7 +156,7 @@
         const db = getFirestore(app);
         const appId = 'jaddy-inc-finanzas';
         
-        let userId = null;
+        let currentUserId = null;
         let filtroActual = 'hoy';
 
         let store = {
@@ -158,164 +166,164 @@
             prestamos: []
         };
 
-        // --- SEGURIDAD ---
+        // Identificación por Login
         onAuthStateChanged(auth, (user) => {
             if(user && !user.isAnonymous) {
-                userId = user.uid;
+                currentUserId = user.uid;
                 document.body.style.display = "block";
                 document.getElementById('loading-screen').style.display = "none";
-                iniciarEscuchas(user.uid);
+                iniciarSincronizacionTotal();
             } else {
                 window.location.href = "login.html";
             }
         });
 
-        function iniciarEscuchas(uid) {
-            // Inventario
+        function iniciarSincronizacionTotal() {
+            // 1. Escuchar PRODUCTOS (Para calcular costos de inversión)
             onSnapshot(collection(db, "productos"), snap => {
-                store.productos = snap.docs.map(d => d.data());
-                renderizar();
+                store.productos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+                procesarCalculos();
             });
 
-            // Egresos del usuario
-            onSnapshot(collection(db, 'artifacts', appId, 'users', uid, 'egresos'), snap => {
-                store.egresos = snap.docs.map(d => d.data());
-                renderizar();
-            });
-
-            // Deudas del usuario (Pagos a acreedores)
-            onSnapshot(collection(db, 'artifacts', appId, 'users', uid, 'prestamos'), snap => {
-                store.prestamos = snap.docs.map(d => d.data());
-                renderizar();
-            });
-
-            // Ventas Realizadas (Créditos y Abonos de clientes)
+            // 2. Escuchar VENTAS (Contado, Crédito, Detalle)
             onSnapshot(collection(db, "ventas_realizadas"), snap => {
-                store.ventas = snap.docs.map(d => d.data());
-                renderizar();
+                store.ventas = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+                procesarCalculos();
             });
-        }
 
-        function renderizar() {
-            clearTimeout(window.tCalc);
-            window.tCalc = setTimeout(calcularAnalitica, 100);
+            // 3. Escuchar EGRESOS (Filtrados por el usuario actual)
+            onSnapshot(collection(db, 'artifacts', appId, 'users', currentUserId, 'egresos'), snap => {
+                store.egresos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+                procesarCalculos();
+            });
+
+            // 4. Escuchar PRÉSTAMOS / DEUDAS (Filtrados por el usuario actual)
+            onSnapshot(collection(db, 'artifacts', appId, 'users', currentUserId, 'prestamos'), snap => {
+                store.prestamos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+                procesarCalculos();
+            });
         }
 
         function parseNum(val) {
             if (!val) return 0;
-            return parseFloat(val.toString().replace(/[$,]/g, '')) || 0;
+            if (typeof val === 'number') return val;
+            let clean = val.toString().replace(/[$,]/g, '').trim();
+            return parseFloat(clean) || 0;
         }
 
-        function esFechaValida(fStr) {
+        function esFechaEnRango(fInput) {
             if (filtroActual === 'todo') return true;
-            if (!fStr) return false;
+            if (!fInput) return false;
 
             let fecha;
-            if (fStr.includes('/')) {
-                const p = fStr.split('/');
-                fecha = new Date(p[2], p[1]-1, p[0]);
+            if (typeof fInput === 'number') {
+                fecha = new Date(fInput);
+            } else if (fInput.includes('/')) {
+                const parts = fInput.split('/');
+                fecha = new Date(parts[2], parts[1]-1, parts[0]);
             } else {
-                fecha = new Date(fStr);
+                fecha = new Date(fInput);
             }
 
             if (isNaN(fecha.getTime())) return false;
-            const ahora = new Date();
+            const hoy = new Date();
 
             if (filtroActual === 'custom') {
-                const start = new Date(document.getElementById('fecha-inicio').value + "T00:00:00");
-                const end = new Date(document.getElementById('fecha-fin').value + "T23:59:59");
-                return fecha >= start && fecha <= end;
+                const s = new Date(document.getElementById('fecha-inicio').value + "T00:00:00");
+                const e = new Date(document.getElementById('fecha-fin').value + "T23:59:59");
+                return fecha >= s && fecha <= e;
             }
 
-            if (filtroActual === 'hoy') return fecha.toDateString() === ahora.toDateString();
+            if (filtroActual === 'hoy') return fecha.toDateString() === hoy.toDateString();
             if (filtroActual === 'semana') {
-                const hoy = new Date();
-                const diff = hoy.getDate() - hoy.getDay() + (hoy.getDay() === 0 ? -6 : 1);
-                const lunes = new Date(hoy.setDate(diff));
+                const d = hoy.getDate() - hoy.getDay() + (hoy.getDay() === 0 ? -6 : 1);
+                const lunes = new Date(new Date().setDate(d));
                 lunes.setHours(0,0,0,0);
                 return fecha >= lunes;
             }
-            if (filtroActual === 'mes') return fecha.getMonth() === ahora.getMonth() && fecha.getFullYear() === ahora.getFullYear();
-            if (filtroActual === 'anio') return fecha.getFullYear() === ahora.getFullYear();
+            if (filtroActual === 'mes') return fecha.getMonth() === hoy.getMonth() && fecha.getFullYear() === hoy.getFullYear();
+            if (filtroActual === 'anio') return fecha.getFullYear() === hoy.getFullYear();
             return true;
         }
 
-        function calcularAnalitica() {
-            let ingresosEfectivo = 0; // Ventas Contado + Abonos Recibidos
+        function procesarCalculos() {
+            let ingresosEfectivo = 0; // Ventas Contado + Abonos Recibidos de Clientes
             let egresosTotales = 0;   // Gastos + Abonos Pagados a deudas
-            let costoMercancia = 0;   // Inversión en lo vendido
-            let cxcPendiente = 0;     // Lo que los clientes deben aún
+            let costoInversion = 0;   // Costo de la mercancía que ya no está
+            let cxcPendiente = 0;     // Saldo que los clientes deben
 
-            // 1. PROCESAR VENTAS
+            // PROCESO DE VENTAS (Toda la información)
             store.ventas.forEach(v => {
                 const totalVenta = parseNum(v.precio || v.total);
                 const cant = parseInt(v.cantidad || 1);
                 const metodo = (v.metodo || v.tipo || '').toUpperCase();
                 
-                // COSTO (Inversión)
-                const prod = store.productos.find(p => p.nombre === v.producto);
-                const costoUnitario = prod ? parseNum(prod.costo) : 0;
+                // Buscar costo para inversión
+                const pInfo = store.productos.find(p => p.nombre === v.producto);
+                const costoUnitario = pInfo ? parseNum(pInfo.costo) : 0;
 
-                if (esFechaValida(v.fecha)) {
-                    costoMercancia += (costoUnitario * cant);
-                    
+                // Si la venta está en el rango
+                if (esFechaEnRango(v.fecha)) {
+                    costoInversion += (costoUnitario * cant);
+
                     if (metodo.includes('CONTADO') || metodo.includes('EFECTIVO')) {
                         ingresosEfectivo += totalVenta;
-                    } else if (metodo.includes('CREDITO')) {
-                        // Es crédito: Sumamos solo los abonos que caen en el periodo
-                        let pagadoEnVenta = 0;
+                    } 
+                    else if (metodo.includes('CREDITO')) {
+                        // Buscar abonos recibidos en este rango para esta venta crédito
+                        let pagadoHistorial = 0;
                         if (v.abonos && Array.isArray(v.abonos)) {
                             v.abonos.forEach(ab => {
-                                if (esFechaValida(ab.fecha)) {
+                                if (esFechaEnRango(ab.fecha)) {
                                     ingresosEfectivo += parseNum(ab.monto);
                                 }
-                                pagadoEnVenta += parseNum(ab.monto);
+                                pagadoHistorial += parseNum(ab.monto);
                             });
                         }
-                        // La deuda total de clientes (CxC) es lo que falta por cobrar
-                        cxcPendiente += (totalVenta - pagadoEnVenta);
+                        // Lo que falta por cobrar
+                        cxcPendiente += (totalVenta - pagadoHistorial);
                     }
                 }
             });
 
-            // 2. PROCESAR EGRESOS (Gastos directos)
+            // PROCESO DE EGRESOS (Gastos directos del usuario)
             store.egresos.forEach(e => {
-                if (esFechaEnPeriodo(e.fecha)) {
+                if (esFechaEnRango(e.fecha || e.createdAt)) {
                     egresosTotales += parseNum(e.monto);
                 }
             });
 
-            // 3. PROCESAR PAGOS DE DEUDAS (Abonos a acreedores)
+            // PROCESO DE DEUDAS (Pagos que tú hiciste a otros)
             store.prestamos.forEach(p => {
                 if (p.abonos && Array.isArray(p.abonos)) {
                     p.abonos.forEach(ab => {
-                        if (esFechaValida(ab.fecha)) {
+                        if (esFechaEnRango(ab.fecha)) {
                             egresosTotales += parseNum(ab.monto);
                         }
                     });
                 }
             });
 
-            const utilidadNeta = ingresosEfectivo - egresosTotales - costoMercancia;
+            const utilidadNeta = ingresosEfectivo - egresosTotales - costoInversion;
 
-            // Update UI
+            // Actualizar Interfaz
             requestAnimationFrame(() => {
                 document.getElementById('total-ventas').innerText = `$${ingresosEfectivo.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
                 document.getElementById('total-egresos').innerText = `$${egresosTotales.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
                 document.getElementById('total-credito').innerText = `$${cxcPendiente.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
-                document.getElementById('inversion-total').innerText = `$${costoMercancia.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
+                document.getElementById('inversion-total').innerText = `$${costoInversion.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
                 document.getElementById('ganancia-neta').innerText = `${utilidadNeta >= 0 ? '+' : ''}$${utilidadNeta.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
                 
                 const meta = document.getElementById('mensaje-meta');
-                meta.innerHTML = utilidadNeta < 0 
-                    ? `⚠️ Estás operando con pérdida de <span class="text-white font-bold">$${Math.abs(utilidadNeta).toFixed(2)}</span>`
-                    : `✅ Tu ganancia neta real hoy es de <span class="text-white font-bold">$${utilidadNeta.toFixed(2)}</span>`;
-                meta.className = `text-[9px] text-center italic mt-4 px-2 ${utilidadNeta < 0 ? 'text-red-400' : 'text-green-400'}`;
+                if (utilidadNeta < 0) {
+                    meta.innerHTML = `⚠️ Operando en negativo por <span class="text-white font-bold">$${Math.abs(utilidadNeta).toFixed(2)}</span>`;
+                    meta.className = "text-[9px] text-center italic mt-4 px-2 text-red-400";
+                } else {
+                    meta.innerHTML = `✅ Beneficio neto de <span class="text-white font-bold">$${utilidadNeta.toFixed(2)}</span> logrado`;
+                    meta.className = "text-[9px] text-center italic mt-4 px-2 text-green-400";
+                }
             });
         }
-
-        // Helper para reutilizar lógica de fecha
-        function esFechaEnPeriodo(f) { return esFechaValida(f); }
 
         window.limpiarCalendario = () => {
             document.getElementById('fecha-inicio').value = '';
@@ -324,10 +332,12 @@
         };
 
         window.aplicarCalendario = () => {
-            filtroActual = 'custom';
-            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-            document.getElementById('txt-periodo').innerText = `Personalizado`;
-            renderizar();
+            if(document.getElementById('fecha-inicio').value && document.getElementById('fecha-fin').value) {
+                filtroActual = 'custom';
+                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                document.getElementById('txt-periodo').innerText = `Rango Especial`;
+                procesarCalculos();
+            }
         };
 
         window.cambiarFiltro = (filtro) => {
@@ -337,7 +347,7 @@
             if(btn) btn.classList.add('active');
             const labels = { hoy: 'Hoy', semana: 'Esta Semana', mes: 'Este Mes', anio: 'Este Año', todo: 'Historial' };
             document.getElementById('txt-periodo').innerText = labels[filtro];
-            renderizar();
+            procesarCalculos();
         };
 
         window.abrirIA = () => { document.getElementById('ia-modal').style.display = 'flex'; };
