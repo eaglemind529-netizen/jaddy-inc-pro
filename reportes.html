@@ -13,8 +13,6 @@
         .gold-border { border: 1px solid rgba(212, 175, 55, 0.2); }
         .stat-card { background: #0A0A0A; border: 1px solid #1A1A1A; border-radius: 20px; padding: 15px; }
         .input-field { background: #111; border: 1px solid #222; border-radius: 12px; padding: 12px; width: 100%; color: white; font-size: 13px; outline: none; }
-        .btn-gold { background: linear-gradient(135deg, #D4AF37, #AA8928); color: black; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; border-radius: 12px; padding: 12px; transition: all 0.3s; }
-        .btn-gold:active { transform: scale(0.95); opacity: 0.8; }
         #loading-screen { position: fixed; inset: 0; background: #050505; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; }
         input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); opacity: 0.5; }
         .date-label { font-size: 7px; color: #D4AF37; font-weight: 900; text-transform: uppercase; margin-bottom: 2px; display: block; letter-spacing: 1px;}
@@ -24,12 +22,12 @@
 
     <div id="loading-screen">
         <div class="w-10 h-10 border-2 border-gold/20 border-t-gold rounded-full animate-spin mb-4"></div>
-        <p class="text-gold text-[10px] font-black uppercase tracking-[0.5em]">Calculando Rango</p>
+        <p class="text-gold text-[10px] font-black uppercase tracking-[0.5em]">Sincronizando Finanzas</p>
     </div>
 
     <div class="p-4">
         <header class="flex justify-between items-center mb-6">
-            <button onclick="window.location.href='index.html'" class="text-[10px] font-black border border-gold/30 px-4 py-2 rounded-full text-gold uppercase">← Menú</button>
+            <button onclick="window.history.back()" class="text-[10px] font-black border border-gold/30 px-4 py-2 rounded-full text-gold uppercase">← Volver</button>
             <div class="text-right">
                 <p class="text-[8px] text-gray-500 font-black uppercase tracking-widest">Análisis de Rango</p>
                 <p class="text-gold font-black italic text-sm">JADDY INC</p>
@@ -56,7 +54,7 @@
             <div class="absolute top-0 right-0 p-2 opacity-10">
                 <i class="fa-solid fa-gem text-4xl text-gold"></i>
             </div>
-            <p class="text-[9px] text-gold font-black uppercase mb-1 tracking-widest">Utilidad Neta del Periodo</p>
+            <p class="text-[9px] text-gold font-black uppercase mb-1 tracking-widest">Utilidad Neta Estimada</p>
             <p id="total-utilidad" class="text-3xl font-black text-white">$0.00</p>
             <div class="flex gap-4 mt-3 pt-3 border-t border-white/5">
                 <div>
@@ -64,7 +62,7 @@
                     <p id="subtotal-ventas" class="text-sm font-bold text-green-400">$0.00</p>
                 </div>
                 <div>
-                    <p class="text-[7px] text-gray-500 font-black uppercase">Egresos (-)</p>
+                    <p class="text-[7px] text-gray-500 font-black uppercase">Gastos/Egresos (-)</p>
                     <p id="subtotal-egresos" class="text-sm font-bold text-red-500">$0.00</p>
                 </div>
             </div>
@@ -77,16 +75,16 @@
                 <p id="total-credito" class="text-lg font-black text-orange-400">$0.00</p>
             </div>
             <div class="stat-card">
-                <p class="text-[7px] text-gray-500 font-black uppercase mb-1">Ventas Realizadas</p>
+                <p class="text-[7px] text-gray-500 font-black uppercase mb-1">Operaciones</p>
                 <p id="total-ventas" class="text-lg font-black text-white">0</p>
             </div>
         </div>
 
         <!-- Detalle de Egresos -->
         <section class="mb-8">
-            <h3 class="text-[9px] font-black text-gray-500 uppercase tracking-[3px] mb-3 px-2">Detalle de Gastos en Periodo</h3>
+            <h3 class="text-[9px] font-black text-gray-500 uppercase tracking-[3px] mb-3 px-2">Movimientos de Caja (Egresos)</h3>
             <div id="lista-egresos" class="space-y-2">
-                <!-- Se llena dinamicamente -->
+                <!-- Se llena dinamicamente con los datos de Finanzas -->
             </div>
         </section>
 
@@ -94,7 +92,7 @@
         <div class="fixed bottom-6 left-4 right-4 flex gap-2">
             <button onclick="enviarWhatsApp()" class="flex-1 bg-[#25D366] text-black font-black py-4 rounded-2xl flex items-center justify-center gap-2 shadow-xl active:scale-95 transition-all">
                 <i class="fa-brands fa-whatsapp text-xl"></i>
-                <span class="text-[11px] uppercase tracking-tighter">Enviar Reporte por WhatsApp</span>
+                <span class="text-[11px] uppercase tracking-tighter">Reporte WhatsApp</span>
             </button>
         </div>
     </div>
@@ -116,40 +114,39 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
+        const appIdFinanzas = "jaddy-inc-finanzas"; // El ID que usa tu archivo de egresos
 
         let userId = null;
         let ventasData = [];
         let egresosData = [];
 
         onAuthStateChanged(auth, (user) => { 
-            if(user && !user.isAnonymous){ 
+            if(user){ 
                 userId = user.uid;
                 document.getElementById('loading-screen').style.display = "none";
                 
-                // Fecha de hoy por defecto
                 const hoy = new Date().toISOString().split('T')[0];
                 document.getElementById('fecha-inicio').value = hoy;
                 document.getElementById('fecha-fin').value = hoy;
                 
                 escucharDatos(user.uid); 
             } else {
-                // Redirección si no hay sesión activa
                 window.location.href = "login.html";
             }
         });
 
         function escucharDatos(uid) {
-            // Sincronización en tiempo real de Ventas
+            // 1. Escuchamos Ventas (Tu colección de ventas principal)
             onSnapshot(collection(db, 'usuarios', uid, 'ventas_realizadas'), snap => {
                 ventasData = snap.docs.map(d => ({id: d.id, ...d.data()}));
                 procesarTodo();
-            }, err => console.error("Error ventas:", err));
+            });
 
-            // Sincronización en tiempo real de Egresos
-            onSnapshot(collection(db, 'usuarios', uid, 'egresos'), snap => {
+            // 2. Escuchamos Egresos (De la ruta EXACTA de tu archivo de Finanzas)
+            onSnapshot(collection(db, 'artifacts', appIdFinanzas, 'users', uid, 'egresos'), snap => {
                 egresosData = snap.docs.map(d => ({id: d.id, ...d.data()}));
                 procesarTodo();
-            }, err => console.error("Error egresos:", err));
+            });
         }
 
         function procesarTodo() {
@@ -158,91 +155,78 @@
 
             if(!inicio || !fin) return;
 
-            // Función para normalizar fechas de los items y compararlas con el filtro
-            const filtrarRango = (itemFecha) => {
-                if(!itemFecha) return false;
-                let fechaNormalizada = itemFecha;
-                if(itemFecha.includes('/')) {
-                    // Convierte DD/MM/YYYY a YYYY-MM-DD
-                    const parts = itemFecha.split('/');
-                    fechaNormalizada = `${parts[2]}-${parts[1].padStart(2,'0')}-${parts[0].padStart(2,'0')}`;
-                }
-                return fechaNormalizada >= inicio && fechaNormalizada <= fin;
+            // Filtro por fecha (YYYY-MM-DD)
+            const filtrarRango = (fechaISO) => {
+                if(!fechaISO) return false;
+                const d = fechaISO.split('T')[0];
+                return d >= inicio && d <= fin;
             };
 
-            // Filtrado de colecciones
-            const ventasFiltradas = ventasData.filter(v => filtrarRango(v.fecha_venta));
+            // Filtrado de Ventas
+            const ventasFiltradas = ventasData.filter(v => {
+                let f = v.fecha_venta;
+                if(f && f.includes('/')) {
+                    const p = f.split('/');
+                    f = `${p[2]}-${p[1].padStart(2,'0')}-${p[0].padStart(2,'0')}`;
+                }
+                return f >= inicio && f <= fin;
+            });
+
+            // Filtrado de Egresos
             const egresosFiltrados = egresosData.filter(e => filtrarRango(e.fecha));
 
-            // Cálculos
             let totalVendido = ventasFiltradas.reduce((acc, v) => acc + (v.total || 0), 0);
             let totalCredito = ventasFiltradas.filter(v => v.tipo === 'CREDITO').reduce((acc, v) => acc + (v.total || 0), 0);
             let totalEgresos = egresosFiltrados.reduce((acc, e) => acc + (e.monto || 0), 0);
-            let utilidadNeta = totalVendido - totalEgresos;
 
-            // Actualización de la Interfaz (UI)
-            document.getElementById('subtotal-ventas').innerText = `$${totalVendido.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
-            document.getElementById('subtotal-egresos').innerText = `$${totalEgresos.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
-            document.getElementById('total-utilidad').innerText = `$${utilidadNeta.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
-            document.getElementById('total-credito').innerText = `$${totalCredito.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
+            // Actualizar UI
+            document.getElementById('subtotal-ventas').innerText = `$${totalVendido.toLocaleString('en-US')}`;
+            document.getElementById('subtotal-egresos').innerText = `$${totalEgresos.toLocaleString('en-US')}`;
+            document.getElementById('total-utilidad').innerText = `$${(totalVendido - totalEgresos).toLocaleString('en-US')}`;
+            document.getElementById('total-credito').innerText = `$${totalCredito.toLocaleString('en-US')}`;
             document.getElementById('total-ventas').innerText = ventasFiltradas.length;
 
-            // Color dinámico para la utilidad
-            const utilidadEl = document.getElementById('total-utilidad');
-            if(utilidadNeta < 0) {
-                utilidadEl.classList.add('text-red-500');
-                utilidadEl.classList.remove('text-white');
-            } else {
-                utilidadEl.classList.remove('text-red-500');
-                utilidadEl.classList.add('text-white');
-            }
-
-            // Renderizado de lista de Egresos
             const listaE = document.getElementById('lista-egresos');
             if(egresosFiltrados.length === 0) {
-                listaE.innerHTML = '<p class="text-[9px] text-gray-700 text-center uppercase py-2 italic">Sin gastos en este periodo</p>';
+                listaE.innerHTML = '<p class="text-[9px] text-gray-700 text-center uppercase py-4 italic">Sin movimientos en este periodo</p>';
             } else {
-                listaE.innerHTML = egresosFiltrados.map(e => `
-                    <div class="flex justify-between items-center bg-[#111] p-3 rounded-xl border border-white/5">
-                        <div>
-                            <p class="text-[10px] font-bold uppercase">${e.motivo || 'Gasto General'}</p>
-                            <p class="text-[7px] text-gray-500">${e.fecha || ''}</p>
+                listaE.innerHTML = egresosFiltrados
+                    .sort((a,b) => new Date(b.fecha) - new Date(a.fecha))
+                    .map(e => `
+                        <div class="flex justify-between items-center bg-[#111] p-3 rounded-xl border border-white/5">
+                            <div class="flex items-center gap-3">
+                                <div class="w-8 h-8 rounded-lg bg-black flex items-center justify-center text-xs">
+                                    ${e.categoria === 'deuda' ? '💸' : '📦'}
+                                </div>
+                                <div>
+                                    <p class="text-[10px] font-bold uppercase text-white">${e.detalle || e.categoria}</p>
+                                    <p class="text-[7px] text-gray-500">${new Date(e.fecha).toLocaleDateString()}</p>
+                                </div>
+                            </div>
+                            <p class="text-[10px] font-black text-red-400">-$${(e.monto || 0).toLocaleString()}</p>
                         </div>
-                        <p class="text-[10px] font-black text-red-400">-$${(e.monto || 0).toLocaleString('en-US', {minimumFractionDigits: 2})}</p>
-                    </div>
-                `).join('');
+                    `).join('');
             }
         }
 
         window.enviarWhatsApp = () => {
             const inicio = document.getElementById('fecha-inicio').value;
             const fin = document.getElementById('fecha-fin').value;
-            const utilidad = document.getElementById('total-utilidad').innerText;
-            const ventas = document.getElementById('subtotal-ventas').innerText;
-            const egresos = document.getElementById('subtotal-egresos').innerText;
-            const credito = document.getElementById('total-credito').innerText;
-            const cant = document.getElementById('total-ventas').innerText;
-
-            const periodo = (inicio === fin) ? inicio : `${inicio} al ${fin}`;
-
             const mensaje = encodeURIComponent(
-                `🏆 *REPORTE DE NEGOCIO JADDY INC*\n` +
-                `📅 Periodo: ${periodo}\n` +
+                `🏆 *REPORTE JADDY INC*\n` +
+                `📅 Periodo: ${inicio} / ${fin}\n` +
                 `--------------------------------\n` +
-                `💰 *VENTAS TOTALES:* ${ventas}\n` +
-                `💸 *EGRESOS:* ${egresos}\n` +
-                `💳 *POR COBRAR:* ${credito}\n` +
-                `📦 *OPERACIONES:* ${cant}\n` +
+                `💰 VENTAS: ${document.getElementById('subtotal-ventas').innerText}\n` +
+                `💸 EGRESOS: ${document.getElementById('subtotal-egresos').innerText}\n` +
+                `💳 CRÉDITOS: ${document.getElementById('total-credito').innerText}\n` +
                 `--------------------------------\n` +
-                `💎 *UTILIDAD NETA: ${utilidad}*\n` +
+                `💎 UTILIDAD: ${document.getElementById('total-utilidad').innerText}\n` +
                 `--------------------------------\n` +
-                `_Generado por Luxury Intelligence_`
+                `_Luxury Finanzas System_`
             );
-
             window.open(`https://wa.me/?text=${mensaje}`);
         }
 
-        // Listeners para cambios de fecha
         document.getElementById('fecha-inicio').addEventListener('change', procesarTodo);
         document.getElementById('fecha-fin').addEventListener('change', procesarTodo);
     </script>
