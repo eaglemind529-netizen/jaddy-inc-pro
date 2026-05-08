@@ -27,6 +27,9 @@
             position: fixed; inset: 0; background: #000; z-index: 9999; 
             display: flex; flex-direction: column; align-items: center; justify-content: center; 
         }
+        input[type="date"]::-webkit-calendar-picker-indicator {
+            filter: invert(1);
+        }
     </style>
 </head>
 <body class="select-none">
@@ -93,6 +96,12 @@
                 <form id="deuda-form" class="space-y-4 bg-zinc-900/40 p-5 rounded-3xl border border-zinc-800/50 shadow-2xl">
                     <input type="text" required placeholder="Nombre del acreedor" id="deuda-acreedor" class="w-full bg-black border border-zinc-800 p-4 rounded-2xl text-white font-black text-xs outline-none">
                     <input type="number" required placeholder="Monto del préstamo $" id="deuda-monto" class="w-full bg-black border border-zinc-800 p-4 rounded-2xl text-white font-black text-lg outline-none">
+                    
+                    <div class="space-y-2">
+                        <label class="text-[9px] font-black uppercase text-zinc-500 italic px-1">Fecha de recepción</label>
+                        <input type="date" required id="deuda-fecha-inicio" class="w-full bg-black border border-zinc-800 p-4 rounded-2xl text-white font-black text-xs outline-none focus:border-amber-500">
+                    </div>
+
                     <div class="flex items-center justify-between p-4 bg-black/40 rounded-2xl border border-zinc-800">
                         <span class="text-[9px] font-black uppercase text-zinc-500 italic">Interés mensual (%)</span>
                         <button type="button" id="toggle-interes" class="w-10 h-5 rounded-full relative transition-all bg-zinc-800">
@@ -126,7 +135,6 @@
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
         import { getFirestore, collection, doc, addDoc, updateDoc, deleteDoc, onSnapshot, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-        // TUS CREDENCIALES MANTENIDAS
         const firebaseConfig = {
             apiKey: "AIzaSyCrjjeOoXPOtJDXDfrHLOA4Ny0QW2zfVWk",
             authDomain: "apps-d45d6.firebaseapp.com",
@@ -154,9 +162,8 @@
             { id: 'otros', label: 'Otros', icon: '📦' }
         ];
 
-        // --- LÓGICA DE SEGURIDAD IDENTICA AL LOGIN ---
         onAuthStateChanged(auth, (user) => {
-            if(user && !user.isAnonymous) {
+            if(user) {
                 userId = user.uid;
                 document.body.style.display = "block";
                 document.getElementById('loading-screen').style.display = "none";
@@ -166,9 +173,20 @@
                 startListening(user.uid);
                 renderCategories();
             } else {
-                // Si no hay login real, fuera.
                 window.location.href = "login.html";
             }
+        });
+
+        // Toggle Interés
+        document.getElementById('toggle-interes').addEventListener('click', () => {
+            hasInterest = !hasInterest;
+            const circle = document.getElementById('toggle-circle');
+            const input = document.getElementById('deuda-interes-valor');
+            const btn = document.getElementById('toggle-interes');
+            
+            circle.style.left = hasInterest ? '22px' : '2px';
+            btn.className = `w-10 h-5 rounded-full relative transition-all ${hasInterest ? 'bg-amber-500' : 'bg-zinc-800'}`;
+            input.classList.toggle('hidden', !hasInterest);
         });
 
         function startListening(uid) {
@@ -186,6 +204,41 @@
             });
         }
 
+        // Formularios
+        document.getElementById('egreso-form').onsubmit = async (e) => {
+            e.preventDefault();
+            const monto = parseFloat(document.getElementById('egreso-monto').value);
+            const detalle = document.getElementById('egreso-detalle').value;
+            if(!userId) return;
+            await addDoc(collection(db, 'artifacts', appId, 'users', userId, 'egresos'), {
+                categoria: activeCategory,
+                monto,
+                detalle: detalle.toUpperCase(),
+                fecha: new Date().toISOString()
+            });
+            e.target.reset();
+        };
+
+        document.getElementById('deuda-form').onsubmit = async (e) => {
+            e.preventDefault();
+            const acreedor = document.getElementById('deuda-acreedor').value;
+            const monto = parseFloat(document.getElementById('deuda-monto').value);
+            const fechaInicio = document.getElementById('deuda-fecha-inicio').value;
+            const interes = hasInterest ? parseFloat(document.getElementById('deuda-interes-valor').value || 0) : 0;
+            
+            if(!userId) return;
+            await addDoc(collection(db, 'artifacts', appId, 'users', userId, 'prestamos'), {
+                acreedor: acreedor.toUpperCase(),
+                montoInicial: monto,
+                montoTotalConInteres: monto + (monto * (interes / 100)),
+                fechaInicio,
+                interes,
+                estado: 'activo',
+                abonos: []
+            });
+            e.target.reset();
+        };
+
         window.toggleHistory = (show) => { document.getElementById('history-modal').classList.toggle('hidden', !show); };
         
         window.switchTab = (tab) => {
@@ -197,20 +250,16 @@
 
         window.selectCategory = (id) => { activeCategory = id; renderCategories(); };
 
-        // Función para eliminar o reactivar
         window.gestionarBorrado = async (coleccion, id) => {
             if(!userId) return;
             const docRef = doc(db, 'artifacts', appId, 'users', userId, coleccion, id);
-            
             if(coleccion === 'prestamos') {
                 const snap = await getDoc(docRef);
                 if(snap.exists() && snap.data().estado === 'pagado') {
-                    // REACIVAR: Si estaba en historial, vuelve a estar activo y sin abonos
                     await updateDoc(docRef, { estado: 'activo', abonos: [] });
                     return;
                 }
             }
-            // Borrado normal para egresos o deudas no pagadas
             await deleteDoc(docRef);
         };
 
@@ -226,7 +275,7 @@
         function renderEgresos(data) {
             let total = 0;
             const container = document.getElementById('list-egresos');
-            container.innerHTML = data.map(e => {
+            container.innerHTML = data.sort((a,b) => new Date(b.fecha) - new Date(a.fecha)).map(e => {
                 total += parseFloat(e.monto || 0);
                 return `<div class="bg-zinc-900/60 p-4 rounded-2xl flex justify-between items-center border border-zinc-800/40">
                     <div class="flex items-center gap-4">
@@ -259,6 +308,7 @@
                     <div class="p-5 bg-zinc-800/10 flex justify-between items-start">
                         <div>
                             <p class="text-white font-black text-sm uppercase italic">${p.acreedor}</p>
+                            <p class="text-[9px] text-zinc-500 font-bold">Iniciado: ${p.fechaInicio || 'S/F'}</p>
                             <p class="text-amber-500 font-black text-3xl italic mt-1">$${saldo.toLocaleString()}</p>
                         </div>
                         <button onclick="window.gestionarBorrado('prestamos', '${p.id}')" class="text-zinc-700 hover:text-red-500 transition-colors p-2">
@@ -267,9 +317,12 @@
                     </div>
                     
                     <div class="p-4 bg-black/40 space-y-4">
-                        <div class="flex gap-2">
-                            <input type="number" placeholder="Abonar $" id="abono-${p.id}" class="flex-1 bg-black border border-zinc-800 rounded-xl p-3 text-[11px] font-black text-white outline-none">
-                            <button onclick="window.handleAbono('${p.id}', '${p.acreedor}')" class="bg-white text-black text-[9px] font-black px-4 rounded-xl italic uppercase">Abonar</button>
+                        <div class="space-y-2">
+                            <div class="flex gap-2">
+                                <input type="number" placeholder="Abonar $" id="abono-${p.id}" class="flex-[2] bg-black border border-zinc-800 rounded-xl p-3 text-[11px] font-black text-white outline-none">
+                                <input type="date" id="abono-fecha-${p.id}" class="flex-[1.5] bg-black border border-zinc-800 rounded-xl p-2 text-[9px] text-white outline-none">
+                            </div>
+                            <button onclick="window.handleAbono('${p.id}', '${p.acreedor}')" class="w-full bg-white text-black text-[9px] font-black py-3 rounded-xl italic uppercase">Confirmar Abono</button>
                         </div>
 
                         <div class="pt-3 border-t border-zinc-800/50 flex gap-2">
@@ -304,88 +357,51 @@
         }
 
         window.handleAbono = async (id, acreedor) => {
-            const input = document.getElementById(`abono-${id}`);
-            const monto = parseFloat(input.value);
+            const inputMonto = document.getElementById(`abono-${id}`);
+            const inputFecha = document.getElementById(`abono-fecha-${id}`);
+            const monto = parseFloat(inputMonto.value);
+            const fechaAbono = inputFecha.value || new Date().toISOString().split('T')[0];
+
             if(!monto || !userId) return;
             const docRef = doc(db, 'artifacts', appId, 'users', userId, 'prestamos', id);
             const snap = await getDoc(docRef);
+            
             if(snap.exists()) {
                 const data = snap.data();
                 const abonos = data.abonos || [];
                 const totalAbonado = abonos.reduce((s, a) => s + a.monto, 0) + monto;
-                const update = { abonos: [...abonos, { monto, fecha: new Date().toLocaleDateString() }] };
+                const update = { abonos: [...abonos, { monto, fecha: fechaAbono }] };
                 if (totalAbonado >= data.montoTotalConInteres) update.estado = 'pagado';
+                
                 await updateDoc(docRef, update);
                 
-                // Registrar también como egreso automáticamente
                 await addDoc(collection(db, 'artifacts', appId, 'users', userId, 'egresos'), {
                     categoria: 'deuda',
                     monto: monto,
                     detalle: `ABONO A: ${acreedor}`.toUpperCase(),
-                    fecha: new Date().toLocaleDateString()
+                    fecha: new Date(fechaAbono).toISOString()
                 });
-
-                input.value = '';
+                
+                inputMonto.value = '';
+                inputFecha.value = '';
             }
         };
 
         window.handleProrroga = async (id) => {
-            const diasInput = document.getElementById(`pro-dias-${id}`);
-            const porcInput = document.getElementById(`pro-porc-${id}`);
-            const dias = parseInt(diasInput.value);
-            const porc = parseFloat(porcInput.value);
+            const dias = parseInt(document.getElementById(`pro-dias-${id}`).value);
+            const porc = parseFloat(document.getElementById(`pro-porc-${id}`).value);
             if(!dias || !porc || !userId) return;
+            
             const docRef = doc(db, 'artifacts', appId, 'users', userId, 'prestamos', id);
             const snap = await getDoc(docRef);
             if(snap.exists()){
-                const data = snap.data();
-                const extra = data.montoTotalConInteres * (porc / 100);
-                const nuevoTotal = data.montoTotalConInteres + extra;
-                await updateDoc(docRef, { montoTotalConInteres: nuevoTotal });
-                diasInput.value = ''; porcInput.value = '';
+                const current = snap.data().montoTotalConInteres;
+                const extra = current * (porc/100);
+                await updateDoc(docRef, { montoTotalConInteres: current + extra });
             }
         };
 
-        document.getElementById('egreso-form').onsubmit = async (e) => {
-            e.preventDefault();
-            if(!userId) return;
-            await addDoc(collection(db, 'artifacts', appId, 'users', userId, 'egresos'), {
-                categoria: activeCategory,
-                monto: parseFloat(document.getElementById('egreso-monto').value),
-                detalle: document.getElementById('egreso-detalle').value.toUpperCase(),
-                fecha: new Date().toLocaleDateString()
-            });
-            e.target.reset();
-        };
-
-        document.getElementById('deuda-form').onsubmit = async (e) => {
-            e.preventDefault();
-            if(!userId) return;
-            const mBase = parseFloat(document.getElementById('deuda-monto').value);
-            const porc = parseFloat(document.getElementById('deuda-interes-valor').value || 0);
-            const mTotal = mBase + (mBase * (porc / 100));
-            await addDoc(collection(db, 'artifacts', appId, 'users', userId, 'prestamos'), {
-                acreedor: document.getElementById('deuda-acreedor').value.toUpperCase(),
-                montoBase: mBase,
-                montoTotalConInteres: mTotal,
-                abonos: [],
-                estado: 'activo',
-                fecha: new Date().toLocaleDateString()
-            });
-            e.target.reset();
-        };
-
-        document.getElementById('toggle-interes').onclick = () => {
-            hasInterest = !hasInterest;
-            const btn = document.getElementById('toggle-interes');
-            const circle = document.getElementById('toggle-circle');
-            const input = document.getElementById('deuda-interes-valor');
-            btn.className = `w-10 h-5 rounded-full relative transition-all ${hasInterest ? 'bg-amber-500 shadow-[0_0_10px_#f59e0b]' : 'bg-zinc-800'}`;
-            circle.style.left = hasInterest ? '1.375rem' : '0.125rem';
-            input.classList.toggle('hidden', !hasInterest);
-        };
     </script>
 </body>
 </html>
 
-```
