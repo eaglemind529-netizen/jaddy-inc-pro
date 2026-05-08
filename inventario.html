@@ -24,7 +24,7 @@
         .card-master { background: #0F0F0F; border: 1px solid #1A1A1A; border-radius: 20px; margin-bottom: 12px; overflow: hidden; }
         .label-stat { font-size: 7px; text-transform: uppercase; color: #555; font-weight: 800; letter-spacing: 1px; }
         .detalle-variante { display: none; max-height: 0; overflow: hidden; }
-        .detalle-variante.active { display: block; max-height: 1000px; }
+        .detalle-variante.active { display: block; max-height: 2000px; }
         
         input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); opacity: 0.5; }
         .loader { width: 40px; height: 40px; border: 3px solid #111; border-top-color: var(--gold); border-radius: 50%; animation: spin 1s linear infinite; }
@@ -79,7 +79,11 @@
             </div>
         </section>
 
-        <h2 class="text-[10px] font-black text-gray-500 uppercase tracking-[2px] mb-4 ml-2 italic">Stock en Tiempo Real</h2>
+        <div class="flex justify-between items-center mb-4 px-2">
+            <h2 class="text-[10px] font-black text-gray-500 uppercase tracking-[2px] italic">Stock en Tiempo Real</h2>
+            <div class="text-[8px] font-black text-gold border border-gold/20 px-2 py-1 rounded">ACTUALIZADO</div>
+        </div>
+        
         <div id="displayStock" class="space-y-4"></div>
     </main>
 
@@ -130,8 +134,7 @@
         });
 
         function vincularBaseDeDatos(uid) {
-            // Cargar Productos Maestros para el Select
-            onSnapshot(collection(db, 'usuarios', uid, 'productos'), (snap) => {
+            onSnapshot(collection(db, 'users', uid, 'productos'), (snap) => {
                 productosMaestros = snap.docs.map(d => ({ id: d.id, ...d.data() }));
                 
                 if (productosMaestros.length === 0) {
@@ -144,7 +147,6 @@
                 }
             });
 
-            // Cargar Stock Real
             onSnapshot(collection(db, 'usuarios', uid, 'inventario_master'), (snap) => {
                 inventarioData = {};
                 snap.docs.forEach(d => { inventarioData[d.id] = d.data(); });
@@ -152,17 +154,14 @@
             });
         }
 
-        // LÓGICA: Cuando cambia el producto, cargar sus variantes específicas
         selProd.onchange = () => {
             const pId = selProd.value;
             if (!pId) {
                 selVar.innerHTML = '<option value="GENERAL">SELECCIONE PRODUCTO</option>';
                 return;
             }
-
             const producto = productosMaestros.find(p => p.id === pId);
             const variantes = producto.variantes || [];
-
             if (variantes.length === 0) {
                 selVar.innerHTML = '<option value="GENERAL">GENERAL / ÚNICA</option>';
             } else {
@@ -183,7 +182,6 @@
             }
 
             const prod = productosMaestros.find(p => p.id === prodId);
-            // El ID del documento de stock es Producto_Variante para que sean únicos
             const docId = `${prodId}_${variante.replace(/\s+/g, '_')}`;
 
             try {
@@ -196,7 +194,7 @@
                     nombreProducto: prod.nombre,
                     codigo: prod.codigo,
                     entradas: increment(cant),
-                    ventas: increment(0),
+                    ventas: increment(0), // Asegura que el campo exista
                     stock: increment(cant),
                     ultimaFechaIngreso: fecha,
                     lastUpdate: Date.now()
@@ -227,49 +225,60 @@
             });
 
             if (Object.keys(grupos).length === 0) {
-                displayStock.innerHTML = '<div class="text-center py-10 opacity-20 text-[10px] font-black uppercase tracking-widest">Sin stock registrado</div>';
+                displayStock.innerHTML = '<div class="text-center py-20 opacity-20 text-[10px] font-black uppercase tracking-[4px]">Esperando registros de inventario...</div>';
                 return;
             }
 
             for (let id in grupos) {
                 const g = grupos[id];
                 const totalStock = g.items.reduce((acc, s) => acc + (s.stock || 0), 0);
+                const totalVentas = g.items.reduce((acc, s) => acc + (s.ventas || 0), 0);
                 const ultFecha = g.items.reduce((max, item) => !max || (item.ultimaFechaIngreso > max) ? item.ultimaFechaIngreso : max, "");
 
                 displayStock.innerHTML += `
-                    <div class="card-master gold-border">
-                        <button onclick="toggleDetalle('${id}')" class="w-full flex justify-between items-center p-5 bg-[#0D0D0D] active:bg-[#151515] transition-colors">
-                            <div class="text-left">
-                                <span class="text-[7px] bg-gold/10 text-gold px-2 py-0.5 rounded border border-gold/20 font-bold uppercase">${g.codigo}</span>
-                                <h3 class="text-xs font-black uppercase text-white mt-1 tracking-tight">${g.nombre}</h3>
+                    <div class="card-master gold-border shadow-xl">
+                        <button onclick="toggleDetalle('${id}')" class="w-full flex justify-between items-center p-5 bg-[#0D0D0D] active:bg-[#151515] transition-colors relative overflow-hidden">
+                            <div class="text-left z-10">
+                                <span class="text-[7px] bg-gold/10 text-gold px-2 py-0.5 rounded border border-gold/20 font-bold uppercase tracking-widest">${g.codigo}</span>
+                                <h3 class="text-sm font-black uppercase text-white mt-1.5 tracking-tight">${g.nombre}</h3>
                                 <p class="text-[6px] text-gray-500 font-bold uppercase mt-1 tracking-tighter">ÚLT. INGRESO: ${ultFecha || '---'}</p>
                             </div>
-                            <div class="text-right">
-                                <div class="text-white font-black text-xl leading-none">${totalStock}</div>
-                                <div class="label-stat tracking-widest opacity-50">UNIDADES</div>
+                            <div class="text-right z-10">
+                                <div class="text-white font-black text-2xl leading-none">${totalStock}</div>
+                                <div class="label-stat tracking-widest opacity-40">TOTAL DISPONIBLE</div>
                             </div>
+                            <!-- Barra de progreso visual sutil de ventas -->
+                            <div class="absolute bottom-0 left-0 h-[2px] bg-green-500/30" style="width: ${Math.min(100, (totalVentas/(totalStock+totalVentas || 1))*100)}%"></div>
                         </button>
-                        <div id="det-${id}" class="detalle-variante bg-black/40 border-t border-white/5">
+                        <div id="det-${id}" class="detalle-variante bg-black/60 border-t border-white/5">
                             ${g.items.map(s => `
                                 <div class="p-4 border-b border-white/5 last:border-0 flex justify-between items-center">
-                                    <div>
+                                    <div class="flex-1">
                                         <div class="flex items-center gap-2">
-                                            <p class="text-[10px] font-black text-gold uppercase">${s.variante}</p>
+                                            <p class="text-[11px] font-black text-gold uppercase tracking-tighter">${s.variante}</p>
                                         </div>
-                                        <p class="text-[6px] text-zinc-600 font-bold uppercase">STOCK ACTUAL</p>
+                                        <p class="text-[6px] text-zinc-600 font-bold uppercase tracking-widest">DETALLE POR VARIANTE</p>
                                     </div>
-                                    <div class="flex gap-6">
+                                    <div class="flex gap-4 sm:gap-6">
                                         <div class="text-center">
-                                            <p class="label-stat">ENTRADAS</p>
-                                            <p class="text-[10px] font-bold text-zinc-500">${s.entradas}</p>
+                                            <p class="label-stat">ENTRÓ</p>
+                                            <p class="text-[10px] font-bold text-zinc-500">${s.entradas || 0}</p>
                                         </div>
                                         <div class="text-center">
-                                            <p class="label-stat text-green-500">DISPONIBLE</p>
-                                            <p class="text-[11px] font-black text-white">${s.stock}</p>
+                                            <p class="label-stat text-red-500/50">VENDIDO</p>
+                                            <p class="text-[10px] font-bold text-red-400">${s.ventas || 0}</p>
+                                        </div>
+                                        <div class="text-center bg-white/5 px-3 py-1 rounded-lg">
+                                            <p class="label-stat text-green-500">STOCK</p>
+                                            <p class="text-[12px] font-black text-white">${s.stock || 0}</p>
                                         </div>
                                     </div>
                                 </div>
                             `).join('')}
+                            
+                            <div class="p-3 bg-white/5 flex justify-center">
+                                <p class="text-[7px] text-gray-600 font-bold uppercase tracking-[2px]">Consolidado de Variantes (${g.items.length})</p>
+                            </div>
                         </div>
                     </div>`;
             }
