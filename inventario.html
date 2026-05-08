@@ -21,10 +21,12 @@
 
         .gold-border { border: 1px solid rgba(212, 175, 55, 0.2); }
         .input-field { background: #111; border: 1px solid #222; border-radius: 12px; padding: 14px; width: 100%; color: white; font-size: 14px; text-transform: uppercase; font-weight: bold; outline: none; }
-        .card-master { background: #0F0F0F; border: 1px solid #1A1A1A; border-radius: 20px; margin-bottom: 12px; overflow: hidden; }
+        .card-master { background: #0F0F0F; border: 1px solid #1A1A1A; border-radius: 20px; margin-bottom: 12px; overflow: hidden; position: relative; }
         .label-stat { font-size: 7px; text-transform: uppercase; color: #555; font-weight: 800; letter-spacing: 1px; }
         .detalle-variante { display: none; max-height: 0; overflow: hidden; }
         .detalle-variante.active { display: block; max-height: 2000px; }
+        
+        .editing-mode { border-color: #3b82f6 !important; box-shadow: 0 0 20px rgba(59, 130, 246, 0.2); }
         
         input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); opacity: 0.5; }
         .loader { width: 40px; height: 40px; border: 3px solid #111; border-top-color: var(--gold); border-radius: 50%; animation: spin 1s linear infinite; }
@@ -41,13 +43,15 @@
     <main id="main-content">
         <header class="flex justify-between items-center mb-6">
             <button onclick="window.location.href='index.html'" class="text-[10px] font-black border border-gold/30 px-4 py-2 rounded-full text-gold uppercase">← Panel Ventas</button>
-            <div id="statusDot" class="w-3 h-3 rounded-full bg-green-500 shadow-[0_0_10px_#22c55e]"></div>
+            <div id="statusDot" class="w-3 h-3 rounded-full bg-zinc-800"></div>
         </header>
 
-        <section class="bg-[#0A0A0A] p-5 rounded-[24px] gold-border mb-8 shadow-2xl">
-            <h2 class="text-center text-gold font-black uppercase text-[10px] tracking-[3px] mb-6 italic">Ingreso de Mercancía</h2>
+        <section id="form-container" class="bg-[#0A0A0A] p-5 rounded-[24px] gold-border mb-8 shadow-2xl transition-all duration-300">
+            <h2 id="form-title" class="text-center text-gold font-black uppercase text-[10px] tracking-[3px] mb-6 italic">Ingreso de Mercancía</h2>
             <div class="space-y-4">
                 
+                <input type="hidden" id="edit-id" value="">
+
                 <div class="relative">
                     <p class="text-[7px] text-gray-500 absolute -top-2 left-3 bg-[#0A0A0A] px-2 uppercase z-10">Producto Maestro:</p>
                     <select id="sel-producto" class="input-field border-gold/20">
@@ -73,9 +77,12 @@
                     </div>
                 </div>
                 
-                <button id="btnGuardar" class="w-full bg-white text-black font-black py-4 rounded-xl uppercase tracking-widest text-sm active:scale-95 transition-transform">
-                    REGISTRAR ENTRADA
-                </button>
+                <div class="flex gap-2">
+                    <button id="btn-cancelar" onclick="cancelarEdicion()" class="hidden flex-1 bg-zinc-800 text-white font-black py-4 rounded-xl uppercase text-[10px]">Cancelar</button>
+                    <button id="btnGuardar" class="flex-[2] bg-white text-black font-black py-4 rounded-xl uppercase tracking-widest text-sm active:scale-95 transition-transform">
+                        REGISTRAR ENTRADA
+                    </button>
+                </div>
             </div>
         </section>
 
@@ -89,8 +96,8 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, onSnapshot, collection, increment } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getAuth, onAuthStateChanged, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, onSnapshot, collection, increment, deleteDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCrjjeOoXPOtJDXDfrHLOA4Ny0QW2zfVWk",
@@ -120,7 +127,7 @@
         let userId = null;
 
         onAuthStateChanged(auth, (user) => {
-            if (user && !user.isAnonymous) {
+            if (user) {
                 userId = user.uid;
                 authGuard.style.opacity = "0";
                 setTimeout(() => {
@@ -128,28 +135,24 @@
                     mainContent.classList.add('authorized');
                 }, 500);
                 vincularBaseDeDatos(user.uid);
+                document.getElementById('statusDot').style.backgroundColor = "#22c55e";
             } else {
-                window.location.href = 'login.html';
+                signInAnonymously(auth);
             }
         });
 
         function vincularBaseDeDatos(uid) {
             onSnapshot(collection(db, 'users', uid, 'productos'), (snap) => {
                 productosMaestros = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-                
-                if (productosMaestros.length === 0) {
-                    selProd.innerHTML = '<option value="">SIN PRODUCTOS REGISTRADOS</option>';
-                } else {
-                    const currentVal = selProd.value;
-                    selProd.innerHTML = '<option value="">-- SELECCIONA PRODUCTO --</option>' + 
-                        productosMaestros.map(p => `<option value="${p.id}">${p.nombre.toUpperCase()} (${p.codigo})</option>`).join('');
-                    if(currentVal) selProd.value = currentVal;
-                }
+                const currentVal = selProd.value;
+                selProd.innerHTML = '<option value="">-- SELECCIONA PRODUCTO --</option>' + 
+                    productosMaestros.map(p => `<option value="${p.id}">${p.nombre.toUpperCase()} (${p.codigo})</option>`).join('');
+                if(currentVal) selProd.value = currentVal;
             });
 
             onSnapshot(collection(db, 'usuarios', uid, 'inventario_master'), (snap) => {
                 inventarioData = {};
-                snap.docs.forEach(d => { inventarioData[d.id] = d.data(); });
+                snap.docs.forEach(d => { inventarioData[d.id] = { id_doc: d.id, ...d.data() }; });
                 renderizarTabla();
             });
         }
@@ -162,11 +165,9 @@
             }
             const producto = productosMaestros.find(p => p.id === pId);
             const variantes = producto.variantes || [];
-            if (variantes.length === 0) {
-                selVar.innerHTML = '<option value="GENERAL">GENERAL / ÚNICA</option>';
-            } else {
-                selVar.innerHTML = variantes.map(v => `<option value="${v}">${v}</option>`).join('');
-            }
+            selVar.innerHTML = variantes.length === 0 ? 
+                '<option value="GENERAL">GENERAL / ÚNICA</option>' : 
+                variantes.map(v => `<option value="${v}">${v}</option>`).join('');
         };
 
         btnGuardar.onclick = async () => {
@@ -175,57 +176,106 @@
             const fecha = inpFecha.value;
             const cantInput = document.getElementById('inp-cantidad');
             const cant = parseInt(cantInput.value);
+            const editId = document.getElementById('edit-id').value;
 
-            if (!userId || !prodId || isNaN(cant) || cant <= 0 || !fecha || !variante) {
-                alert("Complete todos los campos correctamente");
+            if (!userId || !prodId || isNaN(cant) || cant < 0 || !fecha || !variante) {
+                alert("Complete los campos requeridos");
                 return;
             }
 
             const prod = productosMaestros.find(p => p.id === prodId);
-            const docId = `${prodId}_${variante.replace(/\s+/g, '_')}`;
+            const docId = editId || `${prodId}_${variante.replace(/\s+/g, '_')}`;
 
             try {
                 btnGuardar.disabled = true;
-                btnGuardar.innerText = "REGISTRANDO...";
+                btnGuardar.innerText = "GUARDANDO...";
 
-                await setDoc(doc(db, 'usuarios', userId, 'inventario_master', docId), {
-                    prodId, 
-                    variante,
-                    nombreProducto: prod.nombre,
-                    codigo: prod.codigo,
-                    entradas: increment(cant),
-                    ventas: increment(0), // Asegura que el campo exista
-                    stock: increment(cant),
-                    ultimaFechaIngreso: fecha,
-                    lastUpdate: Date.now()
-                }, { merge: true });
+                // Si es edición, sobrescribimos. Si es nuevo registro, incrementamos.
+                if (editId) {
+                    await updateDoc(doc(db, 'usuarios', userId, 'inventario_master', docId), {
+                        entradas: cant,
+                        stock: cant - (inventarioData[docId]?.ventas || 0),
+                        ultimaFechaIngreso: fecha,
+                        lastUpdate: Date.now()
+                    });
+                } else {
+                    await setDoc(doc(db, 'usuarios', userId, 'inventario_master', docId), {
+                        prodId, variante,
+                        nombreProducto: prod.nombre,
+                        codigo: prod.codigo,
+                        entradas: increment(cant),
+                        ventas: increment(0),
+                        stock: increment(cant),
+                        ultimaFechaIngreso: fecha,
+                        lastUpdate: Date.now()
+                    }, { merge: true });
+                }
 
-                cantInput.value = "";
-                btnGuardar.innerText = "¡EXITO!";
+                cancelarEdicion();
+                btnGuardar.innerText = "¡LISTO!";
                 setTimeout(() => { 
                     btnGuardar.disabled = false; 
                     btnGuardar.innerText = "REGISTRAR ENTRADA"; 
                 }, 1000);
             } catch (e) {
                 console.error(e);
+                alert("Error al guardar");
                 btnGuardar.disabled = false;
-                btnGuardar.innerText = "ERROR AL GUARDAR";
+                btnGuardar.innerText = "ERROR";
             }
         };
 
         window.toggleDetalle = (id) => document.getElementById('det-' + id).classList.toggle('active');
+
+        window.editarStock = (docId) => {
+            const item = inventarioData[docId];
+            if (!item) return;
+
+            document.getElementById('edit-id').value = docId;
+            document.getElementById('form-container').classList.add('editing-mode');
+            document.getElementById('form-title').innerText = "Editando Registro";
+            document.getElementById('btnGuardar').innerText = "ACTUALIZAR DATOS";
+            document.getElementById('btn-cancelar').classList.remove('hidden');
+
+            selProd.value = item.prodId;
+            selProd.dispatchEvent(new Event('change'));
+            selVar.value = item.variante;
+            inpFecha.value = item.ultimaFechaIngreso;
+            document.getElementById('inp-cantidad').value = item.entradas;
+
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        };
+
+        window.eliminarStock = async (docId) => {
+            if (confirm("¿Estás seguro de eliminar este registro del inventario? Esta acción no se puede deshacer.")) {
+                try {
+                    await deleteDoc(doc(db, 'usuarios', userId, 'inventario_master', docId));
+                } catch (e) { alert("Error al eliminar"); }
+            }
+        };
+
+        window.cancelarEdicion = () => {
+            document.getElementById('edit-id').value = "";
+            document.getElementById('form-container').classList.remove('editing-mode');
+            document.getElementById('form-title').innerText = "Ingreso de Mercancía";
+            document.getElementById('btnGuardar').innerText = "REGISTRAR ENTRADA";
+            document.getElementById('btn-cancelar').classList.add('hidden');
+            document.getElementById('inp-cantidad').value = "";
+            selProd.value = "";
+            selVar.innerHTML = '<option value="GENERAL">SELECCIONE PRODUCTO PRIMERO</option>';
+        };
 
         function renderizarTabla() {
             displayStock.innerHTML = '';
             const grupos = {};
             
             Object.values(inventarioData).forEach(item => {
-                if (!grupos[item.prodId]) grupos[item.prodId] = { nombre: item.nombreProducto, codigo: item.codigo, items: [] };
+                if (!grupos[item.prodId]) grupos[item.prodId] = { id: item.prodId, nombre: item.nombreProducto, codigo: item.codigo, items: [] };
                 grupos[item.prodId].items.push(item);
             });
 
             if (Object.keys(grupos).length === 0) {
-                displayStock.innerHTML = '<div class="text-center py-20 opacity-20 text-[10px] font-black uppercase tracking-[4px]">Esperando registros de inventario...</div>';
+                displayStock.innerHTML = '<div class="text-center py-20 opacity-20 text-[10px] font-black uppercase tracking-[4px]">Sin registros en inventario</div>';
                 return;
             }
 
@@ -233,39 +283,47 @@
                 const g = grupos[id];
                 const totalStock = g.items.reduce((acc, s) => acc + (s.stock || 0), 0);
                 const totalVentas = g.items.reduce((acc, s) => acc + (s.ventas || 0), 0);
-                const ultFecha = g.items.reduce((max, item) => !max || (item.ultimaFechaIngreso > max) ? item.ultimaFechaIngreso : max, "");
 
                 displayStock.innerHTML += `
                     <div class="card-master gold-border shadow-xl">
-                        <button onclick="toggleDetalle('${id}')" class="w-full flex justify-between items-center p-5 bg-[#0D0D0D] active:bg-[#151515] transition-colors relative overflow-hidden">
-                            <div class="text-left z-10">
+                        <!-- Botones de Acción Superior -->
+                        <div class="absolute top-4 right-4 z-20 flex gap-4">
+                            <button onclick="event.stopPropagation(); editarStock('${g.items[0].id_doc}')" class="text-blue-400 text-xs opacity-50 hover:opacity-100">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button onclick="event.stopPropagation(); eliminarStock('${g.items[0].id_doc}')" class="text-red-500 text-xs opacity-50 hover:opacity-100">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+
+                        <button onclick="toggleDetalle('${id}')" class="w-full flex justify-between items-center p-5 bg-[#0D0D0D] active:bg-[#151515] transition-colors relative">
+                            <div class="text-left z-10 pr-16">
                                 <span class="text-[7px] bg-gold/10 text-gold px-2 py-0.5 rounded border border-gold/20 font-bold uppercase tracking-widest">${g.codigo}</span>
                                 <h3 class="text-sm font-black uppercase text-white mt-1.5 tracking-tight">${g.nombre}</h3>
-                                <p class="text-[6px] text-gray-500 font-bold uppercase mt-1 tracking-tighter">ÚLT. INGRESO: ${ultFecha || '---'}</p>
                             </div>
                             <div class="text-right z-10">
                                 <div class="text-white font-black text-2xl leading-none">${totalStock}</div>
-                                <div class="label-stat tracking-widest opacity-40">TOTAL DISPONIBLE</div>
+                                <div class="label-stat opacity-40">DISPONIBLE</div>
                             </div>
-                            <!-- Barra de progreso visual sutil de ventas -->
                             <div class="absolute bottom-0 left-0 h-[2px] bg-green-500/30" style="width: ${Math.min(100, (totalVentas/(totalStock+totalVentas || 1))*100)}%"></div>
                         </button>
                         <div id="det-${id}" class="detalle-variante bg-black/60 border-t border-white/5">
                             ${g.items.map(s => `
-                                <div class="p-4 border-b border-white/5 last:border-0 flex justify-between items-center">
+                                <div class="p-4 border-b border-white/5 last:border-0 flex justify-between items-center relative">
                                     <div class="flex-1">
-                                        <div class="flex items-center gap-2">
-                                            <p class="text-[11px] font-black text-gold uppercase tracking-tighter">${s.variante}</p>
+                                        <p class="text-[11px] font-black text-gold uppercase tracking-tighter">${s.variante}</p>
+                                        <div class="flex gap-2 mt-1">
+                                            <button onclick="editarStock('${s.id_doc}')" class="text-[8px] text-blue-500 font-bold uppercase">Editar</button>
+                                            <button onclick="eliminarStock('${s.id_doc}')" class="text-[8px] text-red-600 font-bold uppercase">Borrar</button>
                                         </div>
-                                        <p class="text-[6px] text-zinc-600 font-bold uppercase tracking-widest">DETALLE POR VARIANTE</p>
                                     </div>
-                                    <div class="flex gap-4 sm:gap-6">
+                                    <div class="flex gap-4">
                                         <div class="text-center">
                                             <p class="label-stat">ENTRÓ</p>
                                             <p class="text-[10px] font-bold text-zinc-500">${s.entradas || 0}</p>
                                         </div>
                                         <div class="text-center">
-                                            <p class="label-stat text-red-500/50">VENDIDO</p>
+                                            <p class="label-stat text-red-500/50">VENTAS</p>
                                             <p class="text-[10px] font-bold text-red-400">${s.ventas || 0}</p>
                                         </div>
                                         <div class="text-center bg-white/5 px-3 py-1 rounded-lg">
@@ -275,10 +333,6 @@
                                     </div>
                                 </div>
                             `).join('')}
-                            
-                            <div class="p-3 bg-white/5 flex justify-center">
-                                <p class="text-[7px] text-gray-600 font-bold uppercase tracking-[2px]">Consolidado de Variantes (${g.items.length})</p>
-                            </div>
                         </div>
                     </div>`;
             }
