@@ -9,20 +9,31 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root { --gold: #D4AF37; --bg: #050505; }
-        body { background: var(--bg); color: white; font-family: 'Inter', sans-serif; margin: 0; }
+        /* Seguridad: Cuerpo oculto por defecto hasta validar login */
+        body { background: var(--bg); color: white; font-family: 'Inter', sans-serif; margin: 0; display: none; }
         .texto-dorado { background: linear-gradient(to bottom, #CF9E1D 22%, #F1D37E 45%, #CF9E1D 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         .card-deudores { background: #0A0A0A; border: 1px solid #1A1A1A; border-left: 4px solid var(--gold); border-radius: 20px; padding: 18px; margin-bottom: 12px; }
         .btn-abonar { background: white; color: black; font-weight: 900; border-radius: 12px; padding: 12px; font-size: 10px; text-transform: uppercase; width: 100%; }
         .modal-abono { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 100; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(5px); }
         .input-abono { background: #151515; border: 1px solid #333; border-radius: 12px; padding: 14px; color: white; font-size: 16px; width: 100%; text-align: center; outline: none; }
+        
+        #loading-screen { 
+            position: fixed; inset: 0; background: #050505; z-index: 9999; 
+            display: flex; flex-direction: column; align-items: center; justify-content: center; 
+        }
     </style>
 </head>
 <body class="p-4 pb-24 max-w-md mx-auto">
 
+    <!-- Pantalla de Carga/Seguridad -->
+    <div id="loading-screen">
+        <div class="w-10 h-10 border-2 border-gold/20 border-t-gold rounded-full animate-spin mb-4"></div>
+        <p class="text-gold text-[10px] font-black uppercase tracking-[0.5em]">Verificando Acceso</p>
+    </div>
+
     <header class="flex justify-between items-center mb-6">
-        <!-- SOLUCIÓN: Usamos window.history.back() para regresar sin errores de ruta -->
-        <button onclick="window.history.back()" class="text-[10px] font-black border border-gold/30 px-4 py-2 rounded-full text-gold uppercase">← Volver</button>
-        <div id="statusDot" class="w-2 h-2 rounded-full bg-red-500"></div>
+        <button onclick="window.location.href='index.html'" class="text-[10px] font-black border border-gold/30 px-4 py-2 rounded-full text-gold uppercase">← Inicio</button>
+        <div id="statusDot" class="w-2 h-2 rounded-full bg-zinc-800"></div>
     </header>
 
     <div class="mb-8">
@@ -31,11 +42,11 @@
     </div>
 
     <div class="mb-6">
-        <input type="text" id="busqueda" oninput="renderizar()" placeholder="BUSCAR CLIENTE..." class="w-full bg-[#0F0F0F] border border-gray-800 rounded-xl py-4 px-5 text-xs font-bold text-white uppercase outline-none focus:border-gold">
+        <input type="text" id="busqueda" oninput="window.renderizar()" placeholder="BUSCAR CLIENTE..." class="w-full bg-[#0F0F0F] border border-gray-800 rounded-xl py-4 px-5 text-xs font-bold text-white uppercase outline-none focus:border-gold">
     </div>
 
     <div id="listaDeudores" class="space-y-4">
-        <div class="text-center py-20 opacity-30 text-[10px] font-black uppercase tracking-widest">Cargando base de datos...</div>
+        <div class="text-center py-20 opacity-30 text-[10px] font-black uppercase tracking-widest">Sincronizando deudas...</div>
     </div>
 
     <!-- Modal de Abonos -->
@@ -46,8 +57,8 @@
             <div class="space-y-4">
                 <input type="number" id="input-monto" class="input-abono" placeholder="0.00">
                 <div class="flex gap-2">
-                    <button onclick="cerrarModal()" class="flex-1 py-4 text-[10px] font-black text-gray-500 uppercase">Cancelar</button>
-                    <button id="btnEjecutar" onclick="ejecutarAbono()" class="flex-2 btn-abonar">Guardar Pago</button>
+                    <button onclick="window.cerrarModal()" class="flex-1 py-4 text-[10px] font-black text-gray-500 uppercase">Cancelar</button>
+                    <button id="btnEjecutar" onclick="window.ejecutarAbono()" class="flex-2 btn-abonar">Guardar Pago</button>
                 </div>
             </div>
         </div>
@@ -55,10 +66,9 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getFirestore, collection, onSnapshot, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getFirestore, collection, onSnapshot, doc, updateDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-        // MANTENEMOS TU CONFIGURACIÓN ORIGINAL
         const firebaseConfig = {
             apiKey: "AIzaSyCrjjeOoXPOtJDXDfrHLOA4Ny0QW2zfVWk",
             authDomain: "apps-d45d6.firebaseapp.com",
@@ -71,35 +81,38 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        const appId = "jaddy-inc-finanzas";
 
         let todasLasVentas = [];
         let deudorActivo = null;
         let userId = null;
 
-        // Autenticación Anónima para mantener la sesión
-        signInAnonymously(auth).catch(console.error);
-
+        // SEGURIDAD: Solo acceso si hay login real de correo
         onAuthStateChanged(auth, (user) => {
-            if(user) {
+            if(user && !user.isAnonymous) {
                 userId = user.uid;
-                document.getElementById('statusDot').className = "w-2 h-2 rounded-full bg-green-500";
+                document.body.style.display = "block";
+                document.getElementById('loading-screen').style.display = "none";
+                document.getElementById('statusDot').classList.add('bg-green-500');
                 conectarBaseDeDatos(user.uid);
+            } else {
+                // Si no hay login real, fuera
+                window.location.href = "login.html";
             }
         });
 
         function conectarBaseDeDatos(uid) {
-            // MANTENEMOS LA RUTA ORIGINAL DE TUS VENTAS
-            const colRef = collection(db, 'artifacts', appId, 'users', uid, 'ventas_realizadas');
+            // Ruta sincronizada con tus otros archivos protegidos
+            const colRef = collection(db, 'usuarios', uid, 'ventas_realizadas');
             
             onSnapshot(colRef, (snapshot) => {
                 todasLasVentas = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-                renderizar();
+                window.renderizar();
             });
         }
 
         window.renderizar = () => {
             const container = document.getElementById('listaDeudores');
+            if(!container) return;
             const buscar = document.getElementById('busqueda').value.toUpperCase();
             
             const deudores = todasLasVentas.filter(v => 
@@ -111,15 +124,16 @@
                 <div class="card-deudores">
                     <div class="flex justify-between items-start mb-4">
                         <div>
-                            <h3 class="text-sm font-black uppercase">${v.cliente}</h3>
-                            <p class="text-[8px] text-gray-500 font-bold uppercase">${v.fecha_legible || 'Sin Fecha'}</p>
+                            <h3 class="text-sm font-black uppercase text-white">${v.cliente}</h3>
+                            <p class="text-[8px] text-gray-500 font-bold uppercase">${v.fecha_venta || 'Reciente'}</p>
+                            <p class="text-[7px] text-gold/50 font-black uppercase mt-1 italic">${v.producto}</p>
                         </div>
                         <div class="text-right">
                             <p class="text-[7px] text-gold font-black uppercase">Saldo</p>
                             <p class="text-lg font-black text-white">$${parseFloat(v.total).toLocaleString()}</p>
                         </div>
                     </div>
-                    <button onclick="abrirModal('${v.id}', '${v.cliente}', ${v.total})" class="btn-abonar">Abonar</button>
+                    <button onclick="window.abrirModal('${v.id}', '${v.cliente}', ${v.total})" class="btn-abonar">Abonar</button>
                 </div>
             `).join('');
 
@@ -137,20 +151,24 @@
         window.cerrarModal = () => document.getElementById('modalAbono').style.display = 'none';
 
         window.ejecutarAbono = async () => {
-            const abono = parseFloat(document.getElementById('input-monto').value);
+            const input = document.getElementById('input-monto');
+            const abono = parseFloat(input.value);
             if(!abono || abono <= 0) return;
             
             const nuevoTotal = deudorActivo.saldo - abono;
-            if(nuevoTotal < 0) return;
+            if(nuevoTotal < 0) {
+                alert("El abono supera la deuda.");
+                return;
+            }
 
             try {
-                const docRef = doc(db, 'artifacts', appId, 'users', userId, 'ventas_realizadas', deudorActivo.id);
+                const docRef = doc(db, 'usuarios', userId, 'ventas_realizadas', deudorActivo.id);
                 await updateDoc(docRef, {
                     total: nuevoTotal,
                     tipo: nuevoTotal === 0 ? 'CONTADO' : 'CREDITO'
                 });
-                cerrarModal();
-                document.getElementById('input-monto').value = '';
+                window.cerrarModal();
+                input.value = '';
             } catch (e) {
                 console.error("Error al abonar:", e);
             }
