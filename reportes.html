@@ -1,4 +1,4 @@
-```html
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -34,7 +34,6 @@
             </div>
         </header>
 
-        <!-- Filtro por Rango de Fechas -->
         <div class="mb-6 bg-[#0A0A0A] p-4 rounded-2xl gold-border">
             <p class="text-[9px] text-gray-500 font-black uppercase mb-3 tracking-[2px] text-center">Filtrar por Periodo</p>
             <div class="flex gap-3">
@@ -49,16 +48,15 @@
             </div>
         </div>
 
-        <!-- Dashboard de Utilidad -->
         <div class="stat-card mb-6 border-gold/40 relative overflow-hidden">
             <div class="absolute top-0 right-0 p-2 opacity-10">
                 <i class="fa-solid fa-gem text-4xl text-gold"></i>
             </div>
-            <p class="text-[9px] text-gold font-black uppercase mb-1 tracking-widest">Utilidad Neta Estimada</p>
+            <p class="text-[9px] text-gold font-black uppercase mb-1 tracking-widest">Utilidad Neta Real</p>
             <p id="total-utilidad" class="text-3xl font-black text-white">$0.00</p>
             <div class="flex gap-4 mt-3 pt-3 border-t border-white/5">
                 <div>
-                    <p class="text-[7px] text-gray-500 font-black uppercase">Ingresos Reales (+)</p>
+                    <p class="text-[7px] text-gray-500 font-black uppercase">Ingresos (Caja) (+)</p>
                     <p id="subtotal-ventas" class="text-sm font-bold text-green-400">$0.00</p>
                 </div>
                 <div>
@@ -68,7 +66,6 @@
             </div>
         </div>
 
-        <!-- Grid de Stats Secundarios -->
         <div class="grid grid-cols-2 gap-3 mb-8">
             <div class="stat-card">
                 <p class="text-[7px] text-gray-500 font-black uppercase mb-1">Cuentas por Cobrar</p>
@@ -80,15 +77,11 @@
             </div>
         </div>
 
-        <!-- Detalle de Egresos -->
         <section class="mb-8">
             <h3 class="text-[9px] font-black text-gray-500 uppercase tracking-[3px] mb-3 px-2">Movimientos de Caja (Egresos)</h3>
-            <div id="lista-egresos" class="space-y-2">
-                <!-- Se llena dinamicamente con los datos de Finanzas -->
-            </div>
+            <div id="lista-egresos" class="space-y-2"></div>
         </section>
 
-        <!-- Botones de Acción -->
         <div class="fixed bottom-6 left-4 right-4 flex gap-2">
             <button onclick="enviarWhatsApp()" class="flex-1 bg-[#25D366] text-black font-black py-4 rounded-2xl flex items-center justify-center gap-2 shadow-xl active:scale-95 transition-all">
                 <i class="fa-brands fa-whatsapp text-xl"></i>
@@ -134,6 +127,7 @@
         });
 
         function escucharDatos(uid) {
+            // Sincronización con la colección de ventas (donde Cartera guarda los abonos)
             onSnapshot(collection(db, 'usuarios', uid, 'ventas_realizadas'), snap => {
                 ventasData = snap.docs.map(d => ({id: d.id, ...d.data()}));
                 procesarTodo();
@@ -145,59 +139,72 @@
             });
         }
 
+        function parseNum(val) {
+            if(!val) return 0;
+            return parseFloat(val.toString().replace(/[$,]/g, '')) || 0;
+        }
+
         function procesarTodo() {
             const inicio = document.getElementById('fecha-inicio').value;
             const fin = document.getElementById('fecha-fin').value;
 
             if(!inicio || !fin) return;
 
-            const filtrarRango = (fechaISO) => {
-                if(!fechaISO) return false;
-                const d = fechaISO.split('T')[0];
-                return d >= inicio && d <= fin;
-            };
-
-            const ventasFiltradas = ventasData.filter(v => {
-                let f = v.fecha_venta;
-                if(f && f.includes('/')) {
+            const filtrarRango = (fechaStr) => {
+                if(!fechaStr) return true; // Si no hay fecha, lo incluimos en el historial para no perder datos
+                let f = fechaStr;
+                if(f.includes('T')) f = f.split('T')[0];
+                if(f.includes('/')) {
                     const p = f.split('/');
                     f = `${p[2]}-${p[1].padStart(2,'0')}-${p[0].padStart(2,'0')}`;
                 }
                 return f >= inicio && f <= fin;
-            });
+            };
 
-            const egresosFiltrados = egresosData.filter(e => filtrarRango(e.fecha));
+            let ingresosTotalesCaja = 0;
+            let deudaPendienteTotal = 0;
+            let contadorOperaciones = 0;
 
-            let ingresosReales = 0;
-            let totalCreditoPendiente = 0;
-
-            ventasFiltradas.forEach(v => {
-                const totalVenta = v.total || 0;
-                if(v.tipo === 'CONTADO') {
-                    ingresosReales += totalVenta;
-                } else if(v.tipo === 'CREDITO') {
-                    // Solo sumamos los abonos a ingresos reales
-                    let abonosMonto = 0;
-                    if(v.abonos && Array.isArray(v.abonos)) {
-                        v.abonos.forEach(abono => abonosMonto += (abono.monto || 0));
+            ventasData.forEach(v => {
+                // Verificamos si la venta entra en el rango de fecha
+                const enFecha = filtrarRango(v.fecha_venta || v.fecha);
+                
+                if(enFecha) {
+                    contadorOperaciones++;
+                    const totalVenta = parseNum(v.total || v.precio);
+                    
+                    if(v.tipo === 'CONTADO') {
+                        ingresosTotalesCaja += totalVenta;
+                    } else if(v.tipo === 'CREDITO') {
+                        // Sumamos solo lo que se haya abonado
+                        let sumaAbonos = 0;
+                        if(v.abonos && Array.isArray(v.abonos)) {
+                            v.abonos.forEach(ab => {
+                                // Importante: solo sumar abonos que estén en el rango de fecha seleccionado
+                                if(filtrarRango(ab.fecha)) {
+                                    sumaAbonos += parseNum(ab.monto);
+                                }
+                            });
+                        }
+                        ingresosTotalesCaja += sumaAbonos;
+                        deudaPendienteTotal += (totalVenta - sumaAbonos);
                     }
-                    ingresosReales += abonosMonto;
-                    totalCreditoPendiente += (totalVenta - abonosMonto);
                 }
             });
 
-            let totalEgresos = egresosFiltrados.reduce((acc, e) => acc + (e.monto || 0), 0);
+            const egresosFiltrados = egresosData.filter(e => filtrarRango(e.fecha));
+            let totalEgresos = egresosFiltrados.reduce((acc, e) => acc + parseNum(e.monto), 0);
 
-            // Actualizar UI
-            document.getElementById('subtotal-ventas').innerText = `$${ingresosReales.toLocaleString('en-US')}`;
-            document.getElementById('subtotal-egresos').innerText = `$${totalEgresos.toLocaleString('en-US')}`;
-            document.getElementById('total-utilidad').innerText = `$${(ingresosReales - totalEgresos).toLocaleString('en-US')}`;
-            document.getElementById('total-credito').innerText = `$${totalCreditoPendiente.toLocaleString('en-US')}`;
-            document.getElementById('total-ventas').innerText = ventasFiltradas.length;
+            // Actualizar Interfaz
+            document.getElementById('subtotal-ventas').innerText = `$${ingresosTotalesCaja.toLocaleString('en-US', {minimumFractionDigits:2})}`;
+            document.getElementById('subtotal-egresos').innerText = `$${totalEgresos.toLocaleString('en-US', {minimumFractionDigits:2})}`;
+            document.getElementById('total-utilidad').innerText = `$${(ingresosTotalesCaja - totalEgresos).toLocaleString('en-US', {minimumFractionDigits:2})}`;
+            document.getElementById('total-credito').innerText = `$${deudaPendienteTotal.toLocaleString('en-US', {minimumFractionDigits:2})}`;
+            document.getElementById('total-ventas').innerText = contadorOperaciones;
 
             const listaE = document.getElementById('lista-egresos');
             if(egresosFiltrados.length === 0) {
-                listaE.innerHTML = '<p class="text-[9px] text-gray-700 text-center uppercase py-4 italic">Sin movimientos en este periodo</p>';
+                listaE.innerHTML = '<p class="text-[9px] text-gray-700 text-center uppercase py-4 italic">Sin movimientos registrados</p>';
             } else {
                 listaE.innerHTML = egresosFiltrados
                     .sort((a,b) => new Date(b.fecha) - new Date(a.fecha))
@@ -212,25 +219,19 @@
                                     <p class="text-[7px] text-gray-500">${new Date(e.fecha).toLocaleDateString()}</p>
                                 </div>
                             </div>
-                            <p class="text-[10px] font-black text-red-400">-$${(e.monto || 0).toLocaleString()}</p>
+                            <p class="text-[10px] font-black text-red-400">-$${parseNum(e.monto).toLocaleString()}</p>
                         </div>
                     `).join('');
             }
         }
 
         window.enviarWhatsApp = () => {
-            const inicio = document.getElementById('fecha-inicio').value;
-            const fin = document.getElementById('fecha-fin').value;
             const mensaje = encodeURIComponent(
                 `🏆 *REPORTE JADDY INC*\n` +
-                `📅 Periodo: ${inicio} / ${fin}\n` +
-                `--------------------------------\n` +
-                `💰 INGRESOS REALES: ${document.getElementById('subtotal-ventas').innerText}\n` +
+                `💰 CAJA REAL: ${document.getElementById('subtotal-ventas').innerText}\n` +
                 `💸 EGRESOS: ${document.getElementById('subtotal-egresos').innerText}\n` +
                 `💳 POR COBRAR: ${document.getElementById('total-credito').innerText}\n` +
-                `--------------------------------\n` +
                 `💎 UTILIDAD NETA: ${document.getElementById('total-utilidad').innerText}\n` +
-                `--------------------------------\n` +
                 `_Luxury Finanzas System_`
             );
             window.open(`https://wa.me/?text=${mensaje}`);
