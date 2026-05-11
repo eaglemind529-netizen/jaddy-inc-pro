@@ -36,7 +36,7 @@
 
         <div class="mb-6 bg-[#0A0A0A] p-4 rounded-2xl gold-border">
             <p class="text-[9px] text-gray-500 font-black uppercase mb-3 tracking-[2px] text-center">Filtrar por Periodo</p>
-            <div class="flex gap-3">
+            <div class="flex gap-3 mb-3">
                 <div class="flex-1">
                     <label class="date-label">Desde</label>
                     <input type="date" id="fecha-inicio" class="input-field border-none text-white bg-[#151515] font-bold p-2 h-10">
@@ -46,6 +46,10 @@
                     <input type="date" id="fecha-fin" class="input-field border-none text-white bg-[#151515] font-bold p-2 h-10">
                 </div>
             </div>
+            <!-- Nuevo Botón Agregado manteniendo el diseño original -->
+            <button id="btn-todas-ventas" class="w-full bg-gold/10 border border-gold/20 text-gold text-[9px] font-black uppercase py-2 rounded-xl active:scale-95 transition-all tracking-[2px]">
+                <i class="fa-solid fa-clock-rotate-left mr-1"></i> Ver Todas las Ventas (Historial)
+            </button>
         </div>
 
         <div class="stat-card mb-6 border-gold/40 relative overflow-hidden">
@@ -127,7 +131,6 @@
         });
 
         function escucharDatos(uid) {
-            // Sincronización con la colección de ventas (donde Cartera guarda los abonos)
             onSnapshot(collection(db, 'usuarios', uid, 'ventas_realizadas'), snap => {
                 ventasData = snap.docs.map(d => ({id: d.id, ...d.data()}));
                 procesarTodo();
@@ -151,7 +154,7 @@
             if(!inicio || !fin) return;
 
             const filtrarRango = (fechaStr) => {
-                if(!fechaStr) return true; // Si no hay fecha, lo incluimos en el historial para no perder datos
+                if(!fechaStr) return true; 
                 let f = fechaStr;
                 if(f.includes('T')) f = f.split('T')[0];
                 if(f.includes('/')) {
@@ -166,7 +169,6 @@
             let contadorOperaciones = 0;
 
             ventasData.forEach(v => {
-                // Verificamos si la venta entra en el rango de fecha
                 const enFecha = filtrarRango(v.fecha_venta || v.fecha);
                 
                 if(enFecha) {
@@ -176,11 +178,9 @@
                     if(v.tipo === 'CONTADO') {
                         ingresosTotalesCaja += totalVenta;
                     } else if(v.tipo === 'CREDITO') {
-                        // Sumamos solo lo que se haya abonado
                         let sumaAbonos = 0;
                         if(v.abonos && Array.isArray(v.abonos)) {
                             v.abonos.forEach(ab => {
-                                // Importante: solo sumar abonos que estén en el rango de fecha seleccionado
                                 if(filtrarRango(ab.fecha)) {
                                     sumaAbonos += parseNum(ab.monto);
                                 }
@@ -195,7 +195,6 @@
             const egresosFiltrados = egresosData.filter(e => filtrarRango(e.fecha));
             let totalEgresos = egresosFiltrados.reduce((acc, e) => acc + parseNum(e.monto), 0);
 
-            // Actualizar Interfaz
             document.getElementById('subtotal-ventas').innerText = `$${ingresosTotalesCaja.toLocaleString('en-US', {minimumFractionDigits:2})}`;
             document.getElementById('subtotal-egresos').innerText = `$${totalEgresos.toLocaleString('en-US', {minimumFractionDigits:2})}`;
             document.getElementById('total-utilidad').innerText = `$${(ingresosTotalesCaja - totalEgresos).toLocaleString('en-US', {minimumFractionDigits:2})}`;
@@ -225,6 +224,30 @@
             }
         }
 
+        // Función nueva para mostrar todo el historial
+        function verTodasLasVentas() {
+            if(ventasData.length === 0 && egresosData.length === 0) return;
+            
+            // Unimos todas las fechas posibles para encontrar la más antigua
+            const todasLasFechas = [
+                ...ventasData.map(v => v.fecha_venta || v.fecha),
+                ...egresosData.map(e => e.fecha)
+            ].filter(f => f).map(f => {
+                if(f.includes('/')) {
+                    const p = f.split('/');
+                    return `${p[2]}-${p[1].padStart(2,'0')}-${p[0].padStart(2,'0')}`;
+                }
+                return f.split('T')[0];
+            });
+
+            if(todasLasFechas.length > 0) {
+                todasLasFechas.sort();
+                document.getElementById('fecha-inicio').value = todasLasFechas[0];
+                document.getElementById('fecha-fin').value = new Date().toISOString().split('T')[0];
+                procesarTodo();
+            }
+        }
+
         window.enviarWhatsApp = () => {
             const mensaje = encodeURIComponent(
                 `🏆 *REPORTE JADDY INC*\n` +
@@ -239,6 +262,7 @@
 
         document.getElementById('fecha-inicio').addEventListener('change', procesarTodo);
         document.getElementById('fecha-fin').addEventListener('change', procesarTodo);
+        document.getElementById('btn-todas-ventas').addEventListener('click', verTodasLasVentas);
     </script>
 </body>
 </html>
