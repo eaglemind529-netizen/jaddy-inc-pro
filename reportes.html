@@ -58,7 +58,7 @@
             <p id="total-utilidad" class="text-3xl font-black text-white">$0.00</p>
             <div class="flex gap-4 mt-3 pt-3 border-t border-white/5">
                 <div>
-                    <p class="text-[7px] text-gray-500 font-black uppercase">Ingresos (+)</p>
+                    <p class="text-[7px] text-gray-500 font-black uppercase">Ingresos Reales (+)</p>
                     <p id="subtotal-ventas" class="text-sm font-bold text-green-400">$0.00</p>
                 </div>
                 <div>
@@ -114,7 +114,7 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        const appIdFinanzas = "jaddy-inc-finanzas"; // El ID que usa tu archivo de egresos
+        const appIdFinanzas = "jaddy-inc-finanzas";
 
         let userId = null;
         let ventasData = [];
@@ -124,11 +124,9 @@
             if(user){ 
                 userId = user.uid;
                 document.getElementById('loading-screen').style.display = "none";
-                
                 const hoy = new Date().toISOString().split('T')[0];
                 document.getElementById('fecha-inicio').value = hoy;
                 document.getElementById('fecha-fin').value = hoy;
-                
                 escucharDatos(user.uid); 
             } else {
                 window.location.href = "login.html";
@@ -136,13 +134,11 @@
         });
 
         function escucharDatos(uid) {
-            // 1. Escuchamos Ventas (Tu colección de ventas principal)
             onSnapshot(collection(db, 'usuarios', uid, 'ventas_realizadas'), snap => {
                 ventasData = snap.docs.map(d => ({id: d.id, ...d.data()}));
                 procesarTodo();
             });
 
-            // 2. Escuchamos Egresos (De la ruta EXACTA de tu archivo de Finanzas)
             onSnapshot(collection(db, 'artifacts', appIdFinanzas, 'users', uid, 'egresos'), snap => {
                 egresosData = snap.docs.map(d => ({id: d.id, ...d.data()}));
                 procesarTodo();
@@ -155,14 +151,12 @@
 
             if(!inicio || !fin) return;
 
-            // Filtro por fecha (YYYY-MM-DD)
             const filtrarRango = (fechaISO) => {
                 if(!fechaISO) return false;
                 const d = fechaISO.split('T')[0];
                 return d >= inicio && d <= fin;
             };
 
-            // Filtrado de Ventas
             const ventasFiltradas = ventasData.filter(v => {
                 let f = v.fecha_venta;
                 if(f && f.includes('/')) {
@@ -172,18 +166,33 @@
                 return f >= inicio && f <= fin;
             });
 
-            // Filtrado de Egresos
             const egresosFiltrados = egresosData.filter(e => filtrarRango(e.fecha));
 
-            let totalVendido = ventasFiltradas.reduce((acc, v) => acc + (v.total || 0), 0);
-            let totalCredito = ventasFiltradas.filter(v => v.tipo === 'CREDITO').reduce((acc, v) => acc + (v.total || 0), 0);
+            let ingresosReales = 0;
+            let totalCreditoPendiente = 0;
+
+            ventasFiltradas.forEach(v => {
+                const totalVenta = v.total || 0;
+                if(v.tipo === 'CONTADO') {
+                    ingresosReales += totalVenta;
+                } else if(v.tipo === 'CREDITO') {
+                    // Solo sumamos los abonos a ingresos reales
+                    let abonosMonto = 0;
+                    if(v.abonos && Array.isArray(v.abonos)) {
+                        v.abonos.forEach(abono => abonosMonto += (abono.monto || 0));
+                    }
+                    ingresosReales += abonosMonto;
+                    totalCreditoPendiente += (totalVenta - abonosMonto);
+                }
+            });
+
             let totalEgresos = egresosFiltrados.reduce((acc, e) => acc + (e.monto || 0), 0);
 
             // Actualizar UI
-            document.getElementById('subtotal-ventas').innerText = `$${totalVendido.toLocaleString('en-US')}`;
+            document.getElementById('subtotal-ventas').innerText = `$${ingresosReales.toLocaleString('en-US')}`;
             document.getElementById('subtotal-egresos').innerText = `$${totalEgresos.toLocaleString('en-US')}`;
-            document.getElementById('total-utilidad').innerText = `$${(totalVendido - totalEgresos).toLocaleString('en-US')}`;
-            document.getElementById('total-credito').innerText = `$${totalCredito.toLocaleString('en-US')}`;
+            document.getElementById('total-utilidad').innerText = `$${(ingresosReales - totalEgresos).toLocaleString('en-US')}`;
+            document.getElementById('total-credito').innerText = `$${totalCreditoPendiente.toLocaleString('en-US')}`;
             document.getElementById('total-ventas').innerText = ventasFiltradas.length;
 
             const listaE = document.getElementById('lista-egresos');
@@ -216,11 +225,11 @@
                 `🏆 *REPORTE JADDY INC*\n` +
                 `📅 Periodo: ${inicio} / ${fin}\n` +
                 `--------------------------------\n` +
-                `💰 VENTAS: ${document.getElementById('subtotal-ventas').innerText}\n` +
+                `💰 INGRESOS REALES: ${document.getElementById('subtotal-ventas').innerText}\n` +
                 `💸 EGRESOS: ${document.getElementById('subtotal-egresos').innerText}\n` +
-                `💳 CRÉDITOS: ${document.getElementById('total-credito').innerText}\n` +
+                `💳 POR COBRAR: ${document.getElementById('total-credito').innerText}\n` +
                 `--------------------------------\n` +
-                `💎 UTILIDAD: ${document.getElementById('total-utilidad').innerText}\n` +
+                `💎 UTILIDAD NETA: ${document.getElementById('total-utilidad').innerText}\n` +
                 `--------------------------------\n` +
                 `_Luxury Finanzas System_`
             );
