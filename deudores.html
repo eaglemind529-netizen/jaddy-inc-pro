@@ -1,4 +1,4 @@
-```html
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -9,7 +9,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root { --gold: #D4AF37; --bg: #050505; }
-        /* Seguridad: Cuerpo oculto por defecto hasta validar login */
         body { background: var(--bg); color: white; font-family: 'Inter', sans-serif; margin: 0; display: none; }
         .texto-dorado { background: linear-gradient(to bottom, #CF9E1D 22%, #F1D37E 45%, #CF9E1D 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         .card-deudores { background: #0A0A0A; border: 1px solid #1A1A1A; border-left: 4px solid var(--gold); border-radius: 20px; padding: 18px; margin-bottom: 12px; }
@@ -17,15 +16,17 @@
         .modal-abono { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 100; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(5px); }
         .input-abono { background: #151515; border: 1px solid #333; border-radius: 12px; padding: 14px; color: white; font-size: 16px; width: 100%; text-align: center; outline: none; }
         
+        /* Estilo para el input de fecha */
+        input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); opacity: 0.5; }
+
         #loading-screen { 
             position: fixed; inset: 0; background: #050505; z-index: 9999; 
             display: flex; flex-direction: column; align-items: center; justify-content: center; 
         }
     </style>
 </head>
-<body class="p-4 pb-24 max-w-md mx-auto">
+<body class="p-4 pb-24 max-w-md mx-auto select-none">
 
-    <!-- Pantalla de Carga/Seguridad -->
     <div id="loading-screen">
         <div class="w-10 h-10 border-2 border-gold/20 border-t-gold rounded-full animate-spin mb-4"></div>
         <p class="text-gold text-[10px] font-black uppercase tracking-[0.5em]">Verificando Acceso</p>
@@ -49,14 +50,20 @@
         <div class="text-center py-20 opacity-30 text-[10px] font-black uppercase tracking-widest">Sincronizando deudas...</div>
     </div>
 
-    <!-- Modal de Abonos -->
     <div id="modalAbono" class="modal-abono">
         <div class="bg-[#0A0A0A] border border-gray-800 p-8 rounded-[32px] w-full max-w-sm">
             <h2 class="text-gold font-black uppercase text-[10px] mb-1 tracking-widest">Registrar Abono</h2>
             <p id="modal-nombre" class="text-xl font-black text-white mb-6 uppercase italic"></p>
             <div class="space-y-4">
-                <input type="number" id="input-monto" class="input-abono" placeholder="0.00">
-                <div class="flex gap-2">
+                <div>
+                    <label class="text-[7px] text-gold font-black uppercase ml-2 mb-1 block tracking-widest">Monto del Abono</label>
+                    <input type="number" id="input-monto" class="input-abono" placeholder="0.00">
+                </div>
+                <div>
+                    <label class="text-[7px] text-gold font-black uppercase ml-2 mb-1 block tracking-widest">Fecha del Pago</label>
+                    <input type="date" id="input-fecha" class="input-abono text-sm">
+                </div>
+                <div class="flex gap-2 pt-4">
                     <button onclick="window.cerrarModal()" class="flex-1 py-4 text-[10px] font-black text-gray-500 uppercase">Cancelar</button>
                     <button id="btnEjecutar" onclick="window.ejecutarAbono()" class="flex-2 btn-abonar">Guardar Pago</button>
                 </div>
@@ -67,7 +74,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getFirestore, collection, onSnapshot, doc, updateDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, collection, onSnapshot, doc, updateDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCrjjeOoXPOtJDXDfrHLOA4Ny0QW2zfVWk",
@@ -86,7 +93,6 @@
         let deudorActivo = null;
         let userId = null;
 
-        // SEGURIDAD: Solo acceso si hay login real de correo
         onAuthStateChanged(auth, (user) => {
             if(user && !user.isAnonymous) {
                 userId = user.uid;
@@ -95,15 +101,12 @@
                 document.getElementById('statusDot').classList.add('bg-green-500');
                 conectarBaseDeDatos(user.uid);
             } else {
-                // Si no hay login real, fuera
                 window.location.href = "login.html";
             }
         });
 
         function conectarBaseDeDatos(uid) {
-            // Ruta sincronizada con tus otros archivos protegidos
             const colRef = collection(db, 'usuarios', uid, 'ventas_realizadas');
-            
             onSnapshot(colRef, (snapshot) => {
                 todasLasVentas = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
                 window.renderizar();
@@ -116,7 +119,7 @@
             const buscar = document.getElementById('busqueda').value.toUpperCase();
             
             const deudores = todasLasVentas.filter(v => 
-                v.tipo === 'CREDITO' && v.total > 0 &&
+                v.tipo === 'CREDITO' && (v.total || v.precio) > 0 &&
                 (v.cliente && v.cliente.toUpperCase().includes(buscar))
             );
 
@@ -125,15 +128,15 @@
                     <div class="flex justify-between items-start mb-4">
                         <div>
                             <h3 class="text-sm font-black uppercase text-white">${v.cliente}</h3>
-                            <p class="text-[8px] text-gray-500 font-bold uppercase">${v.fecha_venta || 'Reciente'}</p>
-                            <p class="text-[7px] text-gold/50 font-black uppercase mt-1 italic">${v.producto}</p>
+                            <p class="text-[8px] text-gray-500 font-bold uppercase">${v.fecha_venta || v.fecha || 'Sin fecha'}</p>
+                            <p class="text-[7px] text-gold/50 font-black uppercase mt-1 italic">${v.producto || 'Venta'}</p>
                         </div>
                         <div class="text-right">
                             <p class="text-[7px] text-gold font-black uppercase">Saldo</p>
-                            <p class="text-lg font-black text-white">$${parseFloat(v.total).toLocaleString()}</p>
+                            <p class="text-lg font-black text-white">$${parseFloat(v.total || v.precio || 0).toLocaleString()}</p>
                         </div>
                     </div>
-                    <button onclick="window.abrirModal('${v.id}', '${v.cliente}', ${v.total})" class="btn-abonar">Abonar</button>
+                    <button onclick="window.abrirModal('${v.id}', '${v.cliente}', ${v.total || v.precio || 0})" class="btn-abonar">Abonar</button>
                 </div>
             `).join('');
 
@@ -145,15 +148,21 @@
         window.abrirModal = (id, nombre, saldo) => {
             deudorActivo = { id, nombre, saldo };
             document.getElementById('modal-nombre').innerText = nombre;
+            // Poner la fecha de hoy por defecto
+            document.getElementById('input-fecha').value = new Date().toISOString().split('T')[0];
             document.getElementById('modalAbono').style.display = 'flex';
         };
 
         window.cerrarModal = () => document.getElementById('modalAbono').style.display = 'none';
 
         window.ejecutarAbono = async () => {
-            const input = document.getElementById('input-monto');
-            const abono = parseFloat(input.value);
+            const inputMonto = document.getElementById('input-monto');
+            const inputFecha = document.getElementById('input-fecha');
+            const abono = parseFloat(inputMonto.value);
+            const fechaAbono = inputFecha.value;
+
             if(!abono || abono <= 0) return;
+            if(!fechaAbono) { alert("Selecciona una fecha"); return; }
             
             const nuevoTotal = deudorActivo.saldo - abono;
             if(nuevoTotal < 0) {
@@ -163,18 +172,27 @@
 
             try {
                 const docRef = doc(db, 'usuarios', userId, 'ventas_realizadas', deudorActivo.id);
+                
+                // Actualizamos la deuda Y agregamos el registro del abono con su fecha
                 await updateDoc(docRef, {
                     total: nuevoTotal,
-                    tipo: nuevoTotal === 0 ? 'CONTADO' : 'CREDITO'
+                    tipo: nuevoTotal <= 0 ? 'CONTADO' : 'CREDITO',
+                    // Guardamos el abono en el historial para que Reportes lo sume
+                    abonos: arrayUnion({
+                        monto: abono,
+                        fecha: fechaAbono
+                    })
                 });
+
                 window.cerrarModal();
-                input.value = '';
+                inputMonto.value = '';
             } catch (e) {
                 console.error("Error al abonar:", e);
+                alert("Error al guardar el abono.");
             }
         };
     </script>
 </body>
 </html>
 
-```
+
