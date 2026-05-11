@@ -1,4 +1,4 @@
-```html
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -16,7 +16,6 @@
         #loading-screen { position: fixed; inset: 0; background: #050505; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; }
         input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); opacity: 0.5; }
         .date-label { font-size: 7px; color: #D4AF37; font-weight: 900; text-transform: uppercase; margin-bottom: 2px; display: block; letter-spacing: 1px;}
-        /* Estilo para el botón amarillo/oro */
         .btn-gold { background: var(--gold); color: black; font-weight: 900; }
     </style>
 </head>
@@ -49,9 +48,8 @@
                 </div>
             </div>
             
-            <!-- BOTÓN AMARILLO (GOLD) AGREGADO -->
             <button onclick="verTodoHistorial()" class="w-full btn-gold py-3 rounded-xl text-[10px] uppercase tracking-widest shadow-lg shadow-gold/10 active:scale-95 transition-all">
-                <i class="fa-solid fa-chart-line mr-2"></i> Ver Análisis de Todas las Ventas
+                <i class="fa-solid fa-chart-line mr-2"></i> Ver Análisis Total (Histórico)
             </button>
         </div>
 
@@ -151,10 +149,19 @@
             return parseFloat(val.toString().replace(/[$,]/g, '')) || 0;
         }
 
-        // Función que activa el modo historial total
+        // Normaliza formatos de fecha DD/MM/YYYY o ISO a YYYY-MM-DD
+        function normalizarFecha(f) {
+            if(!f) return "";
+            if(f.includes('T')) return f.split('T')[0];
+            if(f.includes('/')) {
+                const p = f.split('/');
+                if(p[2].length === 4) return `${p[2]}-${p[1].padStart(2,'0')}-${p[0].padStart(2,'0')}`;
+            }
+            return f;
+        }
+
         window.verTodoHistorial = () => {
             modoHistorialTotal = true;
-            // Limpiamos visualmente los campos de fecha para indicar que se está viendo todo
             document.getElementById('fecha-inicio').value = "";
             document.getElementById('fecha-fin').value = "";
             procesarTodo();
@@ -164,17 +171,9 @@
             const inicio = document.getElementById('fecha-inicio').value;
             const fin = document.getElementById('fecha-fin').value;
 
-            const filtrarRango = (fechaStr) => {
-                // Si el modo historial está activo o no hay fechas puestas, se muestra TODO
+            const estaEnRango = (fechaOriginal) => {
                 if (modoHistorialTotal || (!inicio && !fin)) return true;
-                
-                if(!fechaStr) return false; 
-                let f = fechaStr;
-                if(f.includes('T')) f = f.split('T')[0];
-                if(f.includes('/')) {
-                    const p = f.split('/');
-                    f = `${p[2]}-${p[1].padStart(2,'0')}-${p[0].padStart(2,'0')}`;
-                }
+                const f = normalizarFecha(fechaOriginal);
                 return f >= inicio && f <= fin;
             };
 
@@ -183,34 +182,52 @@
             let contadorOperaciones = 0;
 
             ventasData.forEach(v => {
-                const enFecha = filtrarRango(v.fecha_venta || v.fecha);
-                
-                if(enFecha) {
+                const fechaVentaNorm = normalizarFecha(v.fecha_venta || v.fecha);
+                const ventaEnRango = estaEnRango(fechaVentaNorm);
+                const totalVenta = parseNum(v.total || v.precio);
+
+                // 1. Contabilizar la operación si la venta ocurrió en el rango
+                if (ventaEnRango) {
                     contadorOperaciones++;
-                    const totalVenta = parseNum(v.total || v.precio);
-                    
-                    if(v.tipo === 'CONTADO') {
+                }
+
+                // 2. Lógica de Ingresos (Lo que realmente entró a caja)
+                if (v.tipo === 'CONTADO') {
+                    if (ventaEnRango) {
                         ingresosTotalesCaja += totalVenta;
-                    } else if(v.tipo === 'CREDITO') {
-                        let sumaAbonos = 0;
-                        if(v.abonos && Array.isArray(v.abonos)) {
-                            v.abonos.forEach(ab => {
-                                // En créditos, los abonos también deben cumplir el filtro
-                                if(filtrarRango(ab.fecha)) {
-                                    sumaAbonos += parseNum(ab.monto);
-                                }
-                            });
+                    }
+                } else if (v.tipo === 'CREDITO') {
+                    let totalAbonadoHistorico = 0;
+                    
+                    if (v.abonos && Array.isArray(v.abonos)) {
+                        v.abonos.forEach(ab => {
+                            const montoAbono = parseNum(ab.monto);
+                            totalAbonadoHistorico += montoAbono;
+                            
+                            // CRUCIAL: Sumar el abono a caja SI EL ABONO se hizo en el rango de fecha
+                            // sin importar si la venta es antigua.
+                            if (estaEnRango(ab.fecha)) {
+                                ingresosTotalesCaja += montoAbono;
+                            }
+                        });
+                    }
+                    
+                    // 3. Lógica de Cuentas por Cobrar (Saldo pendiente HOY)
+                    // Solo mostramos deuda pendiente si estamos viendo "Todo" o si la venta está en rango
+                    if (modoHistorialTotal || ventaEnRango) {
+                        const saldoPendiente = totalVenta - totalAbonadoHistorico;
+                        if (saldoPendiente > 0) {
+                            deudaPendienteTotal += saldoPendiente;
                         }
-                        ingresosTotalesCaja += sumaAbonos;
-                        deudaPendienteTotal += (totalVenta - sumaAbonos);
                     }
                 }
             });
 
-            const egresosFiltrados = egresosData.filter(e => filtrarRango(e.fecha));
+            // 4. Egresos
+            const egresosFiltrados = egresosData.filter(e => estaEnRango(e.fecha));
             let totalEgresos = egresosFiltrados.reduce((acc, e) => acc + parseNum(e.monto), 0);
 
-            // Actualizar Interfaz
+            // Actualizar UI
             document.getElementById('subtotal-ventas').innerText = `$${ingresosTotalesCaja.toLocaleString('en-US', {minimumFractionDigits:2})}`;
             document.getElementById('subtotal-egresos').innerText = `$${totalEgresos.toLocaleString('en-US', {minimumFractionDigits:2})}`;
             document.getElementById('total-utilidad').innerText = `$${(ingresosTotalesCaja - totalEgresos).toLocaleString('en-US', {minimumFractionDigits:2})}`;
@@ -222,7 +239,7 @@
                 listaE.innerHTML = '<p class="text-[9px] text-gray-700 text-center uppercase py-4 italic">Sin movimientos registrados</p>';
             } else {
                 listaE.innerHTML = egresosFiltrados
-                    .sort((a,b) => new Date(b.fecha) - new Date(a.fecha))
+                    .sort((a,b) => new Date(normalizarFecha(b.fecha)) - new Date(normalizarFecha(a.fecha)))
                     .map(e => `
                         <div class="flex justify-between items-center bg-[#111] p-3 rounded-xl border border-white/5">
                             <div class="flex items-center gap-3">
@@ -231,7 +248,7 @@
                                 </div>
                                 <div>
                                     <p class="text-[10px] font-bold uppercase text-white">${e.detalle || e.categoria}</p>
-                                    <p class="text-[7px] text-gray-500">${new Date(e.fecha).toLocaleDateString()}</p>
+                                    <p class="text-[7px] text-gray-500">${new Date(normalizarFecha(e.fecha)).toLocaleDateString()}</p>
                                 </div>
                             </div>
                             <p class="text-[10px] font-black text-red-400">-$${parseNum(e.monto).toLocaleString()}</p>
@@ -252,7 +269,6 @@
             window.open(`https://wa.me/?text=${mensaje}`);
         }
 
-        // Si el usuario cambia la fecha manualmente, se desactiva el modo "Ver Todo"
         document.getElementById('fecha-inicio').addEventListener('change', () => { modoHistorialTotal = false; procesarTodo(); });
         document.getElementById('fecha-fin').addEventListener('change', () => { modoHistorialTotal = false; procesarTodo(); });
     </script>
