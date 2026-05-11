@@ -1,4 +1,4 @@
-
+```html
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -46,9 +46,9 @@
                     <input type="date" id="fecha-fin" class="input-field border-none text-white bg-[#151515] font-bold p-2 h-10">
                 </div>
             </div>
-            <!-- Nuevo Botón Agregado manteniendo el diseño original -->
+            <!-- Botón para ver todas las ventas -->
             <button id="btn-todas-ventas" class="w-full bg-gold/10 border border-gold/20 text-gold text-[9px] font-black uppercase py-2 rounded-xl active:scale-95 transition-all tracking-[2px]">
-                <i class="fa-solid fa-clock-rotate-left mr-1"></i> Ver Todas las Ventas (Historial)
+                <i class="fa-solid fa-clock-rotate-left mr-1"></i> Ver Análisis Total (Histórico)
             </button>
         </div>
 
@@ -224,11 +224,11 @@
             }
         }
 
-        // Función nueva para mostrar todo el historial
-        function verTodasLasVentas() {
+        // Función para mostrar el análisis total absoluto
+        function verAnalisisTotal() {
             if(ventasData.length === 0 && egresosData.length === 0) return;
             
-            // Unimos todas las fechas posibles para encontrar la más antigua
+            // Recolectamos todas las fechas disponibles
             const todasLasFechas = [
                 ...ventasData.map(v => v.fecha_venta || v.fecha),
                 ...egresosData.map(e => e.fecha)
@@ -242,8 +242,11 @@
 
             if(todasLasFechas.length > 0) {
                 todasLasFechas.sort();
+                // Seteamos el rango desde la primera venta registrada hasta hoy
                 document.getElementById('fecha-inicio').value = todasLasFechas[0];
                 document.getElementById('fecha-fin').value = new Date().toISOString().split('T')[0];
+                
+                // Ejecutamos el procesamiento para actualizar todas las tarjetas de stats
                 procesarTodo();
             }
         }
@@ -262,7 +265,7 @@
 
         document.getElementById('fecha-inicio').addEventListener('change', procesarTodo);
         document.getElementById('fecha-fin').addEventListener('change', procesarTodo);
-        document.getElementById('btn-todas-ventas').addEventListener('click', verTodasLasVentas);
+        document.getElementById('btn-todas-ventas').addEventListener('click', verAnalisisTotal);
     </script>
 </body>
 </html>
