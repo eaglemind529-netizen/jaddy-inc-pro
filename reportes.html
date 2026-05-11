@@ -16,6 +16,8 @@
         #loading-screen { position: fixed; inset: 0; background: #050505; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; }
         input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); opacity: 0.5; }
         .date-label { font-size: 7px; color: #D4AF37; font-weight: 900; text-transform: uppercase; margin-bottom: 2px; display: block; letter-spacing: 1px;}
+        /* Estilo para el botón amarillo/oro */
+        .btn-gold { background: var(--gold); color: black; font-weight: 900; }
     </style>
 </head>
 <body class="pb-32 max-w-md mx-auto">
@@ -36,7 +38,7 @@
 
         <div class="mb-6 bg-[#0A0A0A] p-4 rounded-2xl gold-border">
             <p class="text-[9px] text-gray-500 font-black uppercase mb-3 tracking-[2px] text-center">Filtrar por Periodo</p>
-            <div class="flex gap-3 mb-3">
+            <div class="flex gap-3 mb-4">
                 <div class="flex-1">
                     <label class="date-label">Desde</label>
                     <input type="date" id="fecha-inicio" class="input-field border-none text-white bg-[#151515] font-bold p-2 h-10">
@@ -46,9 +48,10 @@
                     <input type="date" id="fecha-fin" class="input-field border-none text-white bg-[#151515] font-bold p-2 h-10">
                 </div>
             </div>
-            <!-- Botón para ver todas las ventas -->
-            <button id="btn-todas-ventas" class="w-full bg-gold/10 border border-gold/20 text-gold text-[9px] font-black uppercase py-2 rounded-xl active:scale-95 transition-all tracking-[2px]">
-                <i class="fa-solid fa-clock-rotate-left mr-1"></i> Ver Análisis Total (Histórico)
+            
+            <!-- BOTÓN AMARILLO (GOLD) AGREGADO -->
+            <button onclick="verTodoHistorial()" class="w-full btn-gold py-3 rounded-xl text-[10px] uppercase tracking-widest shadow-lg shadow-gold/10 active:scale-95 transition-all">
+                <i class="fa-solid fa-chart-line mr-2"></i> Ver Análisis de Todas las Ventas
             </button>
         </div>
 
@@ -116,6 +119,7 @@
         let userId = null;
         let ventasData = [];
         let egresosData = [];
+        let modoHistorialTotal = false;
 
         onAuthStateChanged(auth, (user) => { 
             if(user){ 
@@ -147,14 +151,24 @@
             return parseFloat(val.toString().replace(/[$,]/g, '')) || 0;
         }
 
+        // Función que activa el modo historial total
+        window.verTodoHistorial = () => {
+            modoHistorialTotal = true;
+            // Limpiamos visualmente los campos de fecha para indicar que se está viendo todo
+            document.getElementById('fecha-inicio').value = "";
+            document.getElementById('fecha-fin').value = "";
+            procesarTodo();
+        };
+
         function procesarTodo() {
             const inicio = document.getElementById('fecha-inicio').value;
             const fin = document.getElementById('fecha-fin').value;
 
-            if(!inicio || !fin) return;
-
             const filtrarRango = (fechaStr) => {
-                if(!fechaStr) return true; 
+                // Si el modo historial está activo o no hay fechas puestas, se muestra TODO
+                if (modoHistorialTotal || (!inicio && !fin)) return true;
+                
+                if(!fechaStr) return false; 
                 let f = fechaStr;
                 if(f.includes('T')) f = f.split('T')[0];
                 if(f.includes('/')) {
@@ -181,6 +195,7 @@
                         let sumaAbonos = 0;
                         if(v.abonos && Array.isArray(v.abonos)) {
                             v.abonos.forEach(ab => {
+                                // En créditos, los abonos también deben cumplir el filtro
                                 if(filtrarRango(ab.fecha)) {
                                     sumaAbonos += parseNum(ab.monto);
                                 }
@@ -195,6 +210,7 @@
             const egresosFiltrados = egresosData.filter(e => filtrarRango(e.fecha));
             let totalEgresos = egresosFiltrados.reduce((acc, e) => acc + parseNum(e.monto), 0);
 
+            // Actualizar Interfaz
             document.getElementById('subtotal-ventas').innerText = `$${ingresosTotalesCaja.toLocaleString('en-US', {minimumFractionDigits:2})}`;
             document.getElementById('subtotal-egresos').innerText = `$${totalEgresos.toLocaleString('en-US', {minimumFractionDigits:2})}`;
             document.getElementById('total-utilidad').innerText = `$${(ingresosTotalesCaja - totalEgresos).toLocaleString('en-US', {minimumFractionDigits:2})}`;
@@ -224,33 +240,6 @@
             }
         }
 
-        // Función para mostrar el análisis total absoluto
-        function verAnalisisTotal() {
-            if(ventasData.length === 0 && egresosData.length === 0) return;
-            
-            // Recolectamos todas las fechas disponibles
-            const todasLasFechas = [
-                ...ventasData.map(v => v.fecha_venta || v.fecha),
-                ...egresosData.map(e => e.fecha)
-            ].filter(f => f).map(f => {
-                if(f.includes('/')) {
-                    const p = f.split('/');
-                    return `${p[2]}-${p[1].padStart(2,'0')}-${p[0].padStart(2,'0')}`;
-                }
-                return f.split('T')[0];
-            });
-
-            if(todasLasFechas.length > 0) {
-                todasLasFechas.sort();
-                // Seteamos el rango desde la primera venta registrada hasta hoy
-                document.getElementById('fecha-inicio').value = todasLasFechas[0];
-                document.getElementById('fecha-fin').value = new Date().toISOString().split('T')[0];
-                
-                // Ejecutamos el procesamiento para actualizar todas las tarjetas de stats
-                procesarTodo();
-            }
-        }
-
         window.enviarWhatsApp = () => {
             const mensaje = encodeURIComponent(
                 `🏆 *REPORTE JADDY INC*\n` +
@@ -263,9 +252,9 @@
             window.open(`https://wa.me/?text=${mensaje}`);
         }
 
-        document.getElementById('fecha-inicio').addEventListener('change', procesarTodo);
-        document.getElementById('fecha-fin').addEventListener('change', procesarTodo);
-        document.getElementById('btn-todas-ventas').addEventListener('click', verAnalisisTotal);
+        // Si el usuario cambia la fecha manualmente, se desactiva el modo "Ver Todo"
+        document.getElementById('fecha-inicio').addEventListener('change', () => { modoHistorialTotal = false; procesarTodo(); });
+        document.getElementById('fecha-fin').addEventListener('change', () => { modoHistorialTotal = false; procesarTodo(); });
     </script>
 </body>
 </html>
