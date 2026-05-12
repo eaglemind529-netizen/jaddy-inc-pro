@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -46,7 +47,7 @@
                 <div class="relative">
                     <p class="text-[7px] text-gold font-black absolute -top-2 left-3 bg-[#0A0A0A] px-2 uppercase z-10">Vendedor:</p>
                     <select id="sel-vendedor" class="input-field border-gold/30 text-gold italic">
-                        <option value="">-- CARGANDO EQUIPO --</option>
+                        <option value="">-- EQUIPO --</option>
                     </select>
                 </div>
 
@@ -60,12 +61,12 @@
                     </select>
                 </div>
                 <div id="area-cliente-ocu" class="hidden">
-                    <input type="text" id="inp-cliente-nom" placeholder="NOMBRE DEL CLIENTE OCASIONAL" class="input-field">
+                    <input type="text" id="inp-cliente-nom" placeholder="NOMBRE DEL CLIENTE" class="input-field">
                 </div>
 
                 <div class="grid grid-cols-1 gap-3">
                     <select id="sel-producto" class="input-field">
-                        <option value="">-- SELECCIONAR PRODUCTO --</option>
+                        <option value="">-- PRODUCTO --</option>
                     </select>
                     <div class="relative">
                         <p class="text-[7px] text-gray-500 absolute -top-2 left-3 bg-[#0A0A0A] px-2 uppercase z-10">Variante:</p>
@@ -114,7 +115,7 @@
             </div>
         </section>
 
-        <h3 class="text-[9px] font-black text-gray-600 uppercase tracking-[3px] mb-4 text-center italic">Operaciones de Usuario</h3>
+        <h3 class="text-[9px] font-black text-gray-600 uppercase tracking-[3px] mb-4 text-center italic">Operaciones Recientes</h3>
         <div id="listaVentas" class="space-y-3"></div>
     </div>
 
@@ -155,10 +156,20 @@
             }
         });
 
+        // FUNCIÓN CLAVE: Extrae el texto legible de la variante (Nombre + Género)
+        function obtenerNombreVariante(v) {
+            if (typeof v === 'object' && v !== null) {
+                const nombre = v.nombre || v.variante || "N/A";
+                const genero = v.genero ? ` (${v.genero})` : "";
+                return `${nombre}${genero}`.toUpperCase();
+            }
+            return String(v || "ESTANDAR").toUpperCase();
+        }
+
         function escucharDatos(uid) {
             onSnapshot(collection(db, 'usuarios', uid, 'vendedores'), snap => {
                 const sel = document.getElementById('sel-vendedor');
-                sel.innerHTML = '<option value="">-- VENDEDOR --</option>' + 
+                sel.innerHTML = '<option value="">-- EQUIPO --</option>' + 
                     snap.docs.map(d => `<option value="${d.data().nombre}">${d.data().nombre.toUpperCase()}</option>`).join('');
             });
 
@@ -207,7 +218,11 @@
             pSeleccionado = productosGlobal.find(x => x.id === e.target.value);
             const selVar = document.getElementById('sel-variante');
             if (pSeleccionado?.variantes?.length > 0) {
-                selVar.innerHTML = pSeleccionado.variantes.map(v => `<option value="${v}">${v}</option>`).join('');
+                // Aquí aplicamos la corrección para mostrar el nombre real
+                selVar.innerHTML = pSeleccionado.variantes.map(v => {
+                    const texto = obtenerNombreVariante(v);
+                    return `<option value="${texto}">${texto}</option>`;
+                }).join('');
             } else {
                 selVar.innerHTML = '<option value="ESTANDAR">ESTANDAR / UNICA</option>';
             }
@@ -261,13 +276,12 @@
             if(!v.vendedor || !v.cliente) return;
 
             try {
-                // 1. Guardamos la venta (Tu lógica original)
                 if(editId) {
                     await updateDoc(doc(db, 'usuarios', userId, 'ventas_realizadas', editId), v);
                 } else {
                     await addDoc(collection(db, 'usuarios', userId, 'ventas_realizadas'), v);
                     
-                    // 2. NUEVA FUNCIÓN: Actualizar Inventario Maestro automáticamente al vender
+                    // Sincronización con Inventario Maestro
                     const inventarioDocId = `${pSeleccionado.id}_${varianteSel.replace(/\s+/g, '_')}`;
                     const invRef = doc(db, 'usuarios', userId, 'inventario_master', inventarioDocId);
                     
@@ -275,7 +289,7 @@
                         ventas: increment(cantidadVendida),
                         stock: increment(-cantidadVendida),
                         lastUpdate: Date.now()
-                    }).catch(err => console.log("Inventario no inicializado para este producto aún."));
+                    }).catch(err => console.log("Inventario no inicializado."));
                 }
                 window.cancelarEdicion();
             } catch (e) { console.error(e); }
@@ -305,7 +319,6 @@
             if(confirm('¿ELIMINAR VENTA?')) {
                 const v = ventasGlobal.find(x => x.id === id);
                 if(v) {
-                    // Si eliminamos la venta, devolvemos el stock al inventario
                     const inventarioDocId = `${v.productoId}_${v.variante.replace(/\s+/g, '_')}`;
                     const invRef = doc(db, 'usuarios', userId, 'inventario_master', inventarioDocId);
                     await updateDoc(invRef, {
@@ -344,12 +357,6 @@
                             </div>
                             <div class="text-[11px] font-black uppercase mt-1">${v.cliente}</div>
                             <div class="text-[9px] text-gray-500 italic mt-0.5">${v.producto} (${v.variante}) x${v.cantidad}</div>
-                            ${v.tipo === 'CREDITO' ? `
-                                <div class="mt-2 flex gap-2 text-[8px] font-bold uppercase border-t border-white/5 pt-2">
-                                    <span class="text-gray-400">Entrega: ${v.fecha_entrega || 'N/A'}</span>
-                                    <span class="text-red-400">Cobro: ${v.fecha_limite || 'N/A'}</span>
-                                </div>
-                            ` : ''}
                         </div>
                         <div class="text-right">
                             <div class="text-green-400 font-black text-sm">$${v.total.toLocaleString()}</div>
@@ -368,3 +375,5 @@
     </script>
 </body>
 </html>
+
+```
