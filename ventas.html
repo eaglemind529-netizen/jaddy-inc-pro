@@ -151,10 +151,7 @@
                 document.body.style.display = "block";
                 document.getElementById('loading-screen').style.display = "none";
                 document.getElementById('statusDot').classList.add('bg-green-500', 'shadow-green-500/50');
-                
-                // Establecer fecha de hoy por defecto para todas las ventas
                 document.getElementById('fecha-operacion').valueAsDate = new Date();
-                
                 escucharDatos(user.uid); 
             } else {
                 window.location.href = "login.html";
@@ -199,7 +196,6 @@
             ['contado', 'credito', 'mayor'].forEach(id => {
                 document.getElementById('t-'+id)?.classList.toggle('active', id === t.toLowerCase());
             });
-            
             const panelFechas = document.getElementById('panel-fechas-credito');
             if(t === 'CREDITO') {
                 panelFechas.classList.remove('hidden');
@@ -207,7 +203,6 @@
             } else {
                 panelFechas.classList.add('hidden');
             }
-            
             calcularTotal();
         };
 
@@ -226,12 +221,10 @@
             if(!pSeleccionado) return;
             const cant = parseInt(document.getElementById('inp-cantidad').value) || 0;
             const desc = parseFloat(document.getElementById('inp-descuento').value) || 0;
-            
             let unit = 0;
             if(tipoVenta === 'CONTADO') unit = parseFloat(pSeleccionado.precio_detal || pSeleccionado.detal || 0);
             else if(tipoVenta === 'CREDITO') unit = parseFloat(pSeleccionado.precio_credito || pSeleccionado.credito || 0);
             else if(tipoVenta === 'MAYOR') unit = parseFloat(pSeleccionado.precio_mayor || pSeleccionado.mayor || 0);
-            
             const total = (unit * cant) - desc;
             document.getElementById('inp-precio').value = (total < 0 ? 0 : total).toLocaleString();
         }
@@ -239,9 +232,8 @@
         window.registrarVenta = async () => {
             if(!userId || !pSeleccionado) return;
             const editId = document.getElementById('edit-id').value;
-            
-            // Capturar fecha seleccionada o usar la de hoy si está vacía
             const fechaManual = document.getElementById('fecha-operacion').value;
+            const precioCalculado = parseFloat(document.getElementById('inp-precio').value.replace(/,/g, ''));
 
             const v = {
                 vendedor: document.getElementById('sel-vendedor').value,
@@ -253,11 +245,15 @@
                 variante: document.getElementById('sel-variante').value,
                 cantidad: parseInt(document.getElementById('inp-cantidad').value),
                 descuento: parseFloat(document.getElementById('inp-descuento').value) || 0,
-                total: parseFloat(document.getElementById('inp-precio').value.replace(/,/g, '')),
+                
+                // LA CLAVE: 'total' es para el REPORTE (intocable). 'saldo_pendiente' es para COBRANZA (baja con abonos).
+                total: precioCalculado,
+                saldo_pendiente: tipoVenta === 'CREDITO' ? precioCalculado : 0,
+                
                 tipo: tipoVenta,
                 timestamp: Date.now(),
                 fecha_venta: fechaManual ? new Date(fechaManual + 'T00:00:00').toLocaleDateString() : new Date().toLocaleDateString(),
-                fecha_raw: fechaManual // Guardamos la ISO para facilitar edición posterior
+                fecha_raw: fechaManual
             };
 
             if(tipoVenta === 'CREDITO') {
@@ -287,15 +283,11 @@
             window.setTipo(v.tipo);
             document.getElementById('inp-cantidad').value = v.cantidad;
             document.getElementById('inp-descuento').value = v.descuento;
-            
-            // Cargar fecha que tenía la venta
             if(v.fecha_raw) document.getElementById('fecha-operacion').value = v.fecha_raw;
-
             if(v.tipo === 'CREDITO') {
                 document.getElementById('fecha-entrega').value = v.fecha_entrega || "";
                 document.getElementById('fecha-limite').value = v.fecha_limite || "";
             }
-
             document.getElementById('btn-venta').innerText = "ACTUALIZAR VENTA";
             document.getElementById('btn-cancel').classList.remove('hidden');
             calcularTotal();
