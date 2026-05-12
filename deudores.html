@@ -1,4 +1,4 @@
-
+```html
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -12,24 +12,19 @@
         body { background: var(--bg); color: white; font-family: 'Inter', sans-serif; margin: 0; display: none; }
         .texto-dorado { background: linear-gradient(to bottom, #CF9E1D 22%, #F1D37E 45%, #CF9E1D 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         .card-deudores { background: #0A0A0A; border: 1px solid #1A1A1A; border-left: 4px solid var(--gold); border-radius: 20px; padding: 18px; margin-bottom: 12px; }
+        .card-historial { background: #070707; border: 1px solid #111; border-left: 4px solid #10b981; border-radius: 20px; padding: 15px; margin-bottom: 10px; opacity: 0.6; }
         .btn-abonar { background: white; color: black; font-weight: 900; border-radius: 12px; padding: 12px; font-size: 10px; text-transform: uppercase; width: 100%; }
         .modal-abono { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 100; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(5px); }
         .input-abono { background: #151515; border: 1px solid #333; border-radius: 12px; padding: 14px; color: white; font-size: 16px; width: 100%; text-align: center; outline: none; }
-        
-        /* Estilo para el input de fecha */
         input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); opacity: 0.5; }
-
-        #loading-screen { 
-            position: fixed; inset: 0; background: #050505; z-index: 9999; 
-            display: flex; flex-direction: column; align-items: center; justify-content: center; 
-        }
+        #loading-screen { position: fixed; inset: 0; background: #050505; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; }
     </style>
 </head>
 <body class="p-4 pb-24 max-w-md mx-auto select-none">
 
     <div id="loading-screen">
         <div class="w-10 h-10 border-2 border-gold/20 border-t-gold rounded-full animate-spin mb-4"></div>
-        <p class="text-gold text-[10px] font-black uppercase tracking-[0.5em]">Verificando Acceso</p>
+        <p class="text-gold text-[10px] font-black uppercase tracking-[0.5em]">Sincronizando Deudas</p>
     </div>
 
     <header class="flex justify-between items-center mb-6">
@@ -39,16 +34,21 @@
 
     <div class="mb-8">
         <h1 class="texto-dorado text-3xl font-black uppercase italic tracking-tighter">Deudores</h1>
-        <p class="text-gray-500 text-[10px] font-bold uppercase tracking-[4px]">Control de Abonos</p>
+        <p class="text-gray-500 text-[10px] font-bold uppercase tracking-[4px]">Gestión de Cobranza</p>
     </div>
 
-    <div class="mb-6">
-        <input type="text" id="busqueda" oninput="window.renderizar()" placeholder="BUSCAR CLIENTE..." class="w-full bg-[#0F0F0F] border border-gray-800 rounded-xl py-4 px-5 text-xs font-bold text-white uppercase outline-none focus:border-gold">
+    <div class="mb-6 flex gap-2">
+        <input type="text" id="busqueda" oninput="window.renderizar()" placeholder="BUSCAR CLIENTE..." class="flex-1 bg-[#0F0F0F] border border-gray-800 rounded-xl py-4 px-5 text-xs font-bold text-white uppercase outline-none focus:border-gold">
+        <button onclick="document.getElementById('historial-titulo').scrollIntoView({behavior:'smooth'})" class="bg-[#0F0F0F] border border-gray-800 px-4 rounded-xl text-gold"><i class="fa-solid fa-clock-rotate-left"></i></button>
     </div>
 
     <div id="listaDeudores" class="space-y-4">
-        <div class="text-center py-20 opacity-30 text-[10px] font-black uppercase tracking-widest">Sincronizando deudas...</div>
+        <div class="text-center py-20 opacity-30 text-[10px] font-black uppercase tracking-widest">Sincronizando...</div>
     </div>
+
+    <!-- SECCIÓN HISTORIAL -->
+    <h2 id="historial-titulo" class="text-[9px] font-black text-gray-600 uppercase tracking-[3px] mt-12 mb-4 text-center italic">Clientes que ya Pagaron</h2>
+    <div id="listaHistorial" class="space-y-3 pb-10"></div>
 
     <div id="modalAbono" class="modal-abono">
         <div class="bg-[#0A0A0A] border border-gray-800 p-8 rounded-[32px] w-full max-w-sm">
@@ -114,16 +114,27 @@
         }
 
         window.renderizar = () => {
-            const container = document.getElementById('listaDeudores');
-            if(!container) return;
+            const containerDeudas = document.getElementById('listaDeudores');
+            const containerHistorial = document.getElementById('listaHistorial');
             const buscar = document.getElementById('busqueda').value.toUpperCase();
             
-            const deudores = todasLasVentas.filter(v => 
-                v.tipo === 'CREDITO' && (v.total || v.precio) > 0 &&
-                (v.cliente && v.cliente.toUpperCase().includes(buscar))
-            );
+            // FILTRAR DEUDORES (Saldo > 0)
+            const deudores = todasLasVentas.filter(v => {
+                const saldo = v.saldo_pendiente !== undefined ? v.saldo_pendiente : (v.total || v.precio || 0);
+                return saldo > 0 && v.tipo === 'CREDITO' && 
+                (v.cliente && v.cliente.toUpperCase().includes(buscar));
+            });
 
-            container.innerHTML = deudores.map(v => `
+            // FILTRAR HISTORIAL (Saldo <= 0 y tuvo abonos)
+            const historial = todasLasVentas.filter(v => {
+                const saldo = v.saldo_pendiente !== undefined ? v.saldo_pendiente : -1;
+                return saldo === 0 && (v.cliente && v.cliente.toUpperCase().includes(buscar));
+            });
+
+            // Render Deudas
+            containerDeudas.innerHTML = deudores.map(v => {
+                const saldoDisplay = v.saldo_pendiente !== undefined ? v.saldo_pendiente : (v.total || v.precio || 0);
+                return `
                 <div class="card-deudores">
                     <div class="flex justify-between items-start mb-4">
                         <div>
@@ -132,23 +143,37 @@
                             <p class="text-[7px] text-gold/50 font-black uppercase mt-1 italic">${v.producto || 'Venta'}</p>
                         </div>
                         <div class="text-right">
-                            <p class="text-[7px] text-gold font-black uppercase">Saldo</p>
-                            <p class="text-lg font-black text-white">$${parseFloat(v.total || v.precio || 0).toLocaleString()}</p>
+                            <p class="text-[7px] text-gold font-black uppercase">Saldo Pendiente</p>
+                            <p class="text-lg font-black text-white">$${parseFloat(saldoDisplay).toLocaleString()}</p>
                         </div>
                     </div>
-                    <button onclick="window.abrirModal('${v.id}', '${v.cliente}', ${v.total || v.precio || 0})" class="btn-abonar">Abonar</button>
+                    <button onclick="window.abrirModal('${v.id}', '${v.cliente}', ${saldoDisplay})" class="btn-abonar">Abonar Pago</button>
+                </div>
+            `}).join('');
+
+            // Render Historial
+            containerHistorial.innerHTML = historial.map(v => `
+                <div class="card-historial">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <h3 class="text-[10px] font-black uppercase text-gray-400">${v.cliente}</h3>
+                            <p class="text-[7px] text-green-500 font-black uppercase">PAGADO COMPLETAMENTE ✓</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-[10px] font-black text-white">$${parseFloat(v.total || v.precio || 0).toLocaleString()}</p>
+                            <p class="text-[6px] text-gray-600 uppercase">Valor de Venta</p>
+                        </div>
+                    </div>
                 </div>
             `).join('');
 
-            if(deudores.length === 0) {
-                container.innerHTML = '<p class="text-center py-20 opacity-20 text-[10px] font-black uppercase">Sin deudas pendientes</p>';
-            }
+            if(deudores.length === 0) containerDeudas.innerHTML = '<p class="text-center py-10 opacity-20 text-[10px] font-black uppercase italic">Sin deudas activas</p>';
+            if(historial.length === 0) containerHistorial.innerHTML = '<p class="text-center py-4 opacity-20 text-[10px] font-black uppercase italic">Historial vacío</p>';
         };
 
         window.abrirModal = (id, nombre, saldo) => {
             deudorActivo = { id, nombre, saldo };
             document.getElementById('modal-nombre').innerText = nombre;
-            // Poner la fecha de hoy por defecto
             document.getElementById('input-fecha').value = new Date().toISOString().split('T')[0];
             document.getElementById('modalAbono').style.display = 'flex';
         };
@@ -162,22 +187,20 @@
             const fechaAbono = inputFecha.value;
 
             if(!abono || abono <= 0) return;
-            if(!fechaAbono) { alert("Selecciona una fecha"); return; }
             
-            const nuevoTotal = deudorActivo.saldo - abono;
-            if(nuevoTotal < 0) {
-                alert("El abono supera la deuda.");
-                return;
-            }
+            const nuevoSaldo = deudorActivo.saldo - abono;
+            if(nuevoSaldo < 0) { alert("El monto supera la deuda"); return; }
 
             try {
                 const docRef = doc(db, 'usuarios', userId, 'ventas_realizadas', deudorActivo.id);
                 
-                // Actualizamos la deuda Y agregamos el registro del abono con su fecha
+                // ACTUALIZACIÓN SEGURA:
+                // 1. Mantenemos el campo 'total' INTACTO para que Reportes no falle.
+                // 2. Usamos 'saldo_pendiente' para la lógica de cobranza.
                 await updateDoc(docRef, {
-                    total: nuevoTotal,
-                    tipo: nuevoTotal <= 0 ? 'CONTADO' : 'CREDITO',
-                    // Guardamos el abono en el historial para que Reportes lo sume
+                    saldo_pendiente: nuevoSaldo,
+                    // Si ya pagó todo, lo marcamos como pagado pero no borramos el monto total de la venta
+                    estado_cobranza: nuevoSaldo <= 0 ? 'PAGADO' : 'PENDIENTE',
                     abonos: arrayUnion({
                         monto: abono,
                         fecha: fechaAbono
@@ -188,11 +211,11 @@
                 inputMonto.value = '';
             } catch (e) {
                 console.error("Error al abonar:", e);
-                alert("Error al guardar el abono.");
+                alert("Error al procesar abono.");
             }
         };
     </script>
 </body>
 </html>
 
-
+```
