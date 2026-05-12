@@ -1,4 +1,3 @@
-```html
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -140,6 +139,16 @@
             }
         });
 
+        // NUEVA FUNCIÓN: Traduce el objeto variante a texto legible
+        function formatearNombreVariante(v) {
+            if (typeof v === 'object' && v !== null) {
+                const nombre = v.nombre || v.variante || "N/A";
+                const genero = v.genero ? ` (${v.genero})` : "";
+                return `${nombre}${genero}`.toUpperCase();
+            }
+            return String(v || "GENERAL").toUpperCase();
+        }
+
         function vincularBaseDeDatos(uid) {
             onSnapshot(collection(db, 'usuarios', uid, 'productos'), (snap) => {
                 productosMaestros = snap.docs.map(d => ({ id: d.id, ...d.data() }));
@@ -150,9 +159,7 @@
                     const currentVal = selProd.value;
                     selProd.innerHTML = '<option value="">-- SELECCIONA PRODUCTO --</option>' + 
                         productosMaestros.map(p => `<option value="${p.id}">${p.nombre.toUpperCase()} (${p.codigo})</option>`).join('');
-                    if(currentVal) {
-                        selProd.value = currentVal;
-                    }
+                    if(currentVal) selProd.value = currentVal;
                 }
             });
 
@@ -176,7 +183,11 @@
             if (variantes.length === 0) {
                 selVar.innerHTML = '<option value="GENERAL">GENERAL / ÚNICA</option>';
             } else {
-                selVar.innerHTML = variantes.map(v => `<option value="${v}">${v}</option>`).join('');
+                // Aplicamos el formateador aquí para el menú desplegable del formulario
+                selVar.innerHTML = variantes.map(v => {
+                    const texto = formatearNombreVariante(v);
+                    return `<option value="${texto}">${texto}</option>`;
+                }).join('');
             }
         };
 
@@ -310,7 +321,7 @@
                             ${g.items.map(s => `
                                 <div class="p-4 border-b border-white/5 last:border-0 flex justify-between items-center">
                                     <div class="flex-1">
-                                        <p class="text-[11px] font-black text-gold uppercase tracking-tighter">${s.variante}</p>
+                                        <p class="text-[11px] font-black text-gold uppercase tracking-tighter">${formatearNombreVariante(s.variante)}</p>
                                         <div class="flex gap-3 mt-1.5">
                                             <button onclick="editarItem('${s.id_doc}')" class="text-[8px] text-blue-400 font-black uppercase underline">Editar</button>
                                             <button onclick="borrarItem('${s.id_doc}')" class="text-[8px] text-red-500 font-black uppercase underline">Borrar</button>
@@ -321,7 +332,6 @@
                                             <p class="label-stat">TOTAL</p>
                                             <p class="text-[10px] font-bold text-zinc-500">${s.entradas || 0}</p>
                                         </div>
-                                        <!-- NUEVA COLUMNA DE VENTAS AGREGADA -->
                                         <div class="text-center">
                                             <p class="label-stat text-orange-500">VEND.</p>
                                             <p class="text-[10px] font-bold text-zinc-400">${s.ventas || 0}</p>
@@ -340,5 +350,3 @@
     </script>
 </body>
 </html>
-
-```
