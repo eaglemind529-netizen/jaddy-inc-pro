@@ -1,4 +1,4 @@
-
+```html
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -141,7 +141,6 @@
         });
 
         function vincularBaseDeDatos(uid) {
-            // UNIFICADO: Escuchamos 'usuarios' para traer los productos y sus variantes
             onSnapshot(collection(db, 'usuarios', uid, 'productos'), (snap) => {
                 productosMaestros = snap.docs.map(d => ({ id: d.id, ...d.data() }));
                 
@@ -157,7 +156,6 @@
                 }
             });
 
-            // Sincronizamos el inventario maestro
             onSnapshot(collection(db, 'usuarios', uid, 'inventario_master'), (snap) => {
                 inventarioData = {};
                 snap.docs.forEach(d => { inventarioData[d.id] = { id_doc: d.id, ...d.data() }; });
@@ -165,7 +163,6 @@
             });
         }
 
-        // Evento para cargar variantes al seleccionar producto
         selProd.onchange = () => {
             const pId = selProd.value;
             if (!pId) {
@@ -323,6 +320,11 @@
                                         <div class="text-center">
                                             <p class="label-stat">TOTAL</p>
                                             <p class="text-[10px] font-bold text-zinc-500">${s.entradas || 0}</p>
+                                        </div>
+                                        <!-- NUEVA COLUMNA DE VENTAS AGREGADA -->
+                                        <div class="text-center">
+                                            <p class="label-stat text-orange-500">VEND.</p>
+                                            <p class="text-[10px] font-bold text-zinc-400">${s.ventas || 0}</p>
                                         </div>
                                         <div class="text-center bg-white/5 px-3 py-1 rounded-lg">
                                             <p class="label-stat text-green-500">DISP.</p>
