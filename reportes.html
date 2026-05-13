@@ -1,4 +1,4 @@
-
+```html
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -128,7 +128,7 @@
                 document.getElementById('fecha-fin').value = hoy;
                 escucharDatos(user.uid); 
             } else {
-                window.location.href = "login.html";
+                // Si falla, se queda aquí o maneja error
             }
         });
 
@@ -149,7 +149,6 @@
             return parseFloat(val.toString().replace(/[$,]/g, '')) || 0;
         }
 
-        // Normaliza formatos de fecha DD/MM/YYYY o ISO a YYYY-MM-DD
         function normalizarFecha(f) {
             if(!f) return "";
             if(f.includes('T')) return f.split('T')[0];
@@ -185,52 +184,50 @@
                 const fechaVentaNorm = normalizarFecha(v.fecha_venta || v.fecha);
                 const ventaEnRango = estaEnRango(fechaVentaNorm);
                 const totalVenta = parseNum(v.total || v.precio);
+                const tipoVenta = (v.tipo || "").toUpperCase();
 
-                // 1. Contabilizar la operación si la venta ocurrió en el rango
                 if (ventaEnRango) {
                     contadorOperaciones++;
                 }
 
-                // 2. Lógica de Ingresos (Lo que realmente entró a caja)
-                if (v.tipo === 'CONTADO') {
+                // Lógica de Ingresos Reales (Solo lo que entró físicamente)
+                if (tipoVenta === 'CONTADO') {
                     if (ventaEnRango) {
                         ingresosTotalesCaja += totalVenta;
                     }
-                } else if (v.tipo === 'CREDITO') {
-                    let totalAbonadoHistorico = 0;
-                    
-                    if (v.abonos && Array.isArray(v.abonos)) {
-                        v.abonos.forEach(ab => {
-                            const montoAbono = parseNum(ab.monto);
-                            totalAbonadoHistorico += montoAbono;
-                            
-                            // CRUCIAL: Sumar el abono a caja SI EL ABONO se hizo en el rango de fecha
-                            // sin importar si la venta es antigua.
-                            if (estaEnRango(ab.fecha)) {
-                                ingresosTotalesCaja += montoAbono;
-                            }
-                        });
-                    }
-                    
-                    // 3. Lógica de Cuentas por Cobrar (Saldo pendiente HOY)
-                    // Solo mostramos deuda pendiente si estamos viendo "Todo" o si la venta está en rango
-                    if (modoHistorialTotal || ventaEnRango) {
-                        const saldoPendiente = totalVenta - totalAbonadoHistorico;
-                        if (saldoPendiente > 0) {
-                            deudaPendienteTotal += saldoPendiente;
+                }
+
+                // Sumar abonos a la caja si ocurrieron en el rango de fecha
+                let totalAbonadoHistorico = 0;
+                if (v.abonos && Array.isArray(v.abonos)) {
+                    v.abonos.forEach(ab => {
+                        const montoAbono = parseNum(ab.monto);
+                        totalAbonadoHistorico += montoAbono;
+                        if (estaEnRango(ab.fecha)) {
+                            ingresosTotalesCaja += montoAbono;
                         }
+                    });
+                }
+
+                // Lógica de Cuentas por Cobrar (Lo pendiente hoy)
+                if (tipoVenta === 'CREDITO') {
+                    const saldoPendiente = totalVenta - totalAbonadoHistorico;
+                    if (saldoPendiente > 0) {
+                        deudaPendienteTotal += saldoPendiente;
                     }
                 }
             });
 
-            // 4. Egresos
             const egresosFiltrados = egresosData.filter(e => estaEnRango(e.fecha));
             let totalEgresos = egresosFiltrados.reduce((acc, e) => acc + parseNum(e.monto), 0);
 
             // Actualizar UI
             document.getElementById('subtotal-ventas').innerText = `$${ingresosTotalesCaja.toLocaleString('en-US', {minimumFractionDigits:2})}`;
             document.getElementById('subtotal-egresos').innerText = `$${totalEgresos.toLocaleString('en-US', {minimumFractionDigits:2})}`;
-            document.getElementById('total-utilidad').innerText = `$${(ingresosTotalesCaja - totalEgresos).toLocaleString('en-US', {minimumFractionDigits:2})}`;
+            
+            const utilidadCalculada = ingresosTotalesCaja - totalEgresos;
+            document.getElementById('total-utilidad').innerText = `$${utilidadCalculada.toLocaleString('en-US', {minimumFractionDigits:2})}`;
+            
             document.getElementById('total-credito').innerText = `$${deudaPendienteTotal.toLocaleString('en-US', {minimumFractionDigits:2})}`;
             document.getElementById('total-ventas').innerText = contadorOperaciones;
 
