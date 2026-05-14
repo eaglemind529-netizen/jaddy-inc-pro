@@ -1,0 +1,326 @@
+```html
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Productos LS - Catálogo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #ffffff;
+            color: #333;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* Buscador */
+        .search-container {
+            background: #f4f4f4;
+            border-radius: 12px;
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 16px;
+        }
+
+        .search-input {
+            background: transparent;
+            border: none;
+            outline: none;
+            width: 100%;
+            font-size: 16px;
+            color: #666;
+        }
+
+        /* Grid de productos */
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1px;
+            background-color: #f0f0f0; 
+            border-top: 1px solid #f0f0f0;
+        }
+
+        .product-item {
+            background: white;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+        
+        .product-item:active {
+            opacity: 0.7;
+        }
+
+        .image-wrapper {
+            width: 100%;
+            aspect-ratio: 1 / 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 12px;
+        }
+
+        .image-wrapper img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+
+        .price-old {
+            text-decoration: line-through;
+            color: #b0b0b0;
+            font-size: 13px;
+        }
+
+        .price-new {
+            color: #ff4d8d;
+            font-size: 22px;
+            font-weight: 800;
+            line-height: 1;
+        }
+
+        .badge-shipping {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            color: #00bfa5;
+            font-size: 11px;
+            font-weight: 800;
+            border: 1.5px solid #00bfa5;
+            padding: 3px 8px;
+            border-radius: 6px;
+            margin-top: 10px;
+            width: fit-content;
+            text-transform: uppercase;
+        }
+
+        /* Modal de Detalle */
+        #detailModal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: white;
+            z-index: 100;
+            overflow-y: auto;
+        }
+
+        .modal-active {
+            display: block !important;
+            animation: slideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+        }
+
+        .btn-whatsapp {
+            background: #25d366;
+            color: white;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .bottom-banner {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #fdf2f8;
+            color: #be185d;
+            text-align: center;
+            padding: 12px;
+            font-size: 12px;
+            font-weight: 700;
+            border-top: 1px solid #fbcfe8;
+            z-index: 50;
+        }
+    </style>
+</head>
+<body class="pb-20">
+
+    <!-- Header con el nuevo nombre -->
+    <nav class="flex items-center p-4 sticky top-0 bg-white z-40 border-b border-gray-50">
+        <button class="text-gray-800"><i data-lucide="menu" class="w-6 h-6"></i></button>
+        <h1 class="flex-grow text-center font-bold text-xl tracking-tight uppercase">Productos LS</h1>
+        <button class="text-gray-800"><i data-lucide="shopping-cart" class="w-6 h-6"></i></button>
+    </nav>
+
+    <!-- Buscador -->
+    <div class="search-container">
+        <i data-lucide="search" class="w-5 h-5 text-gray-400"></i>
+        <input type="text" id="searchInput" class="search-input" placeholder="Buscar en Productos LS...">
+    </div>
+
+    <!-- Lista de Productos -->
+    <div id="catalogContainer" class="products-grid">
+        <div class="col-span-2 py-24 text-center">
+            <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-pink-500 border-t-transparent"></div>
+        </div>
+    </div>
+
+    <!-- Modal de Información Completa -->
+    <div id="detailModal">
+        <div class="p-4 flex justify-between items-center sticky top-0 bg-white z-50 border-b border-gray-50">
+            <button onclick="closeDetail()" class="p-2"><i data-lucide="x" class="w-7 h-7"></i></button>
+            <span class="font-bold uppercase text-[10px] tracking-widest text-gray-400">Detalles de Producto</span>
+            <div class="w-11"></div>
+        </div>
+
+        <div id="modalContent" class="pb-32"></div>
+
+        <div class="fixed bottom-0 left-0 right-0 bg-white p-4 border-t border-gray-100 flex gap-3 z-[110]">
+            <button id="buyAction" class="flex-1 btn-whatsapp py-4 rounded-2xl flex items-center justify-center gap-2 shadow-lg shadow-green-500/20">
+                <i data-lucide="message-circle" class="w-5 h-5"></i>
+                Consultar en WhatsApp
+            </button>
+        </div>
+    </div>
+
+    <div class="bottom-banner">
+        Calidad garantizada en Productos LS
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
+        import { getFirestore, collection, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCrjjeOoXPOtJDXDfrHLOA4Ny0QW2zfVWk",
+            authDomain: "apps-d45d6.firebaseapp.com",
+            projectId: "apps-d45d6",
+            storageBucket: "apps-d45d6.firebasestorage.app",
+            messagingSenderId: "502648373937",
+            appId: "1:502648373937:web:8c3beaa2a6c9289a4d9890"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        let allProducts = [];
+
+        const formatDropbox = (url) => {
+            if (!url) return "https://via.placeholder.com/600?text=Productos+LS";
+            return url.trim().replace('dl=0', 'raw=1').replace('www.dropbox.com', 'dl.dropboxusercontent.com');
+        };
+
+        window.openDetail = (index) => {
+            const p = allProducts[index];
+            const img = formatDropbox(p.img);
+            const price = parseFloat(p.price || 0);
+            const priceOld = parseFloat(p.priceOld || price * 1.25);
+
+            document.getElementById('modalContent').innerHTML = `
+                <div class="bg-white flex justify-center p-6 border-b border-gray-50">
+                    <img src="${img}" class="max-h-[350px] object-contain" alt="${p.name}">
+                </div>
+                <div class="p-6">
+                    <div class="flex items-center gap-2 mb-3">
+                        <span class="bg-blue-100 text-blue-600 text-[9px] font-black px-2 py-1 rounded-full uppercase">Disponible</span>
+                        <span class="text-[10px] text-gray-400 font-bold uppercase">Productos LS</span>
+                    </div>
+                    
+                    <h2 class="text-2xl font-extrabold text-gray-900 leading-tight mb-2">${p.name}</h2>
+                    
+                    <div class="flex items-center gap-3 mb-8">
+                        <span class="text-3xl font-black text-[#ff4d8d]">$ ${price.toFixed(2)}</span>
+                        <span class="text-base text-gray-300 line-through font-bold">$ ${priceOld.toFixed(2)}</span>
+                    </div>
+
+                    <div class="space-y-6">
+                        <div class="grid grid-cols-2 gap-3">
+                            <div class="bg-gray-50 p-4 rounded-xl border border-gray-100">
+                                <p class="text-[9px] font-black text-gray-400 uppercase mb-1">Pagos</p>
+                                <p class="text-[11px] font-bold text-gray-700">Múltiples métodos</p>
+                            </div>
+                            <div class="bg-gray-50 p-4 rounded-xl border border-gray-100">
+                                <p class="text-[9px] font-black text-gray-400 uppercase mb-1">Envíos</p>
+                                <p class="text-[11px] font-bold text-gray-700">Seguros y rápidos</p>
+                            </div>
+                        </div>
+
+                        <div>
+                            <h3 class="font-black text-gray-900 mb-2 uppercase text-[10px] tracking-widest">Descripción</h3>
+                            <p class="text-gray-500 text-sm leading-relaxed">
+                                ${p.description || 'Consulta los detalles específicos de este producto con nuestro equipo.'}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('buyAction').onclick = () => {
+                const text = `¡Hola Productos LS! 👋 Me interesa: *${p.name}* ($${price.toFixed(2)}).`;
+                window.open(`https://wa.me/584120000000?text=${encodeURIComponent(text)}`, '_blank');
+            };
+
+            document.getElementById('detailModal').classList.add('modal-active');
+            document.body.style.overflow = 'hidden';
+            lucide.createIcons();
+        };
+
+        window.closeDetail = () => {
+            document.getElementById('detailModal').classList.remove('modal-active');
+            document.body.style.overflow = 'auto';
+        };
+
+        const renderProducts = (products) => {
+            const container = document.getElementById('catalogContainer');
+            container.innerHTML = "";
+
+            if (products.length === 0) {
+                container.innerHTML = `<div class="col-span-2 py-20 text-center text-gray-400 font-bold uppercase text-xs">No se encontraron productos</div>`;
+                return;
+            }
+
+            products.forEach((p, index) => {
+                const img = formatDropbox(p.img);
+                const price = parseFloat(p.price || 0);
+                const priceOld = parseFloat(p.priceOld || price * 1.25);
+
+                container.innerHTML += `
+                    <div class="product-item" onclick="openDetail(${index})">
+                        <div class="image-wrapper">
+                            <img src="${img}" alt="${p.name}" loading="lazy">
+                        </div>
+                        <div class="flex flex-col">
+                            <span class="price-old">$ ${priceOld.toFixed(2)}</span>
+                            <span class="price-new">$ ${price.toFixed(2)}</span>
+                            <h3 class="text-[13px] font-bold text-gray-800 line-clamp-2 mt-2 leading-tight">${p.name}</h3>
+                            <div class="badge-shipping">
+                                <i data-lucide="plus" class="w-3 h-3"></i>
+                                Ver más
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            lucide.createIcons();
+        };
+
+        onSnapshot(query(collection(db, "perfumes"), orderBy("createdAt", "desc")), (snap) => {
+            allProducts = [];
+            snap.forEach(doc => allProducts.push(doc.data()));
+            renderProducts(allProducts);
+        });
+
+        document.getElementById('searchInput').addEventListener('input', (e) => {
+            const term = e.target.value.toLowerCase();
+            const filtered = allProducts.filter(p => p.name.toLowerCase().includes(term));
+            renderProducts(filtered);
+        });
+
+        lucide.createIcons();
+    </script>
+</body>
+</html>
+
+```
