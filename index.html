@@ -55,7 +55,6 @@
         <div class="flex items-center gap-4">
             <div class="flex items-center gap-2">
                 <div class="w-2 h-2 bg-green-600 rounded-full animate-pulse"></div>
-                <!-- Aquí se muestra el nombre del usuario logueado -->
                 <span id="user-name-display" class="text-[8px] text-gray-500 font-bold uppercase tracking-widest">CARGANDO...</span>
             </div>
             <button onclick="cerrarSesion()" class="flex items-center justify-center w-8 h-8 rounded-full bg-white/5 border border-white/10 text-white/50 active:text-oro active:border-oro transition-all">
@@ -85,6 +84,13 @@
                 <a href="deudores.html" class="box-item">
                     <div class="icon-circle bg-white/5 border border-white/10 text-white"><i class="fas fa-hand-holding-dollar opacity-70"></i></div>
                     <span class="text-white font-black text-[11px] uppercase">Cartera</span>
+                </a>
+                <!-- ACCESO A CATÁLOGO DIGITAL AGREGADO AQUÍ -->
+                <a href="catalogo.html" class="box-item border-oro/30">
+                    <div class="icon-circle bg-oro/20 text-oro border border-oro/30 shadow-[0_0_15px_rgba(212,175,55,0.2)]">
+                        <i class="fas fa-book-open"></i>
+                    </div>
+                    <span class="texto-dorado font-black text-[11px] uppercase tracking-tighter">Catálogo Digital</span>
                 </a>
                 <a href="egresos.html" class="box-item">
                     <div class="icon-circle bg-oro/10 text-oro"><i class="fas fa-file-invoice-dollar"></i></div>
@@ -154,18 +160,11 @@
 
         onAuthStateChanged(auth, (user) => {
             if (user) {
-                // El usuario está identificado
                 document.getElementById('safety-overlay').style.display = 'none';
-                
-                // Mostramos su nombre en el header (ejemplo: juan@gmail.com -> JUAN)
                 const userName = user.email ? user.email.split('@')[0].toUpperCase() : "USUARIO";
                 document.getElementById('user-name-display').innerText = userName;
-
-                // IMPORTANTE: Guardamos el userId para que las otras páginas sepan qué datos cargar
                 sessionStorage.setItem('currentUserId', user.uid);
-                console.log("Sesión activa para ID:", user.uid);
             } else {
-                // Si no hay sesión, mandamos al login
                 window.location.replace('login.html');
             }
         });
