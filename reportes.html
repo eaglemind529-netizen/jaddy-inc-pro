@@ -1,4 +1,4 @@
-```html
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -9,7 +9,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root { --gold: #D4AF37; --bg: #050505; }
-        body { background: var(--bg); color: white; font-family: 'Inter', sans-serif; margin: 0; }
+        /* El body empieza oculto por seguridad, se activa solo con login real o bypass de desarrollo */
+        body { background: var(--bg); color: white; font-family: 'Inter', sans-serif; margin: 0; display: none; }
         .gold-border { border: 1px solid rgba(212, 175, 55, 0.2); }
         .stat-card { background: #0A0A0A; border: 1px solid #1A1A1A; border-radius: 20px; padding: 15px; }
         .input-field { background: #111; border: 1px solid #222; border-radius: 12px; padding: 12px; width: 100%; color: white; font-size: 13px; outline: none; }
@@ -24,6 +25,43 @@
     <div id="loading-screen">
         <div class="w-10 h-10 border-2 border-gold/20 border-t-gold rounded-full animate-spin mb-4"></div>
         <p class="text-gold text-[10px] font-black uppercase tracking-[0.5em]">Sincronizando Finanzas</p>
+    </div>
+
+    <!-- PANTALLA DE ACCESO EXCLUSIVA PARA EL MODO DESARROLLO (Invisible en producción) -->
+    <div id="dev-login-screen" class="hidden fixed inset-0 bg-black z-[9998] flex flex-col justify-center p-6">
+        <div class="bg-zinc-900 border border-zinc-800 p-6 rounded-[28px] gold-border shadow-2xl max-w-sm mx-auto w-full">
+            <div class="text-center mb-6">
+                <i class="fa-solid fa-bug text-[#D4AF37] text-2xl mb-2 animate-pulse"></i>
+                <h3 class="text-[#D4AF37] font-black uppercase text-xs tracking-[3px]">Modo de Desarrollo</h3>
+                <p class="text-[9px] text-zinc-500 font-bold uppercase tracking-widest mt-1">Jaddy Inc Sandbox</p>
+            </div>
+            
+            <div class="space-y-3">
+                <div>
+                    <label class="text-[9px] font-black text-zinc-400 uppercase ml-1 block mb-1">Correo de Administrador</label>
+                    <input type="email" id="dev-email" placeholder="admin@jaddyinc.com" class="w-full bg-black border border-zinc-800 p-3 rounded-xl text-white text-xs outline-none focus:border-amber-500">
+                </div>
+                <div>
+                    <label class="text-[9px] font-black text-zinc-400 uppercase ml-1 block mb-1">Contraseña</label>
+                    <input type="password" id="dev-pass" placeholder="••••••••" class="w-full bg-black border border-zinc-800 p-3 rounded-xl text-white text-xs outline-none focus:border-amber-500">
+                </div>
+                
+                <button id="btn-dev-login" class="w-full bg-[#D4AF37] text-black font-black py-3 rounded-xl uppercase text-xs active:scale-95 transition-transform mt-2">
+                    Iniciar Sesión Real
+                </button>
+
+                <div class="relative flex py-2 items-center">
+                    <div class="flex-grow border-t border-zinc-800"></div>
+                    <span class="flex-shrink mx-3 text-[8px] text-zinc-600 font-black uppercase">O también</span>
+                    <div class="flex-grow border-t border-zinc-800"></div>
+                </div>
+
+                <button id="btn-dev-bypass" class="w-full bg-transparent text-[#D4AF37] border border-[#D4AF37]/30 font-black py-3 rounded-xl uppercase text-xs active:scale-95 transition-transform">
+                    Omitir y Ver Maqueta Local
+                </button>
+            </div>
+            <p class="text-[8px] text-center text-zinc-600 font-bold uppercase tracking-wider mt-6">Este panel solo se muestra en el entorno de pruebas.</p>
+        </div>
     </div>
 
     <div class="p-4">
@@ -72,9 +110,16 @@
         </div>
 
         <div class="grid grid-cols-2 gap-3 mb-8">
-            <div class="stat-card">
-                <p class="text-[7px] text-gray-500 font-black uppercase mb-1">Cuentas por Cobrar</p>
-                <p id="total-credito" class="text-lg font-black text-orange-400">$0.00</p>
+            <!-- Tarjeta con Botón de Detalle Integrado -->
+            <div class="stat-card cursor-pointer border border-[#1A1A1A] hover:border-gold/30 active:scale-95 transition-all flex flex-col justify-between" onclick="toggleVendedoresModal(true)">
+                <div>
+                    <p class="text-[7px] text-gray-500 font-black uppercase mb-1">Cuentas por Cobrar</p>
+                    <p id="total-credito" class="text-lg font-black text-orange-400">$0.00</p>
+                </div>
+                <div class="flex items-center gap-1 text-[7px] text-gold font-black uppercase tracking-widest mt-2 pt-1 border-t border-white/5">
+                    <i class="fa-solid fa-users text-[8px]"></i>
+                    <span>Ver por Vendedor</span>
+                </div>
             </div>
             <div class="stat-card">
                 <p class="text-[7px] text-gray-500 font-black uppercase mb-1">Operaciones</p>
@@ -95,9 +140,30 @@
         </div>
     </div>
 
+    <!-- PANTALLA COMPLETA: Cuentas por Cobrar por Vendedor (Modal Premium) -->
+    <div id="vendedores-modal" class="fixed inset-0 z-[100] hidden flex flex-col bg-[#050505]/98 backdrop-blur-md">
+        <header class="p-6 flex justify-between items-center border-b border-zinc-900 bg-black">
+            <div class="flex items-center gap-3">
+                <i class="fas fa-users text-gold text-lg"></i>
+                <h2 class="font-black text-white italic text-sm tracking-tight uppercase">Cuentas por Vendedor</h2>
+            </div>
+            <button onclick="toggleVendedoresModal(false)" class="w-9 h-9 rounded-full bg-[#111] border border-white/5 flex items-center justify-center text-zinc-400 hover:text-gold active:scale-90 transition-all">
+                <i class="fas fa-times text-xs"></i>
+            </button>
+        </header>
+        <div id="lista-deudas-vendedores" class="flex-1 overflow-y-auto p-5 space-y-3 pb-28">
+            <p class="text-[9px] text-gray-700 text-center uppercase py-4 italic">Cargando cuentas...</p>
+        </div>
+    </div>
+
+    <!-- Indicador de Sandbox flotante -->
+    <div id="dev-badge" class="hidden fixed bottom-24 right-4 bg-gold/10 border border-gold/30 text-gold text-[8px] font-black px-3 py-1.5 rounded-full uppercase tracking-wider backdrop-blur-md">
+        Sandbox de Pruebas
+    </div>
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getAuth, onAuthStateChanged, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
         import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         const firebaseConfig = {
@@ -117,20 +183,106 @@
         let userId = null;
         let ventasData = [];
         let egresosData = [];
+        let vendedoresData = []; // Colección para almacenar los vendedores y sus números de teléfono
         let modoHistorialTotal = false;
+
+        // Identificamos si estamos en el Canvas, localhost o URL de desarrollo local
+        const esEntornoPruebas = window.location.hostname.includes("googleusercontent.com") || 
+                                 window.location.hostname === "localhost" || 
+                                 window.location.hostname === "127.0.0.1" || 
+                                 window.location.hostname === "";
 
         onAuthStateChanged(auth, (user) => { 
             if(user){ 
                 userId = user.uid;
+                document.body.style.display = "block";
                 document.getElementById('loading-screen').style.display = "none";
+                document.getElementById('dev-login-screen').style.display = "none";
+                
                 const hoy = new Date().toISOString().split('T')[0];
                 document.getElementById('fecha-inicio').value = hoy;
                 document.getElementById('fecha-fin').value = hoy;
                 escucharDatos(user.uid); 
             } else {
-                // Si falla, se queda aquí o maneja error
+                if (esEntornoPruebas) {
+                    // En Sandbox de pruebas levantamos la interfaz y mostramos el acceso directo
+                    document.getElementById('loading-screen').style.display = "none";
+                    document.getElementById('dev-login-screen').style.display = "flex";
+                    document.body.style.display = "block";
+                } else {
+                    // En producción real redirige a la pantalla de logueo estricto
+                    window.location.href = "login.html";
+                }
             }
         });
+
+        // Eventos del portal de desarrollo
+        if (esEntornoPruebas) {
+            document.getElementById('btn-dev-login').addEventListener('click', async () => {
+                const email = document.getElementById('dev-email').value.trim();
+                const pass = document.getElementById('dev-pass').value.trim();
+                if (!email || !pass) return alert("Completa las credenciales reales");
+                try {
+                    document.getElementById('btn-dev-login').textContent = "AUTENTICANDO...";
+                    await signInWithEmailAndPassword(auth, email, pass);
+                } catch (error) {
+                    alert("Error: " + error.message);
+                    document.getElementById('btn-dev-login').textContent = "Iniciar Sesión Real";
+                }
+            });
+
+            document.getElementById('btn-dev-bypass').addEventListener('click', () => {
+                document.getElementById('dev-login-screen').style.display = "none";
+                document.getElementById('dev-badge').classList.remove('hidden');
+                
+                const hoy = new Date().toISOString().split('T')[0];
+                document.getElementById('fecha-inicio').value = hoy;
+                document.getElementById('fecha-fin').value = hoy;
+
+                // Datos de vendedores simulados para Sandbox
+                vendedoresData = [
+                    { id: "V1", nombre: "MARÍA GONZÁLEZ", telefono: "584121112233" },
+                    { id: "V2", nombre: "CARLOS MENDOZA", telefono: "584244445566" },
+                    { id: "V3", nombre: "JOSÉ RODRÍGUEZ", telefono: "" }
+                ];
+
+                // Cargar datos simulados de volumen real enriquecidos con vendedor para testear el desglose de deudas
+                ventasData = [
+                    { id: "V1", total: 1200.00, tipo: "CONTADO", fecha: hoy, abonos: [], vendedor: "MARÍA GONZÁLEZ" },
+                    { id: "V2", total: 500.00, tipo: "CREDITO", fecha: hoy, abonos: [{ monto: 200, fecha: hoy }], vendedor: "MARÍA GONZÁLEZ", cliente: "ALBERTO ROJAS" }, // María tiene $300 pendientes
+                    { id: "V3", total: 350.00, tipo: "CONTADO", fecha: hoy, abonos: [], vendedor: "CARLOS MENDOZA" },
+                    { id: "V4", total: 800.00, tipo: "CREDITO", fecha: hoy, abonos: [], vendedor: "CARLOS MENDOZA", cliente: "RESTAURANTE EL SOL" }, // Carlos tiene $800 pendientes
+                    { id: "V5", total: 400.00, tipo: "CREDITO", fecha: hoy, abonos: [{ monto: 150, fecha: hoy }], vendedor: "JOSÉ RODRÍGUEZ", cliente: "SARA GÓMEZ" } // José tiene $250 pendientes
+                ];
+
+                egresosData = [
+                    { id: "E1", categoria: "personal", monto: 85.00, detalle: "ALMUERZO DE ADMINISTRADOR", fecha: hoy },
+                    { id: "E2", categoria: "empleados", monto: 150.00, detalle: "PAGO QUINCENA MARÍA GONZÁLEZ", fecha: hoy },
+                    { id: "E3", categoria: "servicios", monto: 45.00, detalle: "PAGO ELECTRICIDAD JADDY INC", fecha: hoy }
+                ];
+
+                procesarTodo();
+            });
+        }
+
+        // CONTROL GLOBAL DE PANTALLA COMPLETA
+        window.toggleVendedoresModal = (show) => {
+            const modal = document.getElementById('vendedores-modal');
+            if (show) {
+                modal.classList.remove('hidden');
+            } else {
+                modal.classList.add('hidden');
+            }
+        };
+
+        // CONTROL DE EXPANSIÓN DE CLIENTES POR VENDEDOR
+        window.toggleVendedorDetalle = (id, event) => {
+            if (event) event.stopPropagation();
+            const element = document.getElementById('det-vend-' + id);
+            if (element) {
+                element.classList.toggle('hidden');
+            }
+        };
 
         function escucharDatos(uid) {
             onSnapshot(collection(db, 'usuarios', uid, 'ventas_realizadas'), snap => {
@@ -140,6 +292,12 @@
 
             onSnapshot(collection(db, 'artifacts', appIdFinanzas, 'users', uid, 'egresos'), snap => {
                 egresosData = snap.docs.map(d => ({id: d.id, ...d.data()}));
+                procesarTodo();
+            });
+
+            // Sincronizar la colección de vendedores real para obtener los números telefónicos
+            onSnapshot(collection(db, 'usuarios', uid, 'vendedores'), snap => {
+                vendedoresData = snap.docs.map(d => ({id: d.id, ...d.data()}));
                 procesarTodo();
             });
         }
@@ -166,6 +324,23 @@
             procesarTodo();
         };
 
+        // Función global para enviar mensaje de WhatsApp personalizado al vendedor correspondiente
+        window.enviarWhatsAppVendedor = (nombre, monto, telefono, event) => {
+            if (event) event.stopPropagation();
+            const mensaje = encodeURIComponent(
+                `🏆 *REPORTE DE COBRO | JADDY INC*\n\n` +
+                `👋 Hola *${nombre}*,\n\n` +
+                `💼 Te informamos que cuentas con un saldo pendiente por cobrar en la calle de:\n` +
+                `💰 *💵 $${monto.toLocaleString('en-US', {minimumFractionDigits:2})}*\n\n` +
+                `Por favor, realiza el seguimiento correspondiente para el retorno de caja.\n\n` +
+                `_Luxury Finanzas System_`
+            );
+            
+            // Si el vendedor tiene cargado el número, enviamos directo, de lo contrario abrimos selección manual
+            const url = telefono ? `https://wa.me/${telefono}?text=${mensaje}` : `https://wa.me/?text=${mensaje}`;
+            window.open(url);
+        };
+
         function procesarTodo() {
             const inicio = document.getElementById('fecha-inicio').value;
             const fin = document.getElementById('fecha-fin').value;
@@ -179,12 +354,16 @@
             let ingresosTotalesCaja = 0;
             let deudaPendienteTotal = 0;
             let contadorOperaciones = 0;
+            
+            // Estructura para agrupar deudas por vendedor (Monto Total + Listado de Ventas)
+            const deudasPorVendedor = {};
 
             ventasData.forEach(v => {
                 const fechaVentaNorm = normalizarFecha(v.fecha_venta || v.fecha);
                 const ventaEnRango = estaEnRango(fechaVentaNorm);
                 const totalVenta = parseNum(v.total || v.precio);
                 const tipoVenta = (v.tipo || "").toUpperCase();
+                const vendedorName = (v.vendedor || "SIN ASIGNAR").toUpperCase();
 
                 if (ventaEnRango) {
                     contadorOperaciones++;
@@ -214,6 +393,24 @@
                     const saldoPendiente = totalVenta - totalAbonadoHistorico;
                     if (saldoPendiente > 0) {
                         deudaPendienteTotal += saldoPendiente;
+                        
+                        // Inicializar agrupado si no existe
+                        if (!deudasPorVendedor[vendedorName]) {
+                            deudasPorVendedor[vendedorName] = { total: 0, ventas: [] };
+                        }
+                        
+                        // Acumular la deuda líquida por vendedor
+                        deudasPorVendedor[vendedorName].total += saldoPendiente;
+                        
+                        // Registrar información detallada del cliente deudor
+                        deudasPorVendedor[vendedorName].ventas.push({
+                            cliente: v.cliente || v.nombre_cliente || v.comprador || "CLIENTE SIN NOMBRE",
+                            totalOriginal: totalVenta,
+                            abonado: totalAbonadoHistorico,
+                            saldo: saldoPendiente,
+                            fecha: fechaVentaNorm,
+                            idVenta: v.id
+                        });
                     }
                 }
             });
@@ -221,7 +418,7 @@
             const egresosFiltrados = egresosData.filter(e => estaEnRango(e.fecha));
             let totalEgresos = egresosFiltrados.reduce((acc, e) => acc + parseNum(e.monto), 0);
 
-            // Actualizar UI
+            // Actualizar UI General
             document.getElementById('subtotal-ventas').innerText = `$${ingresosTotalesCaja.toLocaleString('en-US', {minimumFractionDigits:2})}`;
             document.getElementById('subtotal-egresos').innerText = `$${totalEgresos.toLocaleString('en-US', {minimumFractionDigits:2})}`;
             
@@ -231,6 +428,74 @@
             document.getElementById('total-credito').innerText = `$${deudaPendienteTotal.toLocaleString('en-US', {minimumFractionDigits:2})}`;
             document.getElementById('total-ventas').innerText = contadorOperaciones;
 
+            // Renderizar la lista de deudas en la PANTALLA COMPLETA con su botón de WhatsApp correspondiente e interactividad de expansión
+            const listaDeudasVendedores = document.getElementById('lista-deudas-vendedores');
+            const arrayDeudasVendedores = Object.keys(deudasPorVendedor).map(vendedor => {
+                // Buscamos el número de teléfono del vendedor sincronizado para cargarlo en el botón
+                const matchVendedor = vendedoresData.find(v => v.nombre.toUpperCase() === vendedor.toUpperCase());
+                return {
+                    nombre: vendedor,
+                    monto: deudasPorVendedor[vendedor].total,
+                    ventas: deudasPorVendedor[vendedor].ventas,
+                    porcentaje: deudaPendienteTotal > 0 ? (deudasPorVendedor[vendedor].total / deudaPendienteTotal) * 100 : 0,
+                    telefono: matchVendedor ? matchVendedor.telefono : "" // Sincroniza el número de WhatsApp real
+                };
+            }).sort((a, b) => b.monto - a.monto);
+
+            if (arrayDeudasVendedores.length === 0) {
+                listaDeudasVendedores.innerHTML = '<p class="text-[9px] text-gray-700 text-center uppercase py-10 italic">No hay deudas activas en la calle</p>';
+            } else {
+                listaDeudasVendedores.innerHTML = arrayDeudasVendedores.map(dv => {
+                    const safeVendedorId = dv.nombre.replace(/[^A-Z0-9]/ig, '_');
+                    
+                    return `
+                    <div class="bg-[#0A0A0A] p-5 rounded-2xl border border-zinc-900 space-y-3 shadow-lg cursor-pointer hover:border-zinc-800 transition-colors" onclick="toggleVendedorDetalle('${safeVendedorId}', event)">
+                        <div class="flex justify-between items-center text-xs font-black uppercase tracking-wider">
+                            <div class="flex items-center gap-2">
+                                <span class="w-2.5 h-2.5 rounded-full bg-orange-400 animate-pulse"></span>
+                                <span class="text-white">${dv.nombre}</span>
+                            </div>
+                            <div class="text-right flex items-center gap-2.5">
+                                <div class="mr-1">
+                                    <span class="text-orange-400 font-bold block">$${dv.monto.toLocaleString('en-US', {minimumFractionDigits:2})}</span>
+                                    <span class="text-[9px] text-gray-500 font-normal">(${dv.porcentaje.toFixed(1)}%)</span>
+                                </div>
+                                <!-- BOTÓN WHATSAPP DEL VENDEDOR -->
+                                <button onclick="enviarWhatsAppVendedor('${dv.nombre}', ${dv.monto}, '${dv.telefono}', event)" class="bg-[#25D366] text-black font-black px-3 py-2 rounded-xl flex items-center gap-1 active:scale-90 transition-all text-[8px] tracking-tight">
+                                    <i class="fa-brands fa-whatsapp text-xs"></i>
+                                    <span>Cobro</span>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="w-full bg-[#111] h-2 rounded-full overflow-hidden border border-white/5">
+                            <div style="width: ${dv.porcentaje}%" class="bg-orange-400 h-full rounded-full shadow-[0_0_8px_rgba(251,146,60,0.4)]"></div>
+                        </div>
+
+                        <!-- DESGLOSE EXPANDIBLE DE CLIENTES DEUDORES -->
+                        <div id="det-vend-${safeVendedorId}" class="hidden pt-4 border-t border-zinc-900 space-y-2" onclick="event.stopPropagation()">
+                            <p class="text-[8px] text-gold font-black uppercase tracking-widest mb-1"><i class="fa-solid fa-list mr-1"></i> Cartera de Clientes Deudores</p>
+                            ${dv.ventas.map(vt => `
+                                <div class="bg-black/40 p-3 rounded-xl border border-zinc-950 flex justify-between items-center hover:border-zinc-900 transition-colors">
+                                    <div class="space-y-1">
+                                        <p class="text-[10px] font-black text-zinc-100 uppercase tracking-wide">${vt.cliente}</p>
+                                        <div class="flex gap-2 text-[7px] font-bold text-gray-500 uppercase">
+                                            <span>Fecha: ${new Date(vt.fecha).toLocaleDateString()}</span>
+                                            <span>•</span>
+                                            <span>Original: $${vt.totalOriginal.toFixed(2)}</span>
+                                            <span>•</span>
+                                            <span>Abonado: $${vt.abonado.toFixed(2)}</span>
+                                        </div>
+                                    </div>
+                                    <p class="text-[10px] font-black text-orange-400 font-mono">$${vt.saldo.toFixed(2)}</p>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                    `;
+                }).join('');
+            }
+
+            // Renderizar movimientos de egresos
             const listaE = document.getElementById('lista-egresos');
             if(egresosFiltrados.length === 0) {
                 listaE.innerHTML = '<p class="text-[9px] text-gray-700 text-center uppercase py-4 italic">Sin movimientos registrados</p>';
