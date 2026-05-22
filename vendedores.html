@@ -1,4 +1,4 @@
-
+```html
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root { --gold: #D4AF37; --bg: #050505; }
-        /* El body empieza oculto por seguridad, se activa solo con login real */
+        /* El body empieza oculto por seguridad, se activa solo con login real o bypass de desarrollo */
         body { background: var(--bg); color: white; font-family: 'Inter', sans-serif; margin: 0; display: none; }
         .gold-border { border: 1px solid rgba(212, 175, 55, 0.2); }
         .input-field { background: #111; border: 1px solid #222; border-radius: 12px; padding: 14px; width: 100%; color: white; font-size: 14px; font-weight: bold; text-transform: uppercase; outline: none; }
@@ -42,6 +42,43 @@
         <p class="text-gold text-[10px] font-black uppercase tracking-[0.5em]">JADDY INC</p>
     </div>
 
+    <!-- PANTALLA DE ACCESO EXCLUSIVA PARA EL MODO DESARROLLO (Invisible en producción) -->
+    <div id="dev-login-screen" class="hidden fixed inset-0 bg-[#050505] z-[9998] flex flex-col justify-center p-6">
+        <div class="bg-[#0A0A0A] p-6 rounded-[28px] gold-border shadow-2xl max-w-sm mx-auto w-full">
+            <div class="text-center mb-6">
+                <i class="fa-solid fa-bug text-gold text-2xl mb-2"></i>
+                <h3 class="text-gold font-black uppercase text-xs tracking-[3px]">Modo de Desarrollo</h3>
+                <p class="text-[9px] text-gray-500 font-bold uppercase tracking-widest mt-1">Jaddy Inc Sandbox</p>
+            </div>
+            
+            <div class="space-y-3">
+                <div>
+                    <label class="text-[9px] font-black text-gray-400 uppercase ml-1 block mb-1">Correo de Administrador</label>
+                    <input type="email" id="dev-email" placeholder="admin@jaddyinc.com" class="input-field normal-case font-normal text-xs">
+                </div>
+                <div>
+                    <label class="text-[9px] font-black text-gray-400 uppercase ml-1 block mb-1">Contraseña</label>
+                    <input type="password" id="dev-pass" placeholder="••••••••" class="input-field normal-case font-normal text-xs">
+                </div>
+                
+                <button id="btn-dev-login" class="w-full bg-white text-black font-black py-3.5 rounded-xl uppercase text-xs active:scale-95 transition-transform mt-2">
+                    Iniciar Sesión Real
+                </button>
+
+                <div class="relative flex py-2 items-center">
+                    <div class="flex-grow border-t border-white/5"></div>
+                    <span class="flex-shrink mx-3 text-[8px] text-gray-600 font-black uppercase">O también</span>
+                    <div class="flex-grow border-t border-white/5"></div>
+                </div>
+
+                <button id="btn-dev-bypass" class="w-full bg-transparent text-gold border border-gold/30 font-black py-3.5 rounded-xl uppercase text-xs active:scale-95 transition-transform">
+                    Omitir y Ver Maqueta Local
+                </button>
+            </div>
+            <p class="text-[8px] text-center text-gray-600 font-bold uppercase tracking-wider mt-6">Este panel solo se muestra en el entorno de pruebas.</p>
+        </div>
+    </div>
+
     <header class="flex justify-between items-center mb-6">
         <button onclick="window.location.href='index.html'" class="text-[10px] font-black border border-gold/30 px-4 py-2 rounded-full text-gold uppercase">← Inicio</button>
         <div id="statusDot" class="w-3 h-3 rounded-full bg-red-600 shadow-[0_0_10px_rgba(220,38,38,0.5)]"></div>
@@ -70,8 +107,8 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, onSnapshot, collection, query, orderBy, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getAuth, onAuthStateChanged, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, updateDoc, onSnapshot, collection, query, orderBy, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCrjjeOoXPOtJDXDfrHLOA4Ny0QW2zfVWk",
@@ -89,20 +126,71 @@
         let userId = null;
         let todasLasVentas = [];
         let todosLosVendedores = [];
+        let vendedorEditandoId = null; // Almacena el ID del vendedor que se está editando actualmente
 
-        // ESCUCHA DE SESIÓN (Solo permite usuarios logueados de verdad)
+        // Identificamos si estamos en el Canvas, localhost o URL de desarrollo local
+        const esEntornoPruebas = window.location.hostname.includes("googleusercontent.com") || 
+                                 window.location.hostname === "localhost" || 
+                                 window.location.hostname === "127.0.0.1" || 
+                                 window.location.hostname === "";
+
+        // ESCUCHA DE SESIÓN ORIGINAL
         onAuthStateChanged(auth, (user) => {
             if (user && !user.isAnonymous) {
+                // Si el usuario se autentica de verdad (en prod o dev)
                 userId = user.uid;
                 document.body.style.display = "block";
                 document.getElementById('loading-screen').style.display = "none";
+                document.getElementById('dev-login-screen').style.display = "none";
                 document.getElementById('statusDot').style.backgroundColor = "#22c55e";
                 escucharDatosPrivados();
             } else {
-                // Si no hay usuario de Login, te manda a loguearte, NO crea anónimos
-                window.location.href = "login.html";
+                if (esEntornoPruebas) {
+                    // EN DESARROLLO: En lugar de redirigir a login.html, mostramos el portal interno de pruebas
+                    document.getElementById('loading-screen').style.display = "none";
+                    document.getElementById('dev-login-screen').style.display = "flex";
+                    document.body.style.display = "block";
+                } else {
+                    // EN PRODUCCIÓN: Mantiene la seguridad estricta y te envía al login original
+                    window.location.href = "login.html";
+                }
             }
         });
+
+        // Configuración de los eventos del Panel de Desarrollo (solo activos en desarrollo)
+        if (esEntornoPruebas) {
+            // Opción 1: Iniciar sesión real en Firebase directamente desde esta pantalla
+            document.getElementById('btn-dev-login').addEventListener('click', async () => {
+                const email = document.getElementById('dev-email').value.trim();
+                const pass = document.getElementById('dev-pass').value.trim();
+                if (!email || !pass) return alert("Por favor, llena los datos de acceso");
+
+                try {
+                    document.getElementById('btn-dev-login').textContent = "AUTENTICANDO...";
+                    await signInWithEmailAndPassword(auth, email, pass);
+                } catch (error) {
+                    alert("Error de acceso real: " + error.message);
+                    document.getElementById('btn-dev-login').textContent = "Iniciar Sesión Real";
+                }
+            });
+
+            // Opción 2: Omitir inicio de sesión (Bypass local) para ver el diseño y maquetas al instante
+            document.getElementById('btn-dev-bypass').addEventListener('click', () => {
+                document.getElementById('dev-login-screen').style.display = "none";
+                document.getElementById('statusDot').style.backgroundColor = "#eab308"; // Color dorado/advertencia de bypass local
+                
+                // Cargamos datos simulados de estructura idéntica para apreciar el diseño
+                todosLosVendedores = [
+                    { id: "MOCK-1", codigo: "VEN-01", nombre: "VENDEDOR EJEMPLO A", ubicacion: "ZONA NORTE", telefono: "584120000000" },
+                    { id: "MOCK-2", codigo: "VEN-02", nombre: "VENDEDOR EJEMPLO B", ubicacion: "ZONA SUR", telefono: "584240000000" }
+                ];
+                todasLasVentas = [
+                    { id: "V-1", vendedor: "VENDEDOR EJEMPLO A", total: 150.00, tipo: "CONTADO", timestamp: new Date().toISOString() },
+                    { id: "V-2", vendedor: "VENDEDOR EJEMPLO B", total: 45.00, tipo: "CREDITO", timestamp: new Date().toISOString() }
+                ];
+                renderizarTodo();
+            });
+        }
 
         function escucharDatosPrivados() {
             // Sincronizar VENTAS
@@ -119,29 +207,100 @@
         }
 
         window.registrarVendedor = async () => {
-            if(!userId) return;
             const codigo = document.getElementById('vendedor-codigo').value.trim().toUpperCase();
             const nombre = document.getElementById('vendedor-nombre').value.trim().toUpperCase();
             const ubicacion = document.getElementById('vendedor-ubicacion').value.trim().toUpperCase();
             const tel = document.getElementById('vendedor-telefono').value.trim();
             if(!nombre || !codigo) return alert("Datos incompletos");
 
-            try {
-                const vId = "VEN-" + Date.now();
-                await setDoc(doc(db, "usuarios", userId, "vendedores", vId), {
-                    id: vId, codigo, nombre, ubicacion, telefono: tel, fechaRegistro: new Date().toISOString()
-                });
+            if (userId) {
+                // Registro Real en Base de Datos
+                try {
+                    const vId = "VEN-" + Date.now();
+                    await setDoc(doc(db, "usuarios", userId, "vendedores", vId), {
+                        id: vId, codigo, nombre, ubicacion, telefono: tel, fechaRegistro: new Date().toISOString()
+                    });
+                    document.querySelectorAll('input').forEach(i => i.value = "");
+                } catch (e) { alert("Error: " + e.message); }
+            } else {
+                // Registro local simulado en modo bypass
+                const mockId = "MOCK-" + Date.now();
+                todosLosVendedores.push({ id: mockId, codigo, nombre, ubicacion, telefono: tel });
+                renderizarTodo();
                 document.querySelectorAll('input').forEach(i => i.value = "");
-            } catch (e) { alert("Error: " + e.message); }
+            }
         };
 
         window.toggleDetalle = (id) => {
+            // Si está en modo edición, evitamos que se colapse al hacer clic accidental fuera de los inputs
+            if (vendedorEditandoId === id) return;
             document.getElementById('det-' + id)?.classList.toggle('active');
         };
 
         window.eliminarVendedor = async (vId) => {
             if(confirm("¿Eliminar vendedor?")) {
-                await deleteDoc(doc(db, "usuarios", userId, "vendedores", vId));
+                if (userId) {
+                    await deleteDoc(doc(db, "usuarios", userId, "vendedores", vId));
+                } else {
+                    todosLosVendedores = todosLosVendedores.filter(v => v.id !== vId);
+                    renderizarTodo();
+                }
+            }
+        };
+
+        // Activa el estado de edición para una tarjeta específica
+        window.activarEdicion = (vId, event) => {
+            if (event) event.stopPropagation();
+            vendedorEditandoId = vId;
+            renderizarTodo();
+        };
+
+        // Cancela la edición y restaura la vista normal
+        window.cancelarEdicion = (event) => {
+            if (event) event.stopPropagation();
+            vendedorEditandoId = null;
+            renderizarTodo();
+        };
+
+        // Guarda los cambios realizados en el vendedor (Firebase o Memoria Local)
+        window.guardarEdicion = async (vId, event) => {
+            if (event) event.stopPropagation();
+            
+            const codigo = document.getElementById(`edit-codigo-${vId}`).value.trim().toUpperCase();
+            const nombre = document.getElementById(`edit-nombre-${vId}`).value.trim().toUpperCase();
+            const ubicacion = document.getElementById(`edit-ubicacion-${vId}`).value.trim().toUpperCase();
+            const tel = document.getElementById(`edit-telefono-${vId}`).value.trim();
+
+            if (!nombre || !codigo) return alert("Nombre y Código son campos obligatorios");
+
+            if (userId) {
+                // Actualización Real en Firebase Firestore
+                try {
+                    await updateDoc(doc(db, "usuarios", userId, "vendedores", vId), {
+                        codigo,
+                        nombre,
+                        ubicacion,
+                        telefono: tel
+                    });
+                    vendedorEditandoId = null;
+                    renderizarTodo();
+                } catch (e) {
+                    alert("Error al actualizar: " + e.message);
+                }
+            } else {
+                // Actualización local para certificar la experiencia visual en el Sandbox
+                const index = todosLosVendedores.findIndex(v => v.id === vId);
+                if (index !== -1) {
+                    todosLosVendedores[index] = {
+                        ...todosLosVendedores[index],
+                        codigo,
+                        nombre,
+                        ubicacion,
+                        telefono: tel
+                    };
+                }
+                vendedorEditandoId = null;
+                renderizarTodo();
             }
         };
 
@@ -166,6 +325,9 @@
                 const deudas = ventasV.filter(s => s.tipo === 'CREDITO');
                 const totalDeuda = deudas.reduce((acc, curr) => acc + parseFloat(curr.total || 0), 0);
 
+                const estaEditando = v.id === vendedorEditandoId;
+                const activeClass = estaEditando ? 'active' : '';
+
                 return `
                 <div class="vendor-card" onclick="toggleDetalle('${v.id}')">
                     <div class="flex items-center gap-4">
@@ -183,21 +345,42 @@
                         </div>
                     </div>
 
-                    <div id="det-${v.id}" class="detalle-vendedor mt-6 pt-6 border-t border-white/5" onclick="event.stopPropagation()">
-                        <div class="grid grid-cols-2 gap-3 mb-6">
-                            <div class="stat-box">
-                                <p class="text-[7px] text-gray-500 font-black uppercase mb-1">Cuentas Pendientes</p>
-                                <p class="text-lg font-black text-red-500">$${totalDeuda.toFixed(2)}</p>
+                    <div id="det-${v.id}" class="detalle-vendedor mt-6 pt-6 border-t border-white/5 ${activeClass}" onclick="event.stopPropagation()">
+                        ${estaEditando ? `
+                            <!-- FORMULARIO DE EDICIÓN EN LÍNEA -->
+                            <div class="space-y-3 mb-4">
+                                <p class="text-[8px] text-gold font-black uppercase tracking-wider mb-2">Editar Vendedor</p>
+                                <div class="grid grid-cols-3 gap-2">
+                                    <input type="text" id="edit-codigo-${v.id}" value="${v.codigo}" placeholder="CÓDIGO" class="input-field col-span-1 py-2 text-xs">
+                                    <input type="text" id="edit-nombre-${v.id}" value="${v.nombre}" placeholder="Nombre" class="input-field col-span-2 py-2 text-xs">
+                                </div>
+                                <input type="text" id="edit-ubicacion-${v.id}" value="${v.ubicacion || ''}" placeholder="Ubicación / Zona" class="input-field py-2 text-xs">
+                                <input type="tel" id="edit-telefono-${v.id}" value="${v.telefono || ''}" placeholder="WhatsApp" class="input-field py-2 text-xs">
                             </div>
-                            <div class="stat-box">
-                                <p class="text-[7px] text-gray-500 font-black uppercase mb-1">Total Ventas</p>
-                                <p class="text-lg font-black text-blue-400">${ventasV.length}</p>
+                            <div class="flex justify-end gap-2">
+                                <button onclick="cancelarEdicion(event)" class="text-[9px] font-black text-gray-400 border border-white/10 px-4 py-2 rounded-xl uppercase">Cancelar</button>
+                                <button onclick="guardarEdicion('${v.id}', event)" class="text-[9px] font-black bg-white text-black px-5 py-2 rounded-xl uppercase">Guardar</button>
                             </div>
-                        </div>
-                        <div class="flex justify-between items-center bg-white/5 p-4 rounded-2xl">
-                            <div class="text-[10px] font-bold">${v.telefono || 'SIN TELÉFONO'}</div>
-                            <button onclick="eliminarVendedor('${v.id}')" class="text-[8px] font-black text-red-700 uppercase">Eliminar</button>
-                        </div>
+                        ` : `
+                            <!-- VISTA NORMAL DE RENDIMIENTO -->
+                            <div class="grid grid-cols-2 gap-3 mb-6">
+                                <div class="stat-box">
+                                    <p class="text-[7px] text-gray-500 font-black uppercase mb-1">Cuentas Pendientes</p>
+                                    <p class="text-lg font-black text-red-500">$${totalDeuda.toFixed(2)}</p>
+                                </div>
+                                <div class="stat-box">
+                                    <p class="text-[7px] text-gray-500 font-black uppercase mb-1">Total Ventas</p>
+                                    <p class="text-lg font-black text-blue-400">${ventasV.length}</p>
+                                </div>
+                            </div>
+                            <div class="flex justify-between items-center bg-white/5 p-4 rounded-2xl">
+                                <div class="text-[10px] font-bold">${v.telefono || 'SIN TELÉFONO'}</div>
+                                <div class="flex gap-4">
+                                    <button onclick="activarEdicion('${v.id}', event)" class="text-[8px] font-black text-gold uppercase">Editar</button>
+                                    <button onclick="eliminarVendedor('${v.id}')" class="text-[8px] font-black text-red-700 uppercase">Eliminar</button>
+                                </div>
+                            </div>
+                        `}
                     </div>
                 </div>
                 `;
@@ -207,3 +390,4 @@
 </body>
 </html>
 
+```
