@@ -1,4 +1,4 @@
-```html
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -37,8 +37,6 @@
         <input type="email" id="email-field" placeholder="Correo electrónico" class="input-login text-xs">
         <input type="password" id="pass-field" placeholder="Contraseña" class="input-login text-xs">
         <button id="btn-login" class="w-full max-w-[300px] bg-white text-black font-black py-4 rounded-xl uppercase text-[10px] tracking-widest active:scale-95 transition-transform">Ingresar</button>
-        <!-- Botón de emergencia para saltar el login en desarrollo -->
-        <button onclick="saltarLogin()" class="mt-6 text-[9px] text-gray-600 underline uppercase tracking-widest">Saltar (Solo Desarrollo)</button>
         <p id="error-msg" class="text-red-500 text-[10px] mt-4 hidden italic">Credenciales incorrectas.</p>
     </div>
 
@@ -107,17 +105,12 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
 
-        // Lógica de salto para desarrollo
-        window.saltarLogin = () => {
-            document.getElementById('safety-overlay').style.display = 'none';
-        };
-
+        // El login siempre está activo y conectado a tu base de datos de Firebase
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 document.getElementById('safety-overlay').style.display = 'none';
                 document.getElementById('user-name-display').innerText = user.email.split('@')[0].toUpperCase();
             } else {
-                // Solo mostrar si no es producción
                 document.getElementById('safety-overlay').style.display = 'flex';
             }
         });
@@ -157,3 +150,4 @@
 </html>
 
 ```
+    
