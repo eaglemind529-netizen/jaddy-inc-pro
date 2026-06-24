@@ -1,4 +1,4 @@
-
+```html
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -13,19 +13,30 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         :root { --oro: #D4AF37; --negro-puro: #050505; }
-        body { background-color: var(--negro-puro); color: #E0E0E0; font-family: 'Inter', sans-serif; margin: 0; min-height: 100vh; overflow-x: hidden; -webkit-overflow-scrolling: touch; }
-        #safety-overlay { position: fixed; inset: 0; background: black; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
-        .input-login { background: #111; border: 1px solid #222; border-radius: 12px; padding: 14px; width: 100%; max-width: 300px; color: white; margin-bottom: 10px; text-align: center; }
+        body { 
+            background-color: var(--negro-puro); 
+            color: #E0E0E0; 
+            font-family: 'Inter', sans-serif; 
+            margin: 0; 
+            min-height: 100vh; 
+            overflow-x: hidden;
+            -webkit-overflow-scrolling: touch; 
+        }
+        
+        #safety-overlay { position: fixed; inset: 0; background: black; z-index: 9999; display: flex; align-items: center; justify-content: center; }
+
         .texto-dorado { background: linear-gradient(to bottom, #CF9E1D 22%, #F1D37E 45%, #CF9E1D 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         .grid-menu { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; width: 100%; max-width: 340px; margin: 0 auto; }
         .box-item { background: #0F0F0F; border: 1px solid #1a1a1a; aspect-ratio: 1 / 1; display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 32px; transition: all 0.2s ease; box-shadow: 0 10px 30px rgba(0,0,0,0.5); text-decoration: none; outline: none; }
         .box-item:active { transform: scale(0.95); border-color: var(--oro); }
         .icon-circle { width: 50px; height: 50px; border-radius: 18px; display: flex; align-items: center; justify-content: center; margin-bottom: 10px; font-size: 20px; }
         .gold-box { background: linear-gradient(135deg, #D4AF37 0%, #f9e29c 50%, #996515 100%); }
+        
         .tab-btn { flex: 1; padding: 15px 5px; font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; color: #444; transition: all 0.3s; border-bottom: 2px solid transparent; cursor: pointer; background: transparent; border: none; }
         .tab-btn.active { color: var(--oro); border-bottom: 2px solid var(--oro); background: linear-gradient(to top, rgba(212, 175, 55, 0.05), transparent); }
         .tab-content { display: none; width: 100%; }
         .tab-content.active { display: block; animation: fadeIn 0.2s ease-out forwards; }
+
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         .content-spacer { padding-bottom: 100px; }
     </style>
@@ -33,11 +44,7 @@
 <body class="flex flex-col">
 
     <div id="safety-overlay">
-        <h1 class="texto-dorado font-black text-2xl mb-8 tracking-widest uppercase">Jaddy INC</h1>
-        <input type="email" id="email-field" placeholder="Correo electrónico" class="input-login text-xs">
-        <input type="password" id="pass-field" placeholder="Contraseña" class="input-login text-xs">
-        <button id="btn-login" class="w-full max-w-[300px] bg-white text-black font-black py-4 rounded-xl uppercase text-[10px] tracking-widest active:scale-95 transition-transform">Ingresar</button>
-        <p id="error-msg" class="text-red-500 text-[10px] mt-4 hidden italic">Credenciales incorrectas.</p>
+        <div class="w-10 h-10 border-2 border-oro/20 border-t-oro rounded-full animate-spin"></div>
     </div>
 
     <header class="sticky top-0 h-16 border-b border-gray-900 bg-black flex items-center justify-between px-6 z-50">
@@ -48,8 +55,9 @@
         <div class="flex items-center gap-4">
             <div class="flex items-center gap-2">
                 <div class="w-2 h-2 bg-green-600 rounded-full animate-pulse"></div>
-                <span id="user-name-display" class="text-[8px] text-gray-500 font-bold uppercase tracking-widest">USER</span>
+                <span class="text-[8px] text-gray-500 font-bold uppercase tracking-widest">ONLINE</span>
             </div>
+            <!-- Botón de Cerrar Sesión con redirección -->
             <button onclick="cerrarSesion()" class="flex items-center justify-center w-8 h-8 rounded-full bg-white/5 border border-white/10 text-white/50 active:text-oro active:border-oro transition-all">
                 <i class="fas fa-power-off text-xs"></i>
             </button>
@@ -63,71 +71,77 @@
     </nav>
 
     <main id="swipe-area" class="flex-1 px-6 pt-8 content-spacer">
+        
         <div id="tab-comercial" class="tab-content active">
-            <div class="text-center mb-8"><h2 class="text-white text-[9px] font-black tracking-[0.4em] uppercase opacity-40 mb-2 italic">Gestión Comercial</h2><div class="w-8 h-[1px] bg-oro/30 mx-auto"></div></div>
+            <div class="text-center mb-8">
+                <h2 class="text-white text-[9px] font-black tracking-[0.4em] uppercase opacity-40 mb-2 italic">Gestión Comercial</h2>
+                <div class="w-8 h-[1px] bg-oro/30 mx-auto"></div>
+            </div>
             <div class="grid-menu">
-                <a href="#" class="box-item"><div class="icon-circle gold-box text-black"><i class="fas fa-shopping-cart"></i></div><span class="text-white font-black text-[11px] uppercase">Ventas</span></a>
-                <a href="#" class="box-item"><div class="icon-circle bg-white/5 border border-white/10 text-white"><i class="fas fa-hand-holding-dollar opacity-70"></i></div><span class="text-white font-black text-[11px] uppercase">Cartera</span></a>
-                <a href="#" class="box-item"><div class="icon-circle bg-oro/10 text-oro"><i class="fas fa-file-invoice-dollar"></i></div><span class="texto-dorado font-black text-[11px] uppercase">Finanzas</span></a>
-                <a href="#" class="box-item"><div class="icon-circle bg-white/5 border border-white/10 text-white"><i class="fas fa-address-card opacity-70"></i></div><span class="text-white font-black text-[11px] uppercase">Clientes</span></a>
+                <a href="ventas.html" class="box-item">
+                    <div class="icon-circle gold-box text-black"><i class="fas fa-shopping-cart"></i></div>
+                    <span class="text-white font-black text-[11px] uppercase">Ventas</span>
+                </a>
+                <a href="deudores.html" class="box-item">
+                    <div class="icon-circle bg-white/5 border border-white/10 text-white"><i class="fas fa-hand-holding-dollar opacity-70"></i></div>
+                    <span class="text-white font-black text-[11px] uppercase">Cartera</span>
+                </a>
+                <a href="egresos.html" class="box-item">
+                    <div class="icon-circle bg-oro/10 text-oro"><i class="fas fa-file-invoice-dollar"></i></div>
+                    <span class="texto-dorado font-black text-[11px] uppercase">Finanzas</span>
+                </a>
+                <a href="clientes.html" class="box-item">
+                    <div class="icon-circle bg-white/5 border border-white/10 text-white"><i class="fas fa-address-card opacity-70"></i></div>
+                    <span class="text-white font-black text-[11px] uppercase">Clientes</span>
+                </a>
             </div>
         </div>
+
         <div id="tab-stock" class="tab-content">
-            <div class="text-center mb-8"><h2 class="text-white text-[9px] font-black tracking-[0.4em] uppercase opacity-40 mb-2 italic">Control de Almacén</h2><div class="w-8 h-[1px] bg-oro/30 mx-auto"></div></div>
+            <div class="text-center mb-8">
+                <h2 class="text-white text-[9px] font-black tracking-[0.4em] uppercase opacity-40 mb-2 italic">Control de Almacén</h2>
+                <div class="w-8 h-[1px] bg-oro/30 mx-auto"></div>
+            </div>
             <div class="grid-menu">
-                <a href="#" class="box-item"><div class="icon-circle bg-white/5 border border-white/10 text-white"><i class="fas fa-list-ul opacity-70"></i></div><span class="text-white font-black text-[11px] uppercase">Inventario</span></a>
-                <a href="#" class="box-item"><div class="icon-circle bg-white/5 border border-white/10 text-white"><i class="fas fa-box opacity-70"></i></div><span class="text-white font-black text-[11px] uppercase">Productos</span></a>
-                <a href="#" class="box-item border-oro/20"><div class="icon-circle bg-oro/10 text-oro border border-oro/20"><i class="fas fa-book-open"></i></div><span class="texto-dorado font-black text-[11px] uppercase tracking-tighter">Catálogo</span></a>
+                <a href="inventario.html" class="box-item">
+                    <div class="icon-circle bg-white/5 border border-white/10 text-white"><i class="fas fa-list-ul opacity-70"></i></div>
+                    <span class="text-white font-black text-[11px] uppercase">Inventario</span>
+                </a>
+                <a href="productos.html" class="box-item">
+                    <div class="icon-circle bg-white/5 border border-white/10 text-white"><i class="fas fa-box opacity-70"></i></div>
+                    <span class="text-white font-black text-[11px] uppercase">Productos</span>
+                </a>
             </div>
         </div>
+
         <div id="tab-analisis" class="tab-content">
-            <div class="text-center mb-8"><h2 class="text-white text-[9px] font-black tracking-[0.4em] uppercase opacity-40 mb-2 italic">Equipo y Datos</h2><div class="w-8 h-[1px] bg-oro/30 mx-auto"></div></div>
+            <div class="text-center mb-8">
+                <h2 class="text-white text-[9px] font-black tracking-[0.4em] uppercase opacity-40 mb-2 italic">Equipo y Datos</h2>
+                <div class="w-8 h-[1px] bg-oro/30 mx-auto"></div>
+            </div>
             <div class="grid-menu">
-                <a href="#" class="box-item"><div class="icon-circle bg-white/5 border border-white/10 text-white"><i class="fas fa-users opacity-70"></i></div><span class="text-white font-black text-[11px] uppercase">Vendedores</span></a>
-                <a href="#" class="box-item"><div class="icon-circle border border-oro/20 text-oro"><i class="fas fa-chart-line"></i></div><span class="texto-dorado font-black text-[11px] uppercase">Reportes</span></a>
+                <a href="vendedores.html" class="box-item">
+                    <div class="icon-circle bg-white/5 border border-white/10 text-white"><i class="fas fa-users opacity-70"></i></div>
+                    <span class="text-white font-black text-[11px] uppercase">Vendedores</span>
+                </a>
+                <a href="reportes.html" class="box-item">
+                    <div class="icon-circle border border-oro/20 text-oro"><i class="fas fa-chart-line"></i></div>
+                    <span class="texto-dorado font-black text-[11px] uppercase">Reportes</span>
+                </a>
             </div>
         </div>
     </main>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    <nav class="fixed bottom-0 left-0 right-0 h-14 bg-black/90 backdrop-blur-xl border-t border-gray-900 flex items-center justify-between px-8 z-50">
+        <div class="text-[7px] text-oro tracking-[0.4em] uppercase opacity-30 font-black">Luxury System Master v1.5</div>
+    </nav>
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyCrjjeOoXPOtJDXDfrHLOA4Ny0QW2zfVWk",
-            authDomain: "apps-d45d6.firebaseapp.com",
-            projectId: "apps-d45d6",
-            storageBucket: "apps-d45d6.firebasestorage.app",
-            messagingSenderId: "502648373937",
-            appId: "1:502648373937:web:8c3beaa2a6c9289a4d9890"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-
-        // El login siempre está activo y conectado a tu base de datos de Firebase
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-                document.getElementById('safety-overlay').style.display = 'none';
-                document.getElementById('user-name-display').innerText = user.email.split('@')[0].toUpperCase();
-            } else {
-                document.getElementById('safety-overlay').style.display = 'flex';
-            }
-        });
-
-        document.getElementById('btn-login').onclick = async () => {
-            try {
-                await signInWithEmailAndPassword(auth, document.getElementById('email-field').value, document.getElementById('pass-field').value);
-            } catch {
-                document.getElementById('error-msg').classList.remove('hidden');
-            }
-        };
-
-        window.cerrarSesion = () => signOut(auth).then(() => location.reload());
-    </script>
     <script>
+        document.getElementById('safety-overlay').style.display = 'none';
+
         const tabs = ['comercial', 'stock', 'analisis'];
         let currentIdx = 0;
+
         window.switchTab = function(tabId) {
             currentIdx = tabs.indexOf(tabId);
             document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
@@ -135,6 +149,16 @@
             document.getElementById('tab-' + tabId).classList.add('active');
             document.getElementById('btn-' + tabId).classList.add('active');
         };
+
+        // Función para cerrar sesión y volver al archivo de Login externo
+        window.cerrarSesion = function() {
+            document.getElementById('safety-overlay').style.display = 'flex';
+            setTimeout(() => {
+                // Cambia 'login.html' por el nombre exacto de tu archivo de registro
+                window.location.href = 'login.html'; 
+            }, 500);
+        };
+
         let touchstartX = 0;
         const swipeArea = document.getElementById('swipe-area');
         swipeArea.addEventListener('touchstart', e => touchstartX = e.changedTouches[0].screenX, {passive: true});
@@ -150,4 +174,3 @@
 </html>
 
 ```
-    
