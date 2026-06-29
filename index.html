@@ -1,4 +1,3 @@
-```html
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -13,9 +12,17 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         :root { --oro: #D4AF37; --negro-puro: #050505; }
-        body { background-color: var(--negro-puro); color: #E0E0E0; font-family: 'Inter', sans-serif; margin: 0; min-height: 100vh; overflow-x: hidden; -webkit-overflow-scrolling: touch; }
+        body { 
+            background-color: var(--negro-puro); 
+            color: #E0E0E0; 
+            font-family: 'Inter', sans-serif; 
+            margin: 0; 
+            min-height: 100vh; 
+            overflow-x: hidden;
+            -webkit-overflow-scrolling: touch; 
+        }
         
-        #safety-overlay, #login-overlay { position: fixed; inset: 0; background: black; z-index: 9999; display: flex; align-items: center; justify-content: center; }
+        #safety-overlay { position: fixed; inset: 0; background: black; z-index: 9999; display: flex; align-items: center; justify-content: center; }
 
         .texto-dorado { background: linear-gradient(to bottom, #CF9E1D 22%, #F1D37E 45%, #CF9E1D 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         .grid-menu { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; width: 100%; max-width: 340px; margin: 0 auto; }
@@ -35,15 +42,6 @@
 </head>
 <body class="flex flex-col">
 
-    <div id="login-overlay">
-        <div class="w-full max-w-sm bg-[#0F0F0F] p-8 rounded-3xl border border-white/10 mx-6">
-            <h2 class="text-white font-black mb-6 text-center tracking-widest uppercase">Sistema de Acceso</h2>
-            <input type="email" id="test-email" placeholder="Correo" class="w-full p-4 mb-3 bg-black border border-white/10 rounded-xl text-white">
-            <input type="password" id="test-pass" placeholder="Contraseña" class="w-full p-4 mb-6 bg-black border border-white/10 rounded-xl text-white">
-            <button onclick="probarLogin()" class="w-full py-4 bg-[#D4AF37] rounded-xl font-bold text-black uppercase">Ingresar</button>
-        </div>
-    </div>
-
     <div id="safety-overlay">
         <div class="w-10 h-10 border-2 border-oro/20 border-t-oro rounded-full animate-spin"></div>
     </div>
@@ -54,7 +52,10 @@
             <h1 class="texto-dorado uppercase tracking-widest text-sm font-black">JADDY INC</h1>
         </div>
         <div class="flex items-center gap-4">
-            <span id="user-name-display" class="text-[8px] text-gray-500 font-bold uppercase tracking-widest">...</span>
+            <div class="flex items-center gap-2">
+                <div class="w-2 h-2 bg-green-600 rounded-full animate-pulse"></div>
+                <span id="user-name-display" class="text-[8px] text-gray-500 font-bold uppercase tracking-widest">CARGANDO...</span>
+            </div>
             <button onclick="cerrarSesion()" class="flex items-center justify-center w-8 h-8 rounded-full bg-white/5 border border-white/10 text-white/50 active:text-oro active:border-oro transition-all">
                 <i class="fas fa-power-off text-xs"></i>
             </button>
@@ -68,33 +69,81 @@
     </nav>
 
     <main id="swipe-area" class="flex-1 px-6 pt-8 content-spacer">
+        
         <div id="tab-comercial" class="tab-content active">
+            <div class="text-center mb-8">
+                <h2 class="text-white text-[9px] font-black tracking-[0.4em] uppercase opacity-40 mb-2 italic">Gestión Comercial</h2>
+                <div class="w-8 h-[1px] bg-oro/30 mx-auto"></div>
+            </div>
             <div class="grid-menu">
-                <a href="ventas.html" class="box-item"><div class="icon-circle gold-box text-black"><i class="fas fa-shopping-cart"></i></div><span class="text-white font-black text-[11px] uppercase">Ventas</span></a>
-                <a href="deudores.html" class="box-item"><div class="icon-circle bg-white/5 border border-white/10 text-white"><i class="fas fa-hand-holding-dollar opacity-70"></i></div><span class="text-white font-black text-[11px] uppercase">Cartera</span></a>
-                <a href="egresos.html" class="box-item"><div class="icon-circle bg-oro/10 text-oro"><i class="fas fa-file-invoice-dollar"></i></div><span class="texto-dorado font-black text-[11px] uppercase">Finanzas</span></a>
-                <a href="clientes.html" class="box-item"><div class="icon-circle bg-white/5 border border-white/10 text-white"><i class="fas fa-address-card opacity-70"></i></div><span class="text-white font-black text-[11px] uppercase">Clientes</span></a>
+                <a href="ventas.html" class="box-item">
+                    <div class="icon-circle gold-box text-black"><i class="fas fa-shopping-cart"></i></div>
+                    <span class="text-white font-black text-[11px] uppercase">Ventas</span>
+                </a>
+                <a href="deudores.html" class="box-item">
+                    <div class="icon-circle bg-white/5 border border-white/10 text-white"><i class="fas fa-hand-holding-dollar opacity-70"></i></div>
+                    <span class="text-white font-black text-[11px] uppercase">Cartera</span>
+                </a>
+                <a href="egresos.html" class="box-item">
+                    <div class="icon-circle bg-oro/10 text-oro"><i class="fas fa-file-invoice-dollar"></i></div>
+                    <span class="texto-dorado font-black text-[11px] uppercase">Finanzas</span>
+                </a>
+                <a href="clientes.html" class="box-item">
+                    <div class="icon-circle bg-white/5 border border-white/10 text-white"><i class="fas fa-address-card opacity-70"></i></div>
+                    <span class="text-white font-black text-[11px] uppercase">Clientes</span>
+                </a>
             </div>
         </div>
+
         <div id="tab-stock" class="tab-content">
+            <div class="text-center mb-8">
+                <h2 class="text-white text-[9px] font-black tracking-[0.4em] uppercase opacity-40 mb-2 italic">Control de Almacén</h2>
+                <div class="w-8 h-[1px] bg-oro/30 mx-auto"></div>
+            </div>
             <div class="grid-menu">
-                <a href="inventario.html" class="box-item"><div class="icon-circle bg-white/5 border border-white/10 text-white"><i class="fas fa-list-ul opacity-70"></i></div><span class="text-white font-black text-[11px] uppercase">Inventario</span></a>
-                <a href="productos.html" class="box-item"><div class="icon-circle bg-white/5 border border-white/10 text-white"><i class="fas fa-box opacity-70"></i></div><span class="text-white font-black text-[11px] uppercase">Productos</span></a>
-                <a href="catalogo.html" id="btn-catalogo" class="box-item border-oro/20"><div class="icon-circle bg-oro/10 text-oro border border-oro/20"><i class="fas fa-book-open"></i></div><span class="texto-dorado font-black text-[11px] uppercase">Catálogo</span></a>
+                <a href="inventario.html" class="box-item">
+                    <div class="icon-circle bg-white/5 border border-white/10 text-white"><i class="fas fa-list-ul opacity-70"></i></div>
+                    <span class="text-white font-black text-[11px] uppercase">Inventario</span>
+                </a>
+                <a href="productos.html" class="box-item">
+                    <div class="icon-circle bg-white/5 border border-white/10 text-white"><i class="fas fa-box opacity-70"></i></div>
+                    <span class="text-white font-black text-[11px] uppercase">Productos</span>
+                </a>
+                <!-- ACCESO AL CATÁLOGO DIGITAL EN ALMACÉN -->
+                <a href="catalogo.html" class="box-item border-oro/20">
+                    <div class="icon-circle bg-oro/10 text-oro border border-oro/20">
+                        <i class="fas fa-book-open"></i>
+                    </div>
+                    <span class="texto-dorado font-black text-[11px] uppercase tracking-tighter">Catálogo</span>
+                </a>
             </div>
         </div>
+
         <div id="tab-analisis" class="tab-content">
+            <div class="text-center mb-8">
+                <h2 class="text-white text-[9px] font-black tracking-[0.4em] uppercase opacity-40 mb-2 italic">Equipo y Datos</h2>
+                <div class="w-8 h-[1px] bg-oro/30 mx-auto"></div>
+            </div>
             <div class="grid-menu">
-                <a href="vendedores.html" class="box-item"><div class="icon-circle bg-white/5 border border-white/10 text-white"><i class="fas fa-users opacity-70"></i></div><span class="text-white font-black text-[11px] uppercase">Vendedores</span></a>
-                <a href="reportes.html" id="btn-reportes" class="box-item"><div class="icon-circle border border-oro/20 text-oro"><i class="fas fa-chart-line"></i></div><span class="texto-dorado font-black text-[11px] uppercase">Reportes</span></a>
+                <a href="vendedores.html" class="box-item">
+                    <div class="icon-circle bg-white/5 border border-white/10 text-white"><i class="fas fa-users opacity-70"></i></div>
+                    <span class="text-white font-black text-[11px] uppercase">Vendedores</span>
+                </a>
+                <a href="reportes.html" class="box-item">
+                    <div class="icon-circle border border-oro/20 text-oro"><i class="fas fa-chart-line"></i></div>
+                    <span class="texto-dorado font-black text-[11px] uppercase">Reportes</span>
+                </a>
             </div>
         </div>
     </main>
 
+    <nav class="fixed bottom-0 left-0 right-0 h-14 bg-black/90 backdrop-blur-xl border-t border-gray-900 flex items-center justify-between px-8 z-50">
+        <div class="text-[7px] text-oro tracking-[0.4em] uppercase opacity-30 font-black">Luxury System Master v1.5</div>
+    </nav>
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getFirestore, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCrjjeOoXPOtJDXDfrHLOA4Ny0QW2zfVWk",
@@ -107,46 +156,41 @@
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
-        const db = getFirestore(app);
-
-        window.probarLogin = async () => {
-            try {
-                await signInWithEmailAndPassword(auth, document.getElementById('test-email').value, document.getElementById('test-pass').value);
-            } catch (e) { alert("Error: " + e.message); }
-        };
 
         onAuthStateChanged(auth, (user) => {
             if (user) {
-                document.getElementById('login-overlay').style.display = 'none';
                 document.getElementById('safety-overlay').style.display = 'none';
-                document.getElementById('user-name-display').innerText = user.email.split('@')[0].toUpperCase();
-                
-                onSnapshot(doc(db, "usuarios", user.email.toLowerCase()), (snap) => {
-                    const btnCatalogo = document.getElementById('btn-catalogo');
-                    if (snap.exists() && snap.data().status === 'bloqueado') {
-                        btnCatalogo.style.display = 'none';
-                    } else {
-                        btnCatalogo.style.display = 'flex';
-                    }
-                });
+                const userName = user.email ? user.email.split('@')[0].toUpperCase() : "USUARIO";
+                document.getElementById('user-name-display').innerText = userName;
+                sessionStorage.setItem('currentUserId', user.uid);
             } else {
-                document.getElementById('safety-overlay').style.display = 'none';
-                document.getElementById('login-overlay').style.display = 'flex';
+                window.location.replace('login.html');
             }
         });
 
-        window.cerrarSesion = async () => { await signOut(auth); location.reload(); };
+        window.cerrarSesion = async function() {
+            document.getElementById('safety-overlay').style.display = 'flex';
+            try {
+                sessionStorage.removeItem('currentUserId');
+                await signOut(auth);
+            } catch (error) {
+                window.location.replace('login.html');
+            }
+        };
     </script>
+
     <script>
         const tabs = ['comercial', 'stock', 'analisis'];
         let currentIdx = 0;
-        window.switchTab = (tabId) => {
+
+        window.switchTab = function(tabId) {
             currentIdx = tabs.indexOf(tabId);
             document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
             document.getElementById('tab-' + tabId).classList.add('active');
             document.getElementById('btn-' + tabId).classList.add('active');
         };
+
         let touchstartX = 0;
         const swipeArea = document.getElementById('swipe-area');
         swipeArea.addEventListener('touchstart', e => touchstartX = e.changedTouches[0].screenX, {passive: true});
@@ -160,5 +204,3 @@
     </script>
 </body>
 </html>
-
-```
