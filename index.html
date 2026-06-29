@@ -35,7 +35,7 @@
 </head>
 <body class="flex flex-col">
 
-    <!-- LOGIN PRUEBA -->
+    <!-- LOGIN PRUEBA MANTENIDO -->
     <div id="login-overlay">
         <div class="w-full max-w-sm bg-[#0F0F0F] p-8 rounded-3xl border border-white/10 mx-6">
             <h2 class="text-white font-black mb-6 text-center tracking-widest uppercase">Ambiente de Prueba</h2>
@@ -81,7 +81,7 @@
             <div class="grid-menu">
                 <a href="inventario.html" class="box-item"><div class="icon-circle bg-white/5 border border-white/10 text-white"><i class="fas fa-list-ul opacity-70"></i></div><span class="text-white font-black text-[11px] uppercase">Inventario</span></a>
                 <a href="productos.html" class="box-item"><div class="icon-circle bg-white/5 border border-white/10 text-white"><i class="fas fa-box opacity-70"></i></div><span class="text-white font-black text-[11px] uppercase">Productos</span></a>
-                <a href="catalogo.html" class="box-item border-oro/20"><div class="icon-circle bg-oro/10 text-oro border border-oro/20"><i class="fas fa-book-open"></i></div><span class="texto-dorado font-black text-[11px] uppercase">Catálogo</span></a>
+                <a href="catalogo.html" id="btn-catalogo" class="box-item border-oro/20"><div class="icon-circle bg-oro/10 text-oro border border-oro/20"><i class="fas fa-book-open"></i></div><span class="texto-dorado font-black text-[11px] uppercase">Catálogo</span></a>
             </div>
         </div>
         <div id="tab-analisis" class="tab-content">
@@ -116,18 +116,19 @@
             } catch (e) { alert("Error: " + e.message); }
         };
 
-        onAuthStateChanged(auth, async (user) => {
+        onAuthStateChanged(auth, (user) => {
             if (user) {
-                const userRef = doc(db, "usuarios", user.email.toLowerCase());
-                onSnapshot(userRef, (docSnap) => {
-                    if (docSnap.exists() && docSnap.data().status === 'bloqueado') {
-                        alert("Licencia Suspendida.");
-                        signOut(auth);
-                        location.reload();
+                document.getElementById('login-overlay').style.display = 'none';
+                document.getElementById('safety-overlay').style.display = 'none';
+                document.getElementById('user-name-display').innerText = user.email.split('@')[0].toUpperCase();
+                
+                // Lógica de control de botón catálogo
+                onSnapshot(doc(db, "usuarios", user.email.toLowerCase()), (snap) => {
+                    const btnCatalogo = document.getElementById('btn-catalogo');
+                    if (snap.exists() && snap.data().status === 'bloqueado') {
+                        btnCatalogo.style.display = 'none';
                     } else {
-                        document.getElementById('safety-overlay').style.display = 'none';
-                        document.getElementById('login-overlay').style.display = 'none';
-                        document.getElementById('user-name-display').innerText = user.email.split('@')[0].toUpperCase();
+                        btnCatalogo.style.display = 'flex';
                     }
                 });
             } else {
