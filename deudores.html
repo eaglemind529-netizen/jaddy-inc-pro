@@ -1,4 +1,3 @@
-```html
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -27,28 +26,51 @@
         <p class="text-gold text-[10px] font-black uppercase tracking-[0.5em]">Sincronizando Deudas</p>
     </div>
 
-    <header class="flex justify-between items-center mb-6">
-        <button onclick="window.location.href='index.html'" class="text-[10px] font-black border border-gold/30 px-4 py-2 rounded-full text-gold uppercase">← Inicio</button>
-        <div id="statusDot" class="w-2 h-2 rounded-full bg-zinc-800"></div>
-    </header>
-
-    <div class="mb-8">
-        <h1 class="texto-dorado text-3xl font-black uppercase italic tracking-tighter">Deudores</h1>
-        <p class="text-gray-500 text-[10px] font-bold uppercase tracking-[4px]">Gestión de Cobranza</p>
+    <!-- PANTALLA DE LOGIN TEMPORAL (Solo visible en ambiente de pruebas de Canvas) -->
+    <div id="login-card-temporal" class="hidden min-h-[80vh] flex flex-col justify-center py-12 px-2">
+        <div class="text-center mb-8">
+            <h1 class="texto-dorado text-4xl font-black uppercase italic tracking-tighter">Jaddy INC</h1>
+            <p class="text-gray-500 text-[10px] font-bold uppercase tracking-[4px]">Acceso Temporal de Pruebas</p>
+        </div>
+        <form onsubmit="window.loginUsuarioPrueba(event)" class="space-y-4">
+            <div>
+                <label class="text-[7px] text-gold font-black uppercase ml-2 mb-1 block tracking-widest">Correo de Acceso</label>
+                <input type="email" id="login-email" class="input-abono text-left" placeholder="correo@ejemplo.com" required>
+            </div>
+            <div>
+                <label class="text-[7px] text-gold font-black uppercase ml-2 mb-1 block tracking-widest">Contraseña</label>
+                <input type="password" id="login-pass" class="input-abono text-left" placeholder="••••••••" required>
+            </div>
+            <p id="login-error" class="text-red-500 text-[10px] font-black uppercase tracking-wider text-center min-h-[15px]"></p>
+            <button type="submit" id="btn-entrar" class="btn-abonar py-4 mt-2">Ingresar y Probar</button>
+        </form>
     </div>
 
-    <div class="mb-6 flex gap-2">
-        <input type="text" id="busqueda" oninput="window.renderizar()" placeholder="BUSCAR CLIENTE..." class="flex-1 bg-[#0F0F0F] border border-gray-800 rounded-xl py-4 px-5 text-xs font-bold text-white uppercase outline-none focus:border-gold">
-        <button onclick="document.getElementById('historial-titulo').scrollIntoView({behavior:'smooth'})" class="bg-[#0F0F0F] border border-gray-800 px-4 rounded-xl text-gold"><i class="fa-solid fa-clock-rotate-left"></i></button>
-    </div>
+    <!-- CONTENIDO PRINCIPAL ORIGINAL -->
+    <div id="main-content-original" class="hidden">
+        <header class="flex justify-between items-center mb-6">
+            <button onclick="window.location.href='index.html'" class="text-[10px] font-black border border-gold/30 px-4 py-2 rounded-full text-gold uppercase">← Inicio</button>
+            <div id="statusDot" class="w-2 h-2 rounded-full bg-zinc-800"></div>
+        </header>
 
-    <div id="listaDeudores" class="space-y-4">
-        <div class="text-center py-20 opacity-30 text-[10px] font-black uppercase tracking-widest">Sincronizando...</div>
-    </div>
+        <div class="mb-8">
+            <h1 class="texto-dorado text-3xl font-black uppercase italic tracking-tighter">Deudores</h1>
+            <p class="text-gray-500 text-[10px] font-bold uppercase tracking-[4px]">Gestión de Cobranza</p>
+        </div>
 
-    <!-- SECCIÓN HISTORIAL -->
-    <h2 id="historial-titulo" class="text-[9px] font-black text-gray-600 uppercase tracking-[3px] mt-12 mb-4 text-center italic">Clientes que ya Pagaron</h2>
-    <div id="listaHistorial" class="space-y-3 pb-10"></div>
+        <div class="mb-6 flex gap-2">
+            <input type="text" id="busqueda" oninput="window.renderizar()" placeholder="BUSCAR CLIENTE..." class="flex-1 bg-[#0F0F0F] border border-gray-800 rounded-xl py-4 px-5 text-xs font-bold text-white uppercase outline-none focus:border-gold">
+            <button onclick="document.getElementById('historial-titulo').scrollIntoView({behavior:'smooth'})" class="bg-[#0F0F0F] border border-gray-800 px-4 rounded-xl text-gold"><i class="fa-solid fa-clock-rotate-left"></i></button>
+        </div>
+
+        <div id="listaDeudores" class="space-y-4">
+            <div class="text-center py-20 opacity-30 text-[10px] font-black uppercase tracking-widest">Sincronizando...</div>
+        </div>
+
+        <!-- SECCIÓN HISTORIAL -->
+        <h2 id="historial-titulo" class="text-[9px] font-black text-gray-600 uppercase tracking-[3px] mt-12 mb-4 text-center italic">Clientes que ya Pagaron</h2>
+        <div id="listaHistorial" class="space-y-3 pb-10"></div>
+    </div>
 
     <div id="modalAbono" class="modal-abono">
         <div class="bg-[#0A0A0A] border border-gray-800 p-8 rounded-[32px] w-full max-w-sm">
@@ -73,7 +95,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getAuth, onAuthStateChanged, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
         import { getFirestore, collection, onSnapshot, doc, updateDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         const firebaseConfig = {
@@ -93,17 +115,61 @@
         let deudorActivo = null;
         let userId = null;
 
+        // Estructura global para almacenar deudas agrupadas por clave de cliente
+        window.deudoresAgrupados = {};
+
+        // Detectar si estamos en el entorno de pruebas temporal o en producción
+        const esAmbientePrueba = window.location.hostname === "" || 
+                                 window.location.hostname.includes("localhost") || 
+                                 window.location.hostname.includes("preview") || 
+                                 window.location.hostname.includes("webcontainer") || 
+                                 window.location.hostname.includes("null") ||
+                                 window.location.href.includes("blob:") ||
+                                 !window.location.hostname;
+
         onAuthStateChanged(auth, (user) => {
+            document.body.style.display = "block";
+            document.getElementById('loading-screen').style.display = "none";
+
             if(user && !user.isAnonymous) {
                 userId = user.uid;
-                document.body.style.display = "block";
-                document.getElementById('loading-screen').style.display = "none";
                 document.getElementById('statusDot').classList.add('bg-green-500');
+                
+                // Mostrar contenido original
+                document.getElementById('login-card-temporal').classList.add('hidden');
+                document.getElementById('main-content-original').classList.remove('hidden');
+                
                 conectarBaseDeDatos(user.uid);
             } else {
-                window.location.href = "login.html";
+                if (esAmbientePrueba) {
+                    document.getElementById('main-content-original').classList.add('hidden');
+                    document.getElementById('login-card-temporal').classList.remove('hidden');
+                } else {
+                    window.location.href = "login.html";
+                }
             }
         });
+
+        window.loginUsuarioPrueba = async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('login-email').value;
+            const pass = document.getElementById('login-pass').value;
+            const btn = document.getElementById('btn-entrar');
+            const errorEl = document.getElementById('login-error');
+            
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner animate-spin mr-2"></i>Conectando...';
+            errorEl.innerText = '';
+
+            try {
+                await signInWithEmailAndPassword(auth, email, pass);
+            } catch (err) {
+                console.error("Error de login temporal: ", err);
+                errorEl.innerText = "Error: Credenciales inválidas.";
+                btn.disabled = false;
+                btn.innerHTML = 'Ingresar y Probar';
+            }
+        };
 
         function conectarBaseDeDatos(uid) {
             const colRef = collection(db, 'usuarios', uid, 'ventas_realizadas');
@@ -118,40 +184,76 @@
             const containerHistorial = document.getElementById('listaHistorial');
             const buscar = document.getElementById('busqueda').value.toUpperCase();
             
-            // FILTRAR DEUDORES (Saldo > 0)
-            const deudores = todasLasVentas.filter(v => {
+            // Reiniciamos el objeto global de deudores agrupados
+            window.deudoresAgrupados = {};
+
+            // Agrupar ventas activas a crédito por cliente
+            todasLasVentas.forEach(v => {
                 const saldo = v.saldo_pendiente !== undefined ? v.saldo_pendiente : (v.total || v.precio || 0);
-                return saldo > 0 && v.tipo === 'CREDITO' && 
-                (v.cliente && v.cliente.toUpperCase().includes(buscar));
+                
+                // Procesar deudas activas (tipo CREDITO y saldo > 0)
+                if (saldo > 0 && v.tipo === 'CREDITO') {
+                    const clienteKey = v.cliente ? v.cliente.toUpperCase().trim() : 'SIN NOMBRE';
+                    
+                    if (!window.deudoresAgrupados[clienteKey]) {
+                        window.deudoresAgrupados[clienteKey] = {
+                            cliente: v.cliente || 'Sin Nombre',
+                            saldoTotal: 0,
+                            productos: [],
+                            fechas: [],
+                            ventas: []
+                        };
+                    }
+                    
+                    window.deudoresAgrupados[clienteKey].saldoTotal += parseFloat(saldo);
+                    if (v.producto) window.deudoresAgrupados[clienteKey].productos.push(v.producto);
+                    if (v.fecha_venta || v.fecha) window.deudoresAgrupados[clienteKey].fechas.push(v.fecha_venta || v.fecha);
+                    
+                    // Almacenamos la info individual de la venta para poder saldarla
+                    window.deudoresAgrupados[clienteKey].ventas.push({
+                        id: v.id,
+                        saldo: parseFloat(saldo),
+                        fecha: v.fecha_venta || v.fecha || ''
+                    });
+                }
             });
 
-            // FILTRAR HISTORIAL (Saldo <= 0 y tuvo abonos)
+            // Convertir deudores agrupados a una lista y aplicar el filtro de búsqueda
+            const deudoresFiltrados = Object.keys(window.deudoresAgrupados)
+                .filter(key => key.includes(buscar))
+                .map(key => ({ key, ...window.deudoresAgrupados[key] }));
+
+            // FILTRAR HISTORIAL (Saldo <= 0 y ventas pagadas de forma individual en el historial)
             const historial = todasLasVentas.filter(v => {
                 const saldo = v.saldo_pendiente !== undefined ? v.saldo_pendiente : -1;
                 return saldo === 0 && (v.cliente && v.cliente.toUpperCase().includes(buscar));
             });
 
-            // Render Deudas
-            containerDeudas.innerHTML = deudores.map(v => {
-                const saldoDisplay = v.saldo_pendiente !== undefined ? v.saldo_pendiente : (v.total || v.precio || 0);
+            // Render de Deudores Agrupados
+            containerDeudas.innerHTML = deudoresFiltrados.map(d => {
+                // Eliminar productos duplicados para una etiqueta limpia
+                const productosUnicos = [...new Set(d.productos)].join(', ') || 'Varios productos';
+                // Obtener fecha del movimiento más antiguo
+                const fechaMasAntigua = d.fechas.sort()[0] || 'Sin fecha';
+                
                 return `
                 <div class="card-deudores">
                     <div class="flex justify-between items-start mb-4">
                         <div>
-                            <h3 class="text-sm font-black uppercase text-white">${v.cliente}</h3>
-                            <p class="text-[8px] text-gray-500 font-bold uppercase">${v.fecha_venta || v.fecha || 'Sin fecha'}</p>
-                            <p class="text-[7px] text-gold/50 font-black uppercase mt-1 italic">${v.producto || 'Venta'}</p>
+                            <h3 class="text-sm font-black uppercase text-white">${d.cliente}</h3>
+                            <p class="text-[8px] text-gray-500 font-bold uppercase">Desde: ${fechaMasAntigua}</p>
+                            <p class="text-[7px] text-gold/50 font-black uppercase mt-1 italic">${productosUnicos}</p>
                         </div>
                         <div class="text-right">
-                            <p class="text-[7px] text-gold font-black uppercase">Saldo Pendiente</p>
-                            <p class="text-lg font-black text-white">$${parseFloat(saldoDisplay).toLocaleString()}</p>
+                            <p class="text-[7px] text-gold font-black uppercase">Saldo Consolidado</p>
+                            <p class="text-lg font-black text-white">$${d.saldoTotal.toLocaleString()}</p>
                         </div>
                     </div>
-                    <button onclick="window.abrirModal('${v.id}', '${v.cliente}', ${saldoDisplay})" class="btn-abonar">Abonar Pago</button>
+                    <button onclick="window.abrirModal('${d.key}')" class="btn-abonar">Abonar Pago</button>
                 </div>
             `}).join('');
 
-            // Render Historial
+            // Render Historial (se conservan individuales para auditoría rápida)
             containerHistorial.innerHTML = historial.map(v => `
                 <div class="card-historial">
                     <div class="flex justify-between items-center">
@@ -167,13 +269,21 @@
                 </div>
             `).join('');
 
-            if(deudores.length === 0) containerDeudas.innerHTML = '<p class="text-center py-10 opacity-20 text-[10px] font-black uppercase italic">Sin deudas activas</p>';
+            if(deudoresFiltrados.length === 0) containerDeudas.innerHTML = '<p class="text-center py-10 opacity-20 text-[10px] font-black uppercase italic">Sin deudas activas</p>';
             if(historial.length === 0) containerHistorial.innerHTML = '<p class="text-center py-4 opacity-20 text-[10px] font-black uppercase italic">Historial vacío</p>';
         };
 
-        window.abrirModal = (id, nombre, saldo) => {
-            deudorActivo = { id, nombre, saldo };
-            document.getElementById('modal-nombre').innerText = nombre;
+        window.abrirModal = (clienteKey) => {
+            const deudor = window.deudoresAgrupados[clienteKey];
+            if (!deudor) return;
+
+            deudorActivo = {
+                cliente: deudor.cliente,
+                saldo: deudor.saldoTotal,
+                ventas: deudor.ventas
+            };
+            
+            document.getElementById('modal-nombre').innerText = deudor.cliente;
             document.getElementById('input-fecha').value = new Date().toISOString().split('T')[0];
             document.getElementById('modalAbono').style.display = 'flex';
         };
@@ -183,39 +293,56 @@
         window.ejecutarAbono = async () => {
             const inputMonto = document.getElementById('input-monto');
             const inputFecha = document.getElementById('input-fecha');
-            const abono = parseFloat(inputMonto.value);
+            const abonoTotal = parseFloat(inputMonto.value);
             const fechaAbono = inputFecha.value;
 
-            if(!abono || abono <= 0) return;
+            if(!abonoTotal || abonoTotal <= 0) return;
             
-            const nuevoSaldo = deudorActivo.saldo - abono;
-            if(nuevoSaldo < 0) { alert("El monto supera la deuda"); return; }
+            if(abonoTotal > deudorActivo.saldo) { 
+                alert("El monto ingresado supera la deuda total de este cliente."); 
+                return; 
+            }
 
             try {
-                const docRef = doc(db, 'usuarios', userId, 'ventas_realizadas', deudorActivo.id);
+                let abonoRestante = abonoTotal;
                 
-                // ACTUALIZACIÓN SEGURA:
-                // 1. Mantenemos el campo 'total' INTACTO para que Reportes no falle.
-                // 2. Usamos 'saldo_pendiente' para la lógica de cobranza.
-                await updateDoc(docRef, {
-                    saldo_pendiente: nuevoSaldo,
-                    // Si ya pagó todo, lo marcamos como pagado pero no borramos el monto total de la venta
-                    estado_cobranza: nuevoSaldo <= 0 ? 'PAGADO' : 'PENDIENTE',
-                    abonos: arrayUnion({
-                        monto: abono,
-                        fecha: fechaAbono
-                    })
+                // Ordenamos las deudas cronológicamente (Primero en Entrar, Primero en Salir / FIFO)
+                const deudasOrdenadas = deudorActivo.ventas.sort((a, b) => {
+                    const fechaA = new Date(a.fecha || 0);
+                    const fechaB = new Date(b.fecha || 0);
+                    return fechaA - fechaB;
                 });
+
+                // Distribuimos el pago entre las diferentes deudas de forma automática
+                for (const deud of deudasOrdenadas) {
+                    if (abonoRestante <= 0) break;
+
+                    // El abono aplicado a este registro específico será el menor entre lo que queda por abonar y lo que se debe de esta venta
+                    const pagoAplicado = Math.min(abonoRestante, deud.saldo);
+                    const nuevoSaldoVenta = deud.saldo - pagoAplicado;
+
+                    const docRef = doc(db, 'usuarios', userId, 'ventas_realizadas', deud.id);
+                    
+                    await updateDoc(docRef, {
+                        saldo_pendiente: nuevoSaldoVenta,
+                        estado_cobranza: nuevoSaldoVenta <= 0 ? 'PAGADO' : 'PENDIENTE',
+                        abonos: arrayUnion({
+                            monto: pagoAplicado,
+                            fecha: fechaAbono
+                        })
+                    });
+
+                    abonoRestante -= pagoAplicado;
+                }
 
                 window.cerrarModal();
                 inputMonto.value = '';
             } catch (e) {
-                console.error("Error al abonar:", e);
-                alert("Error al procesar abono.");
+                console.error("Error al registrar abonos agrupados:", e);
+                alert("Error al procesar el pago consolidado.");
             }
         };
     </script>
 </body>
 </html>
 
-```
