@@ -1,4 +1,3 @@
-```html
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -23,8 +22,29 @@
 <body class="pb-24 max-w-md mx-auto">
 
     <div id="loading-screen">
-        <div class="w-10 h-10 border-2 border-gold/20 border-t-gold rounded-full animate-spin mb-4"></div>
-        <p class="text-gold text-[10px] font-black uppercase tracking-[0.5em]">Validando Credenciales</p>
+        <!-- Spinner de carga -->
+        <div id="spinner-wrap" class="flex flex-col items-center justify-center">
+            <div class="w-10 h-10 border-2 border-gold/20 border-t-gold rounded-full animate-spin mb-4"></div>
+            <p class="text-gold text-[10px] font-black uppercase tracking-[0.5em]">Validando Credenciales</p>
+        </div>
+
+        <!-- =========================================================================
+        FORMULARIO DE LOGIN DE PRUEBA INTERACTIVO (SOLO EN EL ENTORNO DE PRUEBAS)
+        ========================================================================= -->
+        <div id="test-login-box" class="hidden w-full max-w-xs p-6 bg-[#0A0A0A] border border-gray-900 rounded-[24px] text-center shadow-2xl mt-4">
+            <div class="w-10 h-10 bg-gradient-to-r from-[#996515] to-[#f9e29c] rounded-xl flex items-center justify-center text-black text-xs font-bold mx-auto mb-3">JI</div>
+            <h3 class="text-gold font-black uppercase text-[10px] tracking-[3px] mb-4">Login de Prueba</h3>
+            
+            <div class="space-y-3 text-left mb-4">
+                <input type="email" id="test-email" placeholder="CORREO" class="w-full bg-[#111] border border-[#222] rounded-xl p-3 text-xs text-white outline-none focus:border-gold">
+                <input type="password" id="test-pass" placeholder="CONTRASEÑA" class="w-full bg-[#111] border border-[#222] rounded-xl p-3 text-xs text-white outline-none focus:border-gold">
+            </div>
+            
+            <button onclick="window.testLoginReal()" class="w-full py-3 bg-white text-black font-black text-[10px] rounded-xl uppercase tracking-wider mb-2">Ingresar</button>
+            <button onclick="window.testLoginMock()" class="w-full py-3 bg-zinc-900 border border-zinc-800 text-zinc-400 font-black text-[10px] rounded-xl uppercase tracking-wider">Socio Rápido</button>
+            <div id="test-error" class="text-red-500 text-[8px] uppercase tracking-wider font-bold mt-2 hidden"></div>
+        </div>
+        <!-- ========================================================================= -->
     </div>
 
     <div class="p-4">
@@ -121,7 +141,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getAuth, onAuthStateChanged, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, onSnapshot, collection, query, orderBy, deleteDoc, updateDoc, addDoc, increment } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         const firebaseConfig = {
@@ -143,18 +163,62 @@
         let pSeleccionado = null;
         let tipoVenta = 'CONTADO';
 
+        // =========================================================================
+        // RECONOCIMIENTO DE SOCIO LOCAL O REDIRECCIÓN EN PRODUCCIÓN
+        // =========================================================================
         onAuthStateChanged(auth, (user) => { 
-            if(user && !user.isAnonymous){ 
+            const mockUserEmail = sessionStorage.getItem('mockUserEmail');
+            const isPreview = window.location.hostname === "" || window.location.hostname.includes("localhost") || window.location.href.includes("artifact") || window.location.href.includes("preview");
+
+            if (user && !user.isAnonymous) { 
                 userId = user.uid;
                 document.body.style.display = "block";
                 document.getElementById('loading-screen').style.display = "none";
                 document.getElementById('statusDot').classList.add('bg-green-500', 'shadow-green-500/50');
                 document.getElementById('fecha-operacion').valueAsDate = new Date();
                 escucharDatos(user.uid); 
+            } else if (mockUserEmail) {
+                // Si existe sesión local activa del socio, le permitimos el ingreso en pruebas
+                userId = "fsczX7bVq7OasI92E8b4yC96u123"; // Apuntamos al UID de la base de datos principal
+                document.body.style.display = "block";
+                document.getElementById('loading-screen').style.display = "none";
+                document.getElementById('statusDot').classList.add('bg-green-500', 'shadow-green-500/50');
+                document.getElementById('fecha-operacion').valueAsDate = new Date();
+                escucharDatos(userId);
             } else {
-                window.location.href = "login.html";
+                if (isPreview) {
+                    // En el previsualizador mostramos el Login de prueba interactivo sin redirigir
+                    document.body.style.display = "block";
+                    document.getElementById('spinner-wrap').classList.add('hidden');
+                    document.getElementById('test-login-box').classList.remove('hidden');
+                } else {
+                    // Lógica de redirección original para producción
+                    window.location.href = "login.html";
+                }
             }
         });
+
+        // FUNCIONES DE LOGIN PARA EL PREVISUALIZADOR
+        window.testLoginReal = async () => {
+            const email = document.getElementById('test-email').value.trim();
+            const pass = document.getElementById('test-pass').value;
+            const err = document.getElementById('test-error');
+            if (!email || !pass) return;
+            err.classList.add('hidden');
+            try {
+                await signInWithEmailAndPassword(auth, email, pass);
+            } catch (e) {
+                err.innerText = e.message.toUpperCase();
+                err.classList.remove('hidden');
+            }
+        };
+
+        window.testLoginMock = () => {
+            sessionStorage.setItem('mockUserEmail', 'socio@correo.com');
+            sessionStorage.setItem('currentUserId', 'socio-local-id');
+            window.location.reload();
+        };
+        // =========================================================================
 
         // FUNCIÓN CLAVE: Extrae el texto legible de la variante (Nombre + Género)
         function obtenerNombreVariante(v) {
@@ -376,4 +440,3 @@
 </body>
 </html>
 
-```
