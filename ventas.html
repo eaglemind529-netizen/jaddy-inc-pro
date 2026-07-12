@@ -317,4 +317,29 @@
 
         function renderizarVentas() {
             const container = document.getElementById('listaVentas');
-            if(ventasGlobal.length === 0) { container.innerHTML = '<div class="text-cente
+            if(ventasGlobal.length === 0) { container.innerHTML = '<div class="text-center py-10 opacity-20 text-[10px] font-black uppercase italic">Historial Vacío</div>'; return; }
+            container.innerHTML = ventasGlobal.map(v => `
+                <div class="sale-card">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <div class="flex items-center gap-2 mb-1">
+                                <span class="text-[7px] font-black bg-white/10 px-2 py-0.5 rounded text-gold uppercase">${v.tipo}</span>
+                                <span class="text-[7px] text-gray-500 font-bold italic">${v.fecha_venta}</span>
+                            </div>
+                            <div class="text-[11px] font-black uppercase mt-1">${v.cliente}</div>
+                            <div class="text-[9px] text-gray-500 italic mt-0.5">${v.producto} (${v.variante}) x${v.cantidad}</div>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-green-400 font-black text-sm">$${v.total.toLocaleString()}</div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        document.getElementById('inp-cantidad').addEventListener('input', calcularTotal);
+        document.getElementById('inp-descuento').addEventListener('input', calcularTotal);
+    </script>
+</body>
+</html>
+
