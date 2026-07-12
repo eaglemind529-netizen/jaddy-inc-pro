@@ -22,7 +22,7 @@
             -webkit-overflow-scrolling: touch; 
         }
         
-        #safety-overlay { position: fixed; inset: 0; background: black; z-index: 9999; display: flex; align-items: center; justify-content: center; }
+        #safety-overlay { position: fixed; inset: 0; background: black; z-index: 9999; display: flex; align-items: center; justify-content: center; flex-direction: column; }
 
         .texto-dorado { background: linear-gradient(to bottom, #CF9E1D 22%, #F1D37E 45%, #CF9E1D 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         .grid-menu { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; width: 100%; max-width: 340px; margin: 0 auto; }
@@ -43,7 +43,44 @@
 <body class="flex flex-col">
 
     <div id="safety-overlay">
-        <div class="w-10 h-10 border-2 border-oro/20 border-t-oro rounded-full animate-spin"></div>
+        <!-- Spinner de carga inicial -->
+        <div id="loading-spinner" class="w-10 h-10 border-2 border-oro/20 border-t-oro rounded-full animate-spin"></div>
+
+        <!-- =========================================================================
+        AGREGADO: FORMULARIO DE LOGIN DE PRUEBA INTEGRAD0
+        ========================================================================= -->
+        <div id="login-container" class="hidden w-full max-w-sm p-8 bg-[#0F0F0F] border border-gray-900 rounded-[32px] text-center shadow-2xl mx-4">
+            <div class="w-12 h-12 gold-box rounded-2xl flex items-center justify-center text-black text-sm font-bold mx-auto mb-4">JI</div>
+            <h2 class="texto-dorado uppercase tracking-widest text-lg font-black mb-6">LUXURY LOGIN</h2>
+            
+            <div class="space-y-4 mb-6 text-left">
+                <div>
+                    <label class="text-[9px] text-gray-500 uppercase tracking-widest font-black block mb-2">Correo Electrónico</label>
+                    <input type="email" id="login-email" placeholder="ejemplo@correo.com" class="w-full bg-black border border-gray-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-oro transition-all">
+                </div>
+                <div>
+                    <label class="text-[9px] text-gray-500 uppercase tracking-widest font-black block mb-2">Contraseña</label>
+                    <input type="password" id="login-password" placeholder="••••••••" class="w-full bg-black border border-gray-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-oro transition-all">
+                </div>
+            </div>
+
+            <div id="login-error-msg" class="text-red-500 text-[10px] uppercase tracking-wider font-bold mb-4 hidden text-center"></div>
+
+            <button onclick="ejecutarLogin()" class="w-full py-4 rounded-xl gold-box text-black font-black text-xs uppercase tracking-widest active:scale-95 transition-all mb-4">
+                Ingresar con Firebase
+            </button>
+
+            <div class="relative flex py-2 items-center">
+                <div class="flex-grow border-t border-gray-900"></div>
+                <span class="flex-shrink mx-4 text-gray-600 text-[9px] uppercase tracking-widest font-bold">O Probar Acceso</span>
+                <div class="flex-grow border-t border-gray-900"></div>
+            </div>
+
+            <button onclick="ejecutarLoginPrueba()" class="w-full mt-2 py-3 rounded-xl border border-white/10 bg-white/5 text-white font-black text-xs uppercase tracking-widest active:scale-95 hover:border-oro/30 transition-all">
+                Ingreso Rápido (Prueba)
+            </button>
+        </div>
+        <!-- ========================================================================= -->
     </div>
 
     <header class="sticky top-0 h-16 border-b border-gray-900 bg-black flex items-center justify-between px-6 z-50">
@@ -143,7 +180,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getAuth, onAuthStateChanged, signOut, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCrjjeOoXPOtJDXDfrHLOA4Ny0QW2zfVWk",
@@ -157,24 +194,96 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
 
+        // Definimos el correo del socio para validar restricciones
+        const correoSocio = "socio@correo.com"; // <-- Cambia esto por el correo real de tu socio
+
         onAuthStateChanged(auth, (user) => {
-            if (user) {
+            // Evaluamos si hay un usuario real de Firebase o una sesión de prueba en sessionStorage
+            const mockUserEmail = sessionStorage.getItem('mockUserEmail');
+
+            if (user || mockUserEmail) {
+                // Ocultamos la pantalla de bloqueo completamente
                 document.getElementById('safety-overlay').style.display = 'none';
-                const userName = user.email ? user.email.split('@')[0].toUpperCase() : "USUARIO";
+                
+                // Usamos el email activo (el real o el simulado de prueba)
+                const emailActivo = user ? user.email : mockUserEmail;
+                const uidActivo = user ? user.uid : (sessionStorage.getItem('currentUserId') || "mock-uid-12345");
+
+                const userName = emailActivo ? emailActivo.split('@')[0].toUpperCase() : "USUARIO";
                 document.getElementById('user-name-display').innerText = userName;
-                sessionStorage.setItem('currentUserId', user.uid);
+                sessionStorage.setItem('currentUserId', uidActivo);
+
+                // --- VALIDACIÓN DE CORREO DEL SOCIO ---
+                if (emailActivo && emailActivo.toLowerCase() === correoSocio.toLowerCase()) {
+                    // Ocultamos las pestañas superiores de Almacén y Equipo
+                    const btnStock = document.getElementById('btn-stock');
+                    if (btnStock) btnStock.style.display = 'none';
+                    const btnAnalisis = document.getElementById('btn-analisis');
+                    if (btnAnalisis) btnAnalisis.style.display = 'none';
+
+                    // Ocultamos Finanzas (egresos.html) y Clientes (clientes.html) buscando por su enlace real
+                    const linkFinanzas = document.querySelector('a[href="egresos.html"]');
+                    if (linkFinanzas) linkFinanzas.style.display = 'none';
+                    const linkClientes = document.querySelector('a[href="clientes.html"]');
+                    if (linkClientes) linkClientes.style.display = 'none';
+                }
             } else {
-                window.location.replace('login.html');
+                // En vez de redirigir, quitamos el cargador y mostramos el Login de Prueba integrado
+                document.getElementById('loading-spinner').classList.add('hidden');
+                document.getElementById('login-container').classList.remove('hidden');
             }
         });
 
+        // =========================================================================
+        // ACCIONES DEL LOGIN (AGREGADO)
+        // =========================================================================
+        window.ejecutarLogin = async function() {
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+            const errorMsg = document.getElementById('login-error-msg');
+
+            if (!email || !password) {
+                errorMsg.innerText = "Por favor, completa todos los campos.";
+                errorMsg.classList.remove('hidden');
+                return;
+            }
+
+            errorMsg.classList.add('hidden');
+            document.getElementById('login-container').classList.add('hidden');
+            document.getElementById('loading-spinner').classList.remove('hidden');
+
+            try {
+                await signInWithEmailAndPassword(auth, email, password);
+            } catch (error) {
+                document.getElementById('loading-spinner').classList.add('hidden');
+                document.getElementById('login-container').classList.remove('hidden');
+                errorMsg.innerText = "Error: " + error.message;
+                errorMsg.classList.remove('hidden');
+            }
+        };
+
+        window.ejecutarLoginPrueba = function() {
+            const email = document.getElementById('login-email').value || correoSocio;
+            // Guardamos un email de pruebas localmente
+            sessionStorage.setItem('mockUserEmail', email);
+            sessionStorage.setItem('currentUserId', "test-user-id");
+            window.location.reload();
+        };
+        // =========================================================================
+
         window.cerrarSesion = async function() {
             document.getElementById('safety-overlay').style.display = 'flex';
+            document.getElementById('login-container').classList.add('hidden');
+            document.getElementById('loading-spinner').classList.remove('hidden');
             try {
                 sessionStorage.removeItem('currentUserId');
+                sessionStorage.removeItem('mockUserEmail');
                 await signOut(auth);
+                window.location.reload();
             } catch (error) {
-                window.location.replace('login.html');
+                sessionStorage.removeItem('currentUserId');
+                sessionStorage.removeItem('mockUserEmail');
+                window.location.reload();
             }
         };
     </script>
@@ -204,3 +313,4 @@
     </script>
 </body>
 </html>
+
