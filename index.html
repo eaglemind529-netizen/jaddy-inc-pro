@@ -83,7 +83,7 @@
     </div>
 
     <!-- =========================================================================
-    AGREGADO: MODAL FLOTANTE DE AJUSTES DE ACCESO (EXCLUSIVO ADMINISTRADOR)
+    MODAL FLOTANTE DE AJUSTES DE ACCESO (EXCLUSIVO ADMINISTRADOR)
     ========================================================================= -->
     <div id="ajustes-modal" class="fixed inset-0 bg-black/80 backdrop-blur-md z-[999] hidden flex items-center justify-center p-4">
         <div class="w-full max-w-sm bg-[#0F0F0F] border border-gray-900 rounded-[32px] p-6 text-center shadow-2xl">
@@ -102,6 +102,16 @@
                     <input type="email" id="partner-email-input" placeholder="socio@correo.com" class="w-full bg-black border border-gray-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-oro transition-all">
                     <p class="text-[7px] text-gray-600 mt-1 uppercase tracking-wide">Este usuario recibirá las restricciones de abajo.</p>
                 </div>
+
+                <!-- =========================================================================
+                AGREGADO: CLAVE DEL SOCIO PARA INGRESO DIRECTO SIN ESTAR EN FIREBASE
+                ========================================================================= -->
+                <div>
+                    <label class="text-[8px] text-gray-500 uppercase tracking-widest font-black block mb-1">Contraseña de tu Socio (Acceso Directo)</label>
+                    <input type="password" id="partner-password-input" placeholder="Escribe la clave del socio" class="w-full bg-black border border-gray-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-oro transition-all">
+                    <p class="text-[7px] text-gray-600 mt-1 uppercase tracking-wide">Clave personalizada para que ingrese sin estar registrado en Firebase.</p>
+                </div>
+                <!-- ========================================================================= -->
 
                 <div class="border-t border-gray-950 pt-3">
                     <label class="text-[8px] text-gray-500 uppercase tracking-widest font-black block mb-3">Módulos que puede ver:</label>
@@ -162,9 +172,7 @@
                 <div class="w-2 h-2 bg-green-600 rounded-full animate-pulse"></div>
                 <span id="user-name-display" class="text-[8px] text-gray-500 font-bold uppercase tracking-widest">CARGANDO...</span>
             </div>
-            <!-- =========================================================================
-            AGREGADO: BOTÓN DE AJUSTES EN EL MENÚ (SOLO ADMIN)
-            ========================================================================= -->
+            <!-- BOTÓN DE AJUSTES EN EL MENÚ (SOLO ADMIN) -->
             <button id="btn-ajustes" onclick="abrirAjustes()" class="hidden flex items-center justify-center w-8 h-8 rounded-full bg-white/5 border border-white/10 text-white/50 active:text-oro active:border-oro transition-all">
                 <i class="fas fa-cog text-xs"></i>
             </button>
@@ -270,11 +278,12 @@
         const auth = getAuth(app);
 
         // =========================================================================
-        // AGREGADO: CARGAR CONFIGURACIÓN DE PERMISOS DINÁMICOS DESDE LOCALSTORAGE
+        // CARGAR CONFIGURACIÓN DE PERMISOS DINÁMICOS DESDE LOCALSTORAGE
         // =========================================================================
         function obtenerConfigSocio() {
             const configDefault = {
                 correo: "socio@correo.com",
+                clave: "123456", // Clave por defecto inicial para tu socio
                 permisos: {
                     ventas: true,      // Por defecto ve ventas
                     cartera: true,     // Por defecto ve deudores
@@ -352,7 +361,7 @@
         });
 
         window.ejecutarLogin = async function() {
-            const email = document.getElementById('login-email').value;
+            const email = document.getElementById('login-email').value.trim();
             const password = document.getElementById('login-password').value;
             const errorMsg = document.getElementById('login-error-msg');
 
@@ -363,6 +372,19 @@
             }
 
             errorMsg.classList.add('hidden');
+
+            // =========================================================================
+            // AGREGADO: INTERCEPTAR ACCESO DEL SOCIO CON CLAVE LOCAL (NO FIREBASE)
+            // =========================================================================
+            const configSocio = obtenerConfigSocio();
+            if (email.toLowerCase() === configSocio.correo.toLowerCase() && password === configSocio.clave) {
+                sessionStorage.setItem('mockUserEmail', email);
+                sessionStorage.setItem('currentUserId', "socio-local-id");
+                window.location.reload();
+                return; // Detiene el flujo de Firebase para que no tire error de clave inválida
+            }
+            // =========================================================================
+
             document.getElementById('login-container').classList.add('hidden');
             document.getElementById('loading-spinner').classList.remove('hidden');
 
@@ -403,11 +425,12 @@
         };
 
         // =========================================================================
-        // AGREGADO: FUNCIONES PARA GESTIONAR EL MODAL DE AJUSTES EN PANTALLA
+        // FUNCIONES PARA GESTIONAR EL MODAL DE AJUSTES EN PANTALLA
         // =========================================================================
         window.abrirAjustes = function() {
             const config = obtenerConfigSocio();
             document.getElementById('partner-email-input').value = config.correo;
+            document.getElementById('partner-password-input').value = config.clave || ""; // Cargamos su clave asignada
             document.getElementById('perm-ventas').checked = config.permisos.ventas;
             document.getElementById('perm-cartera').checked = config.permisos.cartera;
             document.getElementById('perm-finanzas').checked = config.permisos.finanzas;
@@ -424,13 +447,20 @@
 
         window.guardarAjustes = function() {
             const nuevoCorreo = document.getElementById('partner-email-input').value.trim();
+            const nuevaClave = document.getElementById('partner-password-input').value; // Obtenemos la nueva contraseña
+            
             if (!nuevoCorreo) {
                 alert("Por favor escribe un correo válido para tu socio.");
+                return;
+            }
+            if (!nuevaClave) {
+                alert("Por favor escribe una contraseña para tu socio.");
                 return;
             }
 
             const nuevaConfig = {
                 correo: nuevoCorreo,
+                clave: nuevaClave, // Guardamos la contraseña
                 permisos: {
                     ventas: document.getElementById('perm-ventas').checked,
                     cartera: document.getElementById('perm-cartera').checked,
