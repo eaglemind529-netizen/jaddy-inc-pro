@@ -163,6 +163,9 @@
         let pSeleccionado = null;
         let tipoVenta = 'CONTADO';
 
+        // Constante del administrador principal para centralizar datos
+        const adminUid = "fsczX7bVq7OasI92E8b4yC96u123";
+
         // =========================================================================
         // RECONOCIMIENTO DE SOCIO LOCAL O REDIRECCIÓN EN PRODUCCIÓN
         // =========================================================================
@@ -178,13 +181,13 @@
                 document.getElementById('fecha-operacion').valueAsDate = new Date();
                 escucharDatos(user.uid); 
             } else if (mockUserEmail) {
-                // Si existe sesión local activa del socio, le permitimos el ingreso en pruebas
-                userId = "fsczX7bVq7OasI92E8b4yC96u123"; // Apuntamos al UID de la base de datos principal
+                // Si existe sesión activa del socio, le permitimos el ingreso en pruebas
+                userId = sessionStorage.getItem('currentUserId') || "socio-local-id";
                 document.body.style.display = "block";
                 document.getElementById('loading-screen').style.display = "none";
                 document.getElementById('statusDot').classList.add('bg-green-500', 'shadow-green-500/50');
                 document.getElementById('fecha-operacion').valueAsDate = new Date();
-                escucharDatos(userId);
+                escucharDatos(adminUid); // Escucha directamente los datos del Administrador principal
             } else {
                 if (isPreview) {
                     // En el previsualizador mostramos el Login de prueba interactivo sin redirigir
@@ -339,15 +342,18 @@
 
             if(!v.vendedor || !v.cliente) return;
 
+            // Apuntar al UID del Administrador principal si la sesión activa es un socio local
+            const targetUid = (userId === "socio-local-id" || userId === "test-user-id" || sessionStorage.getItem('mockUserEmail')) ? adminUid : userId;
+
             try {
                 if(editId) {
-                    await updateDoc(doc(db, 'usuarios', userId, 'ventas_realizadas', editId), v);
+                    await updateDoc(doc(db, 'usuarios', targetUid, 'ventas_realizadas', editId), v);
                 } else {
-                    await addDoc(collection(db, 'usuarios', userId, 'ventas_realizadas'), v);
+                    await addDoc(collection(db, 'usuarios', targetUid, 'ventas_realizadas'), v);
                     
                     // Sincronización con Inventario Maestro
                     const inventarioDocId = `${pSeleccionado.id}_${varianteSel.replace(/\s+/g, '_')}`;
-                    const invRef = doc(db, 'usuarios', userId, 'inventario_master', inventarioDocId);
+                    const invRef = doc(db, 'usuarios', targetUid, 'inventario_master', inventarioDocId);
                     
                     await updateDoc(invRef, {
                         ventas: increment(cantidadVendida),
@@ -382,15 +388,16 @@
         window.eliminarVenta = async (id) => {
             if(confirm('¿ELIMINAR VENTA?')) {
                 const v = ventasGlobal.find(x => x.id === id);
+                const targetUid = (userId === "socio-local-id" || userId === "test-user-id" || sessionStorage.getItem('mockUserEmail')) ? adminUid : userId;
                 if(v) {
                     const inventarioDocId = `${v.productoId}_${v.variante.replace(/\s+/g, '_')}`;
-                    const invRef = doc(db, 'usuarios', userId, 'inventario_master', inventarioDocId);
+                    const invRef = doc(db, 'usuarios', targetUid, 'inventario_master', inventarioDocId);
                     await updateDoc(invRef, {
                         ventas: increment(-v.cantidad),
                         stock: increment(v.cantidad)
                     }).catch(e => console.log("No se pudo revertir inventario"));
                 }
-                await deleteDoc(doc(db, 'usuarios', userId, 'ventas_realizadas', id));
+                await deleteDoc(doc(db, 'usuarios', targetUid, 'ventas_realizadas', id));
             }
         };
 
