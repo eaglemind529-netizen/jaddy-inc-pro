@@ -47,7 +47,7 @@
         <div id="loading-spinner" class="w-10 h-10 border-2 border-oro/20 border-t-oro rounded-full animate-spin"></div>
 
         <!-- =========================================================================
-        AGREGADO: FORMULARIO DE LOGIN DE PRUEBA INTEGRAD0
+        FORMULARIO DE LOGIN DE PRUEBA INTEGRADO
         ========================================================================= -->
         <div id="login-container" class="hidden w-full max-w-sm p-8 bg-[#0F0F0F] border border-gray-900 rounded-[32px] text-center shadow-2xl mx-4">
             <div class="w-12 h-12 gold-box rounded-2xl flex items-center justify-center text-black text-sm font-bold mx-auto mb-4">JI</div>
@@ -80,7 +80,76 @@
                 Ingreso Rápido (Prueba)
             </button>
         </div>
-        <!-- ========================================================================= -->
+    </div>
+
+    <!-- =========================================================================
+    AGREGADO: MODAL FLOTANTE DE AJUSTES DE ACCESO (EXCLUSIVO ADMINISTRADOR)
+    ========================================================================= -->
+    <div id="ajustes-modal" class="fixed inset-0 bg-black/80 backdrop-blur-md z-[999] hidden flex items-center justify-center p-4">
+        <div class="w-full max-w-sm bg-[#0F0F0F] border border-gray-900 rounded-[32px] p-6 text-center shadow-2xl">
+            <div class="flex items-center justify-between mb-4 border-b border-gray-950 pb-3">
+                <h3 class="texto-dorado font-black text-xs uppercase tracking-widest flex items-center gap-2">
+                    <i class="fas fa-user-shield text-xs"></i> Control de Accesos
+                </h3>
+                <button onclick="cerrarAjustes()" class="text-gray-500 hover:text-white transition-all text-sm">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <div class="space-y-4 text-left">
+                <div>
+                    <label class="text-[8px] text-gray-500 uppercase tracking-widest font-black block mb-1">Correo de tu Socio</label>
+                    <input type="email" id="partner-email-input" placeholder="socio@correo.com" class="w-full bg-black border border-gray-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-oro transition-all">
+                    <p class="text-[7px] text-gray-600 mt-1 uppercase tracking-wide">Este usuario recibirá las restricciones de abajo.</p>
+                </div>
+
+                <div class="border-t border-gray-950 pt-3">
+                    <label class="text-[8px] text-gray-500 uppercase tracking-widest font-black block mb-3">Módulos que puede ver:</label>
+                    
+                    <div class="space-y-2">
+                        <!-- Permiso Ventas -->
+                        <label class="flex items-center justify-between p-2 rounded-xl bg-black border border-gray-950 cursor-pointer hover:border-oro/20 transition-all">
+                            <span class="text-[10px] uppercase font-black tracking-wider text-gray-300"><i class="fas fa-shopping-cart text-[10px] mr-2 text-oro"></i> Ventas</span>
+                            <input type="checkbox" id="perm-ventas" class="rounded border-gray-800 text-oro focus:ring-0 bg-black w-4 h-4 accent-[#D4AF37]">
+                        </label>
+
+                        <!-- Permiso Cartera -->
+                        <label class="flex items-center justify-between p-2 rounded-xl bg-black border border-gray-950 cursor-pointer hover:border-oro/20 transition-all">
+                            <span class="text-[10px] uppercase font-black tracking-wider text-gray-300"><i class="fas fa-hand-holding-dollar text-[10px] mr-2 text-gray-500"></i> Cartera</span>
+                            <input type="checkbox" id="perm-cartera" class="rounded border-gray-800 text-oro focus:ring-0 bg-black w-4 h-4 accent-[#D4AF37]">
+                        </label>
+
+                        <!-- Permiso Finanzas -->
+                        <label class="flex items-center justify-between p-2 rounded-xl bg-black border border-gray-950 cursor-pointer hover:border-oro/20 transition-all">
+                            <span class="text-[10px] uppercase font-black tracking-wider text-gray-300"><i class="fas fa-file-invoice-dollar text-[10px] mr-2 text-oro"></i> Finanzas</span>
+                            <input type="checkbox" id="perm-finanzas" class="rounded border-gray-800 text-oro focus:ring-0 bg-black w-4 h-4 accent-[#D4AF37]">
+                        </label>
+
+                        <!-- Permiso Clientes -->
+                        <label class="flex items-center justify-between p-2 rounded-xl bg-black border border-gray-950 cursor-pointer hover:border-oro/20 transition-all">
+                            <span class="text-[10px] uppercase font-black tracking-wider text-gray-300"><i class="fas fa-address-card text-[10px] mr-2 text-gray-500"></i> Clientes</span>
+                            <input type="checkbox" id="perm-clientes" class="rounded border-gray-800 text-oro focus:ring-0 bg-black w-4 h-4 accent-[#D4AF37]">
+                        </label>
+
+                        <!-- Permiso Almacén -->
+                        <label class="flex items-center justify-between p-2 rounded-xl bg-black border border-gray-950 cursor-pointer hover:border-oro/20 transition-all">
+                            <span class="text-[10px] uppercase font-black tracking-wider text-gray-300"><i class="fas fa-box text-[10px] mr-2 text-gray-400"></i> Pestaña Almacén</span>
+                            <input type="checkbox" id="perm-almacen" class="rounded border-gray-800 text-oro focus:ring-0 bg-black w-4 h-4 accent-[#D4AF37]">
+                        </label>
+
+                        <!-- Permiso Equipo -->
+                        <label class="flex items-center justify-between p-2 rounded-xl bg-black border border-gray-950 cursor-pointer hover:border-oro/20 transition-all">
+                            <span class="text-[10px] uppercase font-black tracking-wider text-gray-300"><i class="fas fa-chart-line text-[10px] mr-2 text-oro"></i> Pestaña Equipo</span>
+                            <input type="checkbox" id="perm-equipo" class="rounded border-gray-800 text-oro focus:ring-0 bg-black w-4 h-4 accent-[#D4AF37]">
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <button onclick="guardarAjustes()" class="w-full mt-5 py-3 rounded-xl gold-box text-black font-black text-[10px] uppercase tracking-widest active:scale-95 transition-all">
+                Guardar Configuración
+            </button>
+        </div>
     </div>
 
     <header class="sticky top-0 h-16 border-b border-gray-900 bg-black flex items-center justify-between px-6 z-50">
@@ -93,6 +162,12 @@
                 <div class="w-2 h-2 bg-green-600 rounded-full animate-pulse"></div>
                 <span id="user-name-display" class="text-[8px] text-gray-500 font-bold uppercase tracking-widest">CARGANDO...</span>
             </div>
+            <!-- =========================================================================
+            AGREGADO: BOTÓN DE AJUSTES EN EL MENÚ (SOLO ADMIN)
+            ========================================================================= -->
+            <button id="btn-ajustes" onclick="abrirAjustes()" class="hidden flex items-center justify-center w-8 h-8 rounded-full bg-white/5 border border-white/10 text-white/50 active:text-oro active:border-oro transition-all">
+                <i class="fas fa-cog text-xs"></i>
+            </button>
             <button onclick="cerrarSesion()" class="flex items-center justify-center w-8 h-8 rounded-full bg-white/5 border border-white/10 text-white/50 active:text-oro active:border-oro transition-all">
                 <i class="fas fa-power-off text-xs"></i>
             </button>
@@ -194,18 +269,34 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
 
-        // Definimos el correo del socio para validar restricciones
-        const correoSocio = "socio@correo.com"; // <-- Cambia esto por el correo real de tu socio
+        // =========================================================================
+        // AGREGADO: CARGAR CONFIGURACIÓN DE PERMISOS DINÁMICOS DESDE LOCALSTORAGE
+        // =========================================================================
+        function obtenerConfigSocio() {
+            const configDefault = {
+                correo: "socio@correo.com",
+                permisos: {
+                    ventas: true,      // Por defecto ve ventas
+                    cartera: true,     // Por defecto ve deudores
+                    finanzas: false,   // Por defecto oculto
+                    clientes: false,   // Por defecto oculto
+                    almacen: false,    // Por defecto oculto
+                    equipo: false      // Por defecto oculto
+                }
+            };
+            const guardada = localStorage.getItem('luxury_config_socio');
+            if (guardada) {
+                try { return JSON.parse(guardada); } catch (e) { return configDefault; }
+            }
+            return configDefault;
+        }
 
         onAuthStateChanged(auth, (user) => {
-            // Evaluamos si hay un usuario real de Firebase o una sesión de prueba en sessionStorage
             const mockUserEmail = sessionStorage.getItem('mockUserEmail');
 
             if (user || mockUserEmail) {
-                // Ocultamos la pantalla de bloqueo completamente
                 document.getElementById('safety-overlay').style.display = 'none';
                 
-                // Usamos el email activo (el real o el simulado de prueba)
                 const emailActivo = user ? user.email : mockUserEmail;
                 const uidActivo = user ? user.uid : (sessionStorage.getItem('currentUserId') || "mock-uid-12345");
 
@@ -213,30 +304,53 @@
                 document.getElementById('user-name-display').innerText = userName;
                 sessionStorage.setItem('currentUserId', uidActivo);
 
-                // --- VALIDACIÓN DE CORREO DEL SOCIO ---
-                if (emailActivo && emailActivo.toLowerCase() === correoSocio.toLowerCase()) {
-                    // Ocultamos las pestañas superiores de Almacén y Equipo
-                    const btnStock = document.getElementById('btn-stock');
-                    if (btnStock) btnStock.style.display = 'none';
-                    const btnAnalisis = document.getElementById('btn-analisis');
-                    if (btnAnalisis) btnAnalisis.style.display = 'none';
+                // Recuperamos la configuración del socio dinámica
+                const configSocio = obtenerConfigSocio();
 
-                    // Ocultamos Finanzas (egresos.html) y Clientes (clientes.html) buscando por su enlace real
-                    const linkFinanzas = document.querySelector('a[href="egresos.html"]');
-                    if (linkFinanzas) linkFinanzas.style.display = 'none';
-                    const linkClientes = document.querySelector('a[href="clientes.html"]');
-                    if (linkClientes) linkClientes.style.display = 'none';
+                // --- VALIDACIÓN DE CORREO DEL SOCIO DINÁMICO ---
+                if (emailActivo && emailActivo.toLowerCase() === configSocio.correo.toLowerCase()) {
+                    // Ocultar botón de ajustes (engranaje) para el socio
+                    const btnAjustes = document.getElementById('btn-ajustes');
+                    if (btnAjustes) btnAjustes.style.display = 'none';
+
+                    // 1. Ocultar Pestañas del Menú Superior
+                    if (!configSocio.permisos.almacen) {
+                        const btnStock = document.getElementById('btn-stock');
+                        if (btnStock) btnStock.style.display = 'none';
+                    }
+                    if (!configSocio.permisos.equipo) {
+                        const btnAnalisis = document.getElementById('btn-analisis');
+                        if (btnAnalisis) btnAnalisis.style.display = 'none';
+                    }
+
+                    // 2. Ocultar Botones Específicos dentro de Comercial
+                    if (!configSocio.permisos.ventas) {
+                        const linkVentas = document.querySelector('a[href="ventas.html"]');
+                        if (linkVentas) linkVentas.style.display = 'none';
+                    }
+                    if (!configSocio.permisos.cartera) {
+                        const linkCartera = document.querySelector('a[href="deudores.html"]');
+                        if (linkCartera) linkCartera.style.display = 'none';
+                    }
+                    if (!configSocio.permisos.finanzas) {
+                        const linkFinanzas = document.querySelector('a[href="egresos.html"]');
+                        if (linkFinanzas) linkFinanzas.style.display = 'none';
+                    }
+                    if (!configSocio.permisos.clientes) {
+                        const linkClientes = document.querySelector('a[href="clientes.html"]');
+                        if (linkClientes) linkClientes.style.display = 'none';
+                    }
+                } else {
+                    // Si eres tú (Administrador), mostramos el botón de ajustes/engranaje
+                    const btnAjustes = document.getElementById('btn-ajustes');
+                    if (btnAjustes) btnAjustes.style.display = 'flex';
                 }
             } else {
-                // En vez de redirigir, quitamos el cargador y mostramos el Login de Prueba integrado
                 document.getElementById('loading-spinner').classList.add('hidden');
                 document.getElementById('login-container').classList.remove('hidden');
             }
         });
 
-        // =========================================================================
-        // ACCIONES DEL LOGIN (AGREGADO)
-        // =========================================================================
         window.ejecutarLogin = async function() {
             const email = document.getElementById('login-email').value;
             const password = document.getElementById('login-password').value;
@@ -263,13 +377,14 @@
         };
 
         window.ejecutarLoginPrueba = function() {
-            const email = document.getElementById('login-email').value || correoSocio;
-            // Guardamos un email de pruebas localmente
-            sessionStorage.setItem('mockUserEmail', email);
+            const email = document.getElementById('login-email').value;
+            const configSocio = obtenerConfigSocio();
+            // Si el campo está vacío, entra como el socio por defecto para la prueba rápida
+            const emailPrueba = email || configSocio.correo;
+            sessionStorage.setItem('mockUserEmail', emailPrueba);
             sessionStorage.setItem('currentUserId', "test-user-id");
             window.location.reload();
         };
-        // =========================================================================
 
         window.cerrarSesion = async function() {
             document.getElementById('safety-overlay').style.display = 'flex';
@@ -285,6 +400,50 @@
                 sessionStorage.removeItem('mockUserEmail');
                 window.location.reload();
             }
+        };
+
+        // =========================================================================
+        // AGREGADO: FUNCIONES PARA GESTIONAR EL MODAL DE AJUSTES EN PANTALLA
+        // =========================================================================
+        window.abrirAjustes = function() {
+            const config = obtenerConfigSocio();
+            document.getElementById('partner-email-input').value = config.correo;
+            document.getElementById('perm-ventas').checked = config.permisos.ventas;
+            document.getElementById('perm-cartera').checked = config.permisos.cartera;
+            document.getElementById('perm-finanzas').checked = config.permisos.finanzas;
+            document.getElementById('perm-clientes').checked = config.permisos.clientes;
+            document.getElementById('perm-almacen').checked = config.permisos.almacen;
+            document.getElementById('perm-equipo').checked = config.permisos.equipo;
+
+            document.getElementById('ajustes-modal').classList.remove('hidden');
+        };
+
+        window.cerrarAjustes = function() {
+            document.getElementById('ajustes-modal').classList.add('hidden');
+        };
+
+        window.guardarAjustes = function() {
+            const nuevoCorreo = document.getElementById('partner-email-input').value.trim();
+            if (!nuevoCorreo) {
+                alert("Por favor escribe un correo válido para tu socio.");
+                return;
+            }
+
+            const nuevaConfig = {
+                correo: nuevoCorreo,
+                permisos: {
+                    ventas: document.getElementById('perm-ventas').checked,
+                    cartera: document.getElementById('perm-cartera').checked,
+                    finanzas: document.getElementById('perm-finanzas').checked,
+                    clientes: document.getElementById('perm-clientes').checked,
+                    almacen: document.getElementById('perm-almacen').checked,
+                    equipo: document.getElementById('perm-equipo').checked
+                }
+            };
+
+            localStorage.setItem('luxury_config_socio', JSON.stringify(nuevaConfig));
+            document.getElementById('ajustes-modal').classList.add('hidden');
+            window.location.reload(); // Recarga para aplicar los nuevos cambios de inmediato
         };
     </script>
 
