@@ -22,15 +22,11 @@
 <body class="pb-24 max-w-md mx-auto">
 
     <div id="loading-screen">
-        <!-- Spinner de carga -->
         <div id="spinner-wrap" class="flex flex-col items-center justify-center">
             <div class="w-10 h-10 border-2 border-gold/20 border-t-gold rounded-full animate-spin mb-4"></div>
             <p class="text-gold text-[10px] font-black uppercase tracking-[0.5em]">Validando Credenciales</p>
         </div>
 
-        <!-- =========================================================================
-        FORMULARIO DE LOGIN DE PRUEBA INTERACTIVO (SOLO EN EL ENTORNO DE PRUEBAS)
-        ========================================================================= -->
         <div id="test-login-box" class="hidden w-full max-w-xs p-6 bg-[#0A0A0A] border border-gray-900 rounded-[24px] text-center shadow-2xl mt-4">
             <div class="w-10 h-10 bg-gradient-to-r from-[#996515] to-[#f9e29c] rounded-xl flex items-center justify-center text-black text-xs font-bold mx-auto mb-3">JI</div>
             <h3 class="text-gold font-black uppercase text-[10px] tracking-[3px] mb-4">Login de Prueba</h3>
@@ -44,7 +40,6 @@
             <button onclick="window.testLoginMock()" class="w-full py-3 bg-zinc-900 border border-zinc-800 text-zinc-400 font-black text-[10px] rounded-xl uppercase tracking-wider">Socio Rápido</button>
             <div id="test-error" class="text-red-500 text-[8px] uppercase tracking-wider font-bold mt-2 hidden"></div>
         </div>
-        <!-- ========================================================================= -->
     </div>
 
     <div class="p-4">
@@ -142,7 +137,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAuth, onAuthStateChanged, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, onSnapshot, collection, query, orderBy, deleteDoc, updateDoc, addDoc, increment } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, doc, onSnapshot, collection, query, orderBy, deleteDoc, updateDoc, addDoc, increment } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCrjjeOoXPOtJDXDfrHLOA4Ny0QW2zfVWk",
@@ -162,17 +157,10 @@
         let userId = null;
         let pSeleccionado = null;
         let tipoVenta = 'CONTADO';
-
-        // Constante del administrador principal para centralizar datos
         const adminUid = "fsczX7bVq7OasI92E8b4yC96u123";
 
-        // =========================================================================
-        // RECONOCIMIENTO DE SOCIO LOCAL O REDIRECCIÓN EN PRODUCCIÓN
-        // =========================================================================
         onAuthStateChanged(auth, (user) => { 
             const mockUserEmail = sessionStorage.getItem('mockUserEmail');
-            const isPreview = window.location.hostname === "" || window.location.hostname.includes("localhost") || window.location.href.includes("artifact") || window.location.href.includes("preview");
-
             if (user && !user.isAnonymous) { 
                 userId = user.uid;
                 document.body.style.display = "block";
@@ -181,39 +169,26 @@
                 document.getElementById('fecha-operacion').valueAsDate = new Date();
                 escucharDatos(user.uid); 
             } else if (mockUserEmail) {
-                // Si existe sesión activa del socio, le permitimos el ingreso en pruebas
                 userId = sessionStorage.getItem('currentUserId') || "socio-local-id";
                 document.body.style.display = "block";
                 document.getElementById('loading-screen').style.display = "none";
                 document.getElementById('statusDot').classList.add('bg-green-500', 'shadow-green-500/50');
                 document.getElementById('fecha-operacion').valueAsDate = new Date();
-                escucharDatos(adminUid); // Escucha directamente los datos del Administrador principal
+                escucharDatos(adminUid);
             } else {
-                if (isPreview) {
-                    // En el previsualizador mostramos el Login de prueba interactivo sin redirigir
-                    document.body.style.display = "block";
-                    document.getElementById('spinner-wrap').classList.add('hidden');
-                    document.getElementById('test-login-box').classList.remove('hidden');
-                } else {
-                    // Lógica de redirección original para producción
-                    window.location.href = "login.html";
-                }
+                document.body.style.display = "block";
+                document.getElementById('spinner-wrap').classList.add('hidden');
+                document.getElementById('test-login-box').classList.remove('hidden');
             }
         });
 
-        // FUNCIONES DE LOGIN PARA EL PREVISUALIZADOR
         window.testLoginReal = async () => {
             const email = document.getElementById('test-email').value.trim();
             const pass = document.getElementById('test-pass').value;
             const err = document.getElementById('test-error');
             if (!email || !pass) return;
             err.classList.add('hidden');
-            try {
-                await signInWithEmailAndPassword(auth, email, pass);
-            } catch (e) {
-                err.innerText = e.message.toUpperCase();
-                err.classList.remove('hidden');
-            }
+            try { await signInWithEmailAndPassword(auth, email, pass); } catch (e) { err.innerText = e.message.toUpperCase(); err.classList.remove('hidden'); }
         };
 
         window.testLoginMock = () => {
@@ -221,9 +196,7 @@
             sessionStorage.setItem('currentUserId', 'socio-local-id');
             window.location.reload();
         };
-        // =========================================================================
 
-        // FUNCIÓN CLAVE: Extrae el texto legible de la variante (Nombre + Género)
         function obtenerNombreVariante(v) {
             if (typeof v === 'object' && v !== null) {
                 const nombre = v.nombre || v.variante || "N/A";
@@ -234,29 +207,25 @@
         }
 
         function escucharDatos(uid) {
-            onSnapshot(collection(db, 'usuarios', uid, 'vendedores'), snap => {
-                const sel = document.getElementById('sel-vendedor');
-                sel.innerHTML = '<option value="">-- EQUIPO --</option>' + 
-                    snap.docs.map(d => `<option value="${d.data().nombre}">${d.data().nombre.toUpperCase()}</option>`).join('');
-            });
-
-            onSnapshot(collection(db, 'usuarios', uid, 'clientes'), snap => {
-                const sel = document.getElementById('sel-cliente');
-                sel.innerHTML = '<option value="">-- CLIENTE --</option>' + 
-                    snap.docs.map(d => `<option value="${d.data().nombre}">${d.data().nombre.toUpperCase()}</option>`).join('');
-            });
-
-            onSnapshot(collection(db, 'usuarios', uid, 'productos'), snap => {
-                productosGlobal = snap.docs.map(d => ({id: d.id, ...d.data()}));
-                const sel = document.getElementById('sel-producto');
-                sel.innerHTML = '<option value="">-- PRODUCTO --</option>' + 
-                    productosGlobal.map(p => `<option value="${p.id}">${p.nombre.toUpperCase()}</option>`).join('');
-            });
-
-            onSnapshot(query(collection(db, 'usuarios', uid, 'ventas_realizadas'), orderBy("timestamp", "desc")), snap => {
-                ventasGlobal = snap.docs.map(d => ({id: d.id, ...d.data()}));
-                renderizarVentas();
-            });
+            try {
+                onSnapshot(collection(db, 'usuarios', uid, 'vendedores'), snap => {
+                    const sel = document.getElementById('sel-vendedor');
+                    if(sel) sel.innerHTML = '<option value="">-- EQUIPO --</option>' + snap.docs.map(d => `<option value="${d.data().nombre}">${d.data().nombre.toUpperCase()}</option>`).join('');
+                });
+                onSnapshot(collection(db, 'usuarios', uid, 'clientes'), snap => {
+                    const sel = document.getElementById('sel-cliente');
+                    if(sel) sel.innerHTML = '<option value="">-- CLIENTE --</option>' + snap.docs.map(d => `<option value="${d.data().nombre}">${d.data().nombre.toUpperCase()}</option>`).join('');
+                });
+                onSnapshot(collection(db, 'usuarios', uid, 'productos'), snap => {
+                    productosGlobal = snap.docs.map(d => ({id: d.id, ...d.data()}));
+                    const sel = document.getElementById('sel-producto');
+                    if(sel) sel.innerHTML = '<option value="">-- PRODUCTO --</option>' + productosGlobal.map(p => `<option value="${p.id}">${p.nombre.toUpperCase()}</option>`).join('');
+                });
+                onSnapshot(query(collection(db, 'usuarios', uid, 'ventas_realizadas'), orderBy("timestamp", "desc")), snap => {
+                    ventasGlobal = snap.docs.map(d => ({id: d.id, ...d.data()}));
+                    renderizarVentas();
+                });
+            } catch(e) { console.error("Error en escucha: ", e); }
         }
 
         window.toggleCliente = (reg) => {
@@ -268,16 +237,9 @@
 
         window.setTipo = (t) => {
             tipoVenta = t;
-            ['contado', 'credito', 'mayor'].forEach(id => {
-                document.getElementById('t-'+id)?.classList.toggle('active', id === t.toLowerCase());
-            });
+            ['contado', 'credito', 'mayor'].forEach(id => document.getElementById('t-'+id)?.classList.toggle('active', id === t.toLowerCase()));
             const panelFechas = document.getElementById('panel-fechas-credito');
-            if(t === 'CREDITO') {
-                panelFechas.classList.remove('hidden');
-                document.getElementById('fecha-entrega').valueAsDate = new Date();
-            } else {
-                panelFechas.classList.add('hidden');
-            }
+            if(t === 'CREDITO') { panelFechas.classList.remove('hidden'); document.getElementById('fecha-entrega').valueAsDate = new Date(); } else { panelFechas.classList.add('hidden'); }
             calcularTotal();
         };
 
@@ -285,11 +247,7 @@
             pSeleccionado = productosGlobal.find(x => x.id === e.target.value);
             const selVar = document.getElementById('sel-variante');
             if (pSeleccionado?.variantes?.length > 0) {
-                // Aquí aplicamos la corrección para mostrar el nombre real
-                selVar.innerHTML = pSeleccionado.variantes.map(v => {
-                    const texto = obtenerNombreVariante(v);
-                    return `<option value="${texto}">${texto}</option>`;
-                }).join('');
+                selVar.innerHTML = pSeleccionado.variantes.map(v => `<option value="${obtenerNombreVariante(v)}">${obtenerNombreVariante(v)}</option>`).join('');
             } else {
                 selVar.innerHTML = '<option value="ESTANDAR">ESTANDAR / UNICA</option>';
             }
@@ -318,9 +276,7 @@
 
             const v = {
                 vendedor: document.getElementById('sel-vendedor').value,
-                cliente: document.getElementById('btn-cli-reg').classList.contains('active') ? 
-                          document.getElementById('sel-cliente').value : 
-                          document.getElementById('inp-cliente-nom').value.toUpperCase(),
+                cliente: document.getElementById('btn-cli-reg').classList.contains('active') ? document.getElementById('sel-cliente').value : document.getElementById('inp-cliente-nom').value.toUpperCase(),
                 producto: pSeleccionado.nombre,
                 productoId: pSeleccionado.id,
                 variante: varianteSel,
@@ -339,27 +295,16 @@
                 v.fecha_limite = document.getElementById('fecha-limite').value;
                 if(!v.fecha_limite) return;
             }
-
             if(!v.vendedor || !v.cliente) return;
-
-            // Apuntar al UID del Administrador principal si la sesión activa es un socio local
             const targetUid = (userId === "socio-local-id" || userId === "test-user-id" || sessionStorage.getItem('mockUserEmail')) ? adminUid : userId;
-
             try {
                 if(editId) {
                     await updateDoc(doc(db, 'usuarios', targetUid, 'ventas_realizadas', editId), v);
                 } else {
                     await addDoc(collection(db, 'usuarios', targetUid, 'ventas_realizadas'), v);
-                    
-                    // Sincronización con Inventario Maestro
                     const inventarioDocId = `${pSeleccionado.id}_${varianteSel.replace(/\s+/g, '_')}`;
                     const invRef = doc(db, 'usuarios', targetUid, 'inventario_master', inventarioDocId);
-                    
-                    await updateDoc(invRef, {
-                        ventas: increment(cantidadVendida),
-                        stock: increment(-cantidadVendida),
-                        lastUpdate: Date.now()
-                    }).catch(err => console.log("Inventario no inicializado."));
+                    await updateDoc(invRef, { ventas: increment(cantidadVendida), stock: increment(-cantidadVendida), lastUpdate: Date.now() }).catch(err => console.log("Inventario no inicializado."));
                 }
                 window.cancelarEdicion();
             } catch (e) { console.error(e); }
@@ -375,10 +320,7 @@
             document.getElementById('inp-cantidad').value = v.cantidad;
             document.getElementById('inp-descuento').value = v.descuento;
             if(v.fecha_raw) document.getElementById('fecha-operacion').value = v.fecha_raw;
-            if(v.tipo === 'CREDITO') {
-                document.getElementById('fecha-entrega').value = v.fecha_entrega || "";
-                document.getElementById('fecha-limite').value = v.fecha_limite || "";
-            }
+            if(v.tipo === 'CREDITO') { document.getElementById('fecha-entrega').value = v.fecha_entrega || ""; document.getElementById('fecha-limite').value = v.fecha_limite || ""; }
             document.getElementById('btn-venta').innerText = "ACTUALIZAR VENTA";
             document.getElementById('btn-cancel').classList.remove('hidden');
             calcularTotal();
@@ -392,10 +334,7 @@
                 if(v) {
                     const inventarioDocId = `${v.productoId}_${v.variante.replace(/\s+/g, '_')}`;
                     const invRef = doc(db, 'usuarios', targetUid, 'inventario_master', inventarioDocId);
-                    await updateDoc(invRef, {
-                        ventas: increment(-v.cantidad),
-                        stock: increment(v.cantidad)
-                    }).catch(e => console.log("No se pudo revertir inventario"));
+                    await updateDoc(invRef, { ventas: increment(-v.cantidad), stock: increment(v.cantidad) }).catch(e => console.log("No se pudo revertir inventario"));
                 }
                 await deleteDoc(doc(db, 'usuarios', targetUid, 'ventas_realizadas', id));
             }
@@ -414,10 +353,7 @@
 
         function renderizarVentas() {
             const container = document.getElementById('listaVentas');
-            if(ventasGlobal.length === 0) {
-                container.innerHTML = '<div class="text-center py-10 opacity-20 text-[10px] font-black uppercase italic">Historial Vacío</div>';
-                return;
-            }
+            if(ventasGlobal.length === 0) { container.innerHTML = '<div class="text-center py-10 opacity-20 text-[10px] font-black uppercase italic">Historial Vacío</div>'; return; }
             container.innerHTML = ventasGlobal.map(v => `
                 <div class="sale-card">
                     <div class="flex justify-between items-start">
