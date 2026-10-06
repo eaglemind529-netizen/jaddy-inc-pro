@@ -68,9 +68,10 @@
         <header class="flex justify-between items-center mb-6">
             <button onclick="window.history.back()" class="text-[10px] font-black border border-gold/30 px-4 py-2 rounded-full text-gold uppercase">← Volver</button>
             <div class="flex items-center gap-2">
-                <!-- BOTÓN TOP 20 SOLICITADO -->
-                <button onclick="toggleTopModal(true)" class="bg-gold/10 border border-gold/40 text-gold font-black text-[9px] px-3 py-2 rounded-full uppercase tracking-wider active:scale-95 transition-all flex items-center gap-1">
-                    <i class="fa-solid fa-trophy text-xs"></i> Top
+                <!-- Botón TOP agregado de manera limpia y compacta -->
+                <button onclick="toggleTopModal(true)" class="bg-gold/10 border border-gold/40 text-gold font-black text-[10px] px-3 py-2 rounded-full uppercase tracking-widest active:scale-95 transition-all flex items-center gap-1.5 shadow-lg">
+                    <i class="fas fa-trophy text-xs"></i>
+                    <span>TOP</span>
                 </button>
                 <div class="text-right">
                     <p class="text-[8px] text-gray-500 font-black uppercase tracking-widest">Análisis de Rango</p>
@@ -138,10 +139,14 @@
             <div id="lista-egresos" class="space-y-2"></div>
         </section>
 
-        <div class="fixed bottom-6 left-4 right-4 flex gap-2">
-            <button onclick="enviarWhatsApp()" class="flex-1 bg-[#25D366] text-black font-black py-4 rounded-2xl flex items-center justify-center gap-2 shadow-xl active:scale-95 transition-all">
+        <div class="fixed bottom-6 left-4 right-4 grid grid-cols-2 gap-2">
+            <button onclick="enviarWhatsApp()" class="bg-[#25D366] text-black font-black py-4 rounded-2xl flex items-center justify-center gap-2 shadow-xl active:scale-95 transition-all">
                 <i class="fa-brands fa-whatsapp text-xl"></i>
-                <span class="text-[11px] uppercase tracking-tighter">Reporte WhatsApp</span>
+                <span class="text-[10px] uppercase tracking-tighter">Reporte General</span>
+            </button>
+            <button onclick="enviarWhatsAppDetallado()" class="bg-[#D4AF37] text-black font-black py-4 rounded-2xl flex items-center justify-center gap-2 shadow-xl active:scale-95 transition-all">
+                <i class="fa-brands fa-whatsapp text-xl"></i>
+                <span class="text-[10px] uppercase tracking-tighter">Reporte Completo</span>
             </button>
         </div>
     </div>
@@ -167,14 +172,46 @@
         <header class="p-6 flex justify-between items-center border-b border-zinc-900 bg-black">
             <div class="flex items-center gap-3">
                 <i class="fas fa-trophy text-gold text-lg"></i>
-                <h2 class="font-black text-white italic text-sm tracking-tight uppercase">Top 20 Productos / Marcas</h2>
+                <div>
+                    <h2 class="font-black text-white italic text-sm tracking-tight uppercase">Top 20 Fragancias y Variantes</h2>
+                    <p class="text-[8px] text-gold font-bold uppercase tracking-widest mt-0.5">Jaddy Inc Luxury Stats</p>
+                </div>
             </div>
             <button onclick="toggleTopModal(false)" class="w-9 h-9 rounded-full bg-[#111] border border-white/5 flex items-center justify-center text-zinc-400 hover:text-gold active:scale-90 transition-all">
                 <i class="fas fa-times text-xs"></i>
             </button>
         </header>
         <div id="lista-top-productos" class="flex-1 overflow-y-auto p-5 space-y-3 pb-28">
-            <p class="text-[9px] text-gray-700 text-center uppercase py-4 italic">Calculando top de ventas...</p>
+            <p class="text-[9px] text-gray-700 text-center uppercase py-4 italic">Calculando top de fragancias y variantes...</p>
+        </div>
+    </div>
+
+    <!-- PANTALLA COMPLETA: Detalle Individual de Fragancia / Variante Seleccionada -->
+    <div id="detalle-producto-modal" class="fixed inset-0 z-[102] hidden flex flex-col bg-[#050505]/98 backdrop-blur-md">
+        <header class="p-6 flex justify-between items-center border-b border-zinc-900 bg-black">
+            <div class="flex items-center gap-3">
+                <i class="fas fa-gem text-gold text-lg"></i>
+                <div>
+                    <h2 id="det-prod-titulo" class="font-black text-white italic text-sm tracking-tight uppercase">Detalle de Fragancia</h2>
+                    <p class="text-[8px] text-gold font-bold uppercase tracking-widest mt-0.5">Jaddy Inc Luxury Stats</p>
+                </div>
+            </div>
+            <button onclick="toggleDetalleProductoModal(false)" class="w-9 h-9 rounded-full bg-[#111] border border-white/5 flex items-center justify-center text-zinc-400 hover:text-gold active:scale-90 transition-all">
+                <i class="fas fa-times text-xs"></i>
+            </button>
+        </header>
+        <div class="p-5 bg-black/40 border-b border-zinc-900 grid grid-cols-2 gap-3">
+            <div class="stat-card">
+                <p class="text-[7px] text-gray-500 font-black uppercase mb-1">Unidades Totales</p>
+                <p id="det-prod-unidades" class="text-xl font-black text-gold">0</p>
+            </div>
+            <div class="stat-card">
+                <p class="text-[7px] text-gray-500 font-black uppercase mb-1">Ingresos Generados</p>
+                <p id="det-prod-ingresos" class="text-xl font-black text-green-400">$0.00</p>
+            </div>
+        </div>
+        <div id="lista-ventas-producto-detalle" class="flex-1 overflow-y-auto p-5 space-y-3 pb-28">
+            <p class="text-[9px] text-gray-700 text-center uppercase py-4 italic">Cargando transacciones...</p>
         </div>
     </div>
 
@@ -268,13 +305,15 @@
                     { id: "V3", nombre: "JOSÉ RODRÍGUEZ", telefono: "" }
                 ];
 
-                // Cargar datos simulados enriquecidos con productos/marcas y fechas de vencimiento para testear el reporte de WhatsApp detallado
+                // Cargar datos simulados enriquecidos con fragancias y variantes específicas para testear el top 20
                 ventasData = [
-                    { id: "V1", total: 1200.00, tipo: "CONTADO", fecha: hoy, abonos: [], vendedor: "MARÍA GONZÁLEZ", producto: "ROLEX SUBMARINER", marca: "ROLEX", cantidad: 2 },
-                    { id: "V2", total: 500.00, tipo: "CREDITO", fecha: "2026-05-01", fecha_vencimiento: "2026-05-15", abonos: [{ monto: 200, fecha: "2026-05-02" }], vendedor: "MARÍA GONZÁLEZ", cliente: "ALBERTO ROJAS", producto: "IPHONE 15 PRO MAX", marca: "APPLE", cantidad: 1 },
-                    { id: "V3", total: 350.00, tipo: "CONTADO", fecha: hoy, abonos: [], vendedor: "CARLOS MENDOZA", producto: "ROLEX SUBMARINER", marca: "ROLEX", cantidad: 1 },
-                    { id: "V4", total: 800.00, tipo: "CREDITO", fecha: "2026-04-10", fecha_vencimiento: "2026-04-20", abonos: [], vendedor: "CARLOS MENDOZA", cliente: "RESTAURANTE EL SOL", producto: "AIRPODS PRO", marca: "APPLE", cantidad: 4 },
-                    { id: "V5", total: 400.00, tipo: "CREDITO", fecha: "2026-05-10", fecha_vencimiento: "2026-05-20", abonos: [{ monto: 150, fecha: "2026-05-11" }], vendedor: "JOSÉ RODRÍGUEZ", cliente: "SARA GÓMEZ", producto: "NIKE AIR FORCE 1", marca: "NIKE", cantidad: 3 }
+                    { id: "V1", total: 120.00, tipo: "CONTADO", fecha: hoy, abonos: [], vendedor: "MARÍA GONZÁLEZ", producto: "INVICTUS 100ML", cantidad: 2 },
+                    { id: "V2", total: 95.00, tipo: "CREDITO", fecha: "2026-05-01", fecha_vencimiento: "2026-05-15", abonos: [{ monto: 50, fecha: "2026-05-02" }], vendedor: "MARÍA GONZÁLEZ", cliente: "ALBERTO ROJAS", producto: "9 PM AFS/AFNAN", cantidad: 1 },
+                    { id: "V3", total: 60.00, tipo: "CONTADO", fecha: hoy, abonos: [], vendedor: "CARLOS MENDOZA", producto: "INVICTUS 100ML", cantidad: 1 },
+                    { id: "V4", total: 190.00, tipo: "CREDITO", fecha: "2026-04-10", fecha_vencimiento: "2026-04-20", abonos: [], vendedor: "CARLOS MENDOZA", cliente: "RESTAURANTE EL SOL", producto: "9 PM AFS/AFNAN", cantidad: 2 },
+                    { id: "V5", total: 110.00, tipo: "CREDITO", fecha: "2026-05-10", fecha_vencimiento: "2026-05-20", abonos: [{ monto: 50, fecha: "2026-05-11" }], vendedor: "JOSÉ RODRÍGUEZ", cliente: "SARA GÓMEZ", producto: "BLEU DE CHANEL 150ML", cantidad: 1 },
+                    { id: "V6", total: 110.00, tipo: "CONTADO", fecha: hoy, abonos: [], vendedor: "MARÍA GONZÁLEZ", producto: "BLEU DE CHANEL 150ML", cantidad: 1 },
+                    { id: "V7", total: 85.00, tipo: "CONTADO", fecha: hoy, abonos: [], vendedor: "CARLOS MENDOZA", producto: "EROS EDP 100ML", cantidad: 1 }
                 ];
 
                 egresosData = [
@@ -305,6 +344,102 @@
             } else {
                 modal.classList.add('hidden');
             }
+        };
+
+        // CONTROL GLOBAL DE PANTALLA COMPLETA DETALLE PRODUCTO
+        window.toggleDetalleProductoModal = (show) => {
+            const modal = document.getElementById('detalle-producto-modal');
+            if (show) {
+                modal.classList.remove('hidden');
+            } else {
+                modal.classList.add('hidden');
+            }
+        };
+
+        // ABRIR EL DETALLE DE UN PRODUCTO O FRAGANCIA ESPECÍFICA AL TOCARLO EN EL TOP
+        window.verDetalleProducto = (nombreProductoEncoded, event) => {
+            if (event) event.stopPropagation();
+            const productoNombre = decodeURIComponent(nombreProductoEncoded);
+            
+            document.getElementById('det-prod-titulo').innerText = productoNombre;
+
+            const inicio = document.getElementById('fecha-inicio').value;
+            const fin = document.getElementById('fecha-fin').value;
+            const estaEnRango = (fechaOriginal) => {
+                if (modoHistorialTotal || (!inicio && !fin)) return true;
+                const f = normalizarFecha(fechaOriginal);
+                return f >= inicio && f <= fin;
+            };
+
+            let totalUnidades = 0;
+            let totalIngresos = 0;
+            let transaccionesProducto = [];
+
+            ventasData.forEach(v => {
+                const fechaVentaNorm = normalizarFecha(v.fecha_venta || v.fecha);
+                if (estaEnRango(fechaVentaNorm)) {
+                    let nombreItem = "";
+                    if (v.variante) nombreItem = v.variante;
+                    else if (v.fragancia) nombreItem = v.fragancia;
+                    else if (v.producto) nombreItem = v.producto;
+                    else if (v.marca) nombreItem = v.marca;
+                    else if (v.articulo) nombreItem = v.articulo;
+                    else if (v.descripcion_producto) nombreItem = v.descripcion_producto;
+                    else if (v.nombre_articulo) nombreItem = v.nombre_articulo;
+                    
+                    nombreItem = nombreItem.trim().toUpperCase();
+
+                    if (nombreItem && nombreItem === productoNombre.toUpperCase()) {
+                        const cant = parseNum(v.cantidad || v.cant || 1);
+                        const precioVenta = parseNum(v.total || v.precio);
+                        
+                        totalUnidades += cant;
+                        totalIngresos += precioVenta;
+
+                        transaccionesProducto.push({
+                            cliente: v.cliente || v.nombre_cliente || v.comprador || "CLIENTE GENERAL",
+                            vendedor: v.vendedor || "SIN ASIGNAR",
+                            tipo: v.tipo || "CONTADO",
+                            cantidad: cant,
+                            total: precioVenta,
+                            fecha: fechaVentaNorm
+                        });
+                    }
+                }
+            });
+
+            document.getElementById('det-prod-unidades').innerText = totalUnidades;
+            document.getElementById('det-prod-ingresos').innerText = `$${totalIngresos.toLocaleString('en-US', {minimumFractionDigits:2})}`;
+
+            const containerDetalle = document.getElementById('lista-ventas-producto-detalle');
+            if (transaccionesProducto.length === 0) {
+                containerDetalle.innerHTML = '<p class="text-[9px] text-gray-700 text-center uppercase py-10 italic">No hay transacciones registradas para esta fragancia o variante en el periodo</p>';
+            } else {
+                containerDetalle.innerHTML = transaccionesProducto.map((t, idx) => `
+                    <div class="bg-[#0A0A0A] p-4 rounded-2xl border border-zinc-900 flex justify-between items-center shadow-md">
+                        <div class="space-y-1">
+                            <div class="flex items-center gap-2">
+                                <span class="text-[9px] font-black text-gold">#${idx + 1}</span>
+                                <p class="text-xs font-black text-white uppercase tracking-wider">${t.cliente}</p>
+                            </div>
+                            <div class="flex gap-2 text-[7px] font-bold text-gray-400 uppercase">
+                                <span>Vendedor: <strong class="text-zinc-300">${t.vendedor}</strong></span>
+                                <span>•</span>
+                                <span>Tipo: <strong class="${t.tipo === 'CONTADO' ? 'text-green-400' : 'text-orange-400'}">${t.tipo}</strong></span>
+                                <span>•</span>
+                                <span>Cant: <strong class="text-gold">${t.cantidad}</strong></span>
+                            </div>
+                            <p class="text-[7px] text-zinc-500 uppercase">${new Date(t.fecha).toLocaleDateString()}</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-xs font-black text-green-400 font-mono">$${t.total.toLocaleString('en-US', {minimumFractionDigits:2})}</p>
+                            <p class="text-[7px] text-zinc-500 uppercase tracking-widest">Total Venta</p>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            toggleDetalleProductoModal(true);
         };
 
         // CONTROL DE EXPANSIÓN DE CLIENTES POR VENDEDOR
@@ -360,14 +495,8 @@
         window.enviarWhatsAppVendedor = (nombreVendedor, telefono, event) => {
             if (event) event.stopPropagation();
             
-            // Reconstruir o buscar las deudas y ventas de este vendedor específico
             const inicio = document.getElementById('fecha-inicio').value;
             const fin = document.getElementById('fecha-fin').value;
-            const estaEnRango = (fechaOriginal) => {
-                if (modoHistorialTotal || (!inicio && !fin)) return true;
-                const f = normalizarFecha(fechaOriginal);
-                return f >= inicio && f <= fin;
-            };
 
             let ventasVendedor = [];
             let montoTotalDeuda = 0;
@@ -387,7 +516,6 @@
                             const fechaEntrega = normalizarFecha(v.fecha_venta || v.fecha || "N/A");
                             const fechaVencimiento = normalizarFecha(v.fecha_vencimiento || v.vencimiento || fechaEntrega);
                             
-                            // Calcular días de atraso respecto a la fecha actual
                             let diasAtraso = 0;
                             if (fechaVencimiento && fechaVencimiento !== "N/A") {
                                 const hoyDate = new Date();
@@ -410,7 +538,6 @@
                 }
             });
 
-            // Construir el texto detallado para WhatsApp
             let detalleTexto = `🏆 *REPORTE DE COBRO | JADDY INC*\n\n`;
             detalleTexto += `👋 Hola *${nombreVendedor}*,\n`;
             detalleTexto += `💼 Detalle de tus cuentas pendientes en la calle:\n\n`;
@@ -449,9 +576,7 @@
             let deudaPendienteTotal = 0;
             let contadorOperaciones = 0;
             
-            // Estructura para agrupar deudas por vendedor (Monto Total + Listado de Ventas)
             const deudasPorVendedor = {};
-            // Estructura para acumular el Top de productos o marcas
             const rankingProductos = {};
 
             ventasData.forEach(v => {
@@ -461,30 +586,37 @@
                 const tipoVenta = (v.tipo || "").toUpperCase();
                 const vendedorName = (v.vendedor || "SIN ASIGNAR").toUpperCase();
 
-                // Extracción segura del nombre del producto o marca registrada en la venta
-                const nombreItem = (v.producto || v.marca || v.articulo || v.descripcion_producto || "PRODUCTO GENERAL").toUpperCase();
+                let nombreItem = "";
+                if (v.variante) nombreItem = v.variante;
+                else if (v.fragancia) nombreItem = v.fragancia;
+                else if (v.producto) nombreItem = v.producto;
+                else if (v.marca) nombreItem = v.marca;
+                else if (v.articulo) nombreItem = v.articulo;
+                else if (v.descripcion_producto) nombreItem = v.descripcion_producto;
+                else if (v.nombre_articulo) nombreItem = v.nombre_articulo;
+
+                nombreItem = nombreItem.trim();
                 const cantItem = parseNum(v.cantidad || v.cant || 1);
 
                 if (ventaEnRango) {
                     contadorOperaciones++;
                     
-                    // Acumular métricas para el Top 20
-                    if (!rankingProductos[nombreItem]) {
-                        rankingProductos[nombreItem] = { unidades: 0, ingresos: 0 };
+                    if (nombreItem) {
+                        const claveProd = nombreItem.toUpperCase();
+                        if (!rankingProductos[claveProd]) {
+                            rankingProductos[claveProd] = { unidades: 0, ingresos: 0 };
+                        }
+                        rankingProductos[claveProd].unidades += cantItem;
+                        rankingProductos[claveProd].ingresos += totalVenta;
                     }
-                    rankingProductos[nombreItem].unidades += cantItem;
-                    rankingProductos[nombreItem].unidades = Math.max(rankingProductos[nombreItem].unidades, 1);
-                    rankingProductos[nombreItem].ingresos += totalVenta;
                 }
 
-                // Lógica de Ingresos Reales (Solo lo que entró físicamente)
                 if (tipoVenta === 'CONTADO') {
                     if (ventaEnRango) {
                         ingresosTotalesCaja += totalVenta;
                     }
                 }
 
-                // Sumar abonos a la caja si ocurrieron en el rango de fecha
                 let totalAbonadoHistorico = 0;
                 if (v.abonos && Array.isArray(v.abonos)) {
                     v.abonos.forEach(ab => {
@@ -496,21 +628,17 @@
                     });
                 }
 
-                // Lógica de Cuentas por Cobrar (Lo pendiente hoy)
                 if (tipoVenta === 'CREDITO') {
                     const saldoPendiente = totalVenta - totalAbonadoHistorico;
                     if (saldoPendiente > 0) {
                         deudaPendienteTotal += saldoPendiente;
                         
-                        // Inicializar agrupado si no existe
                         if (!deudasPorVendedor[vendedorName]) {
                             deudasPorVendedor[vendedorName] = { total: 0, ventas: [] };
                         }
                         
-                        // Acumular la deuda líquida por vendedor
                         deudasPorVendedor[vendedorName].total += saldoPendiente;
                         
-                        // Registrar información detallada del cliente deudor
                         deudasPorVendedor[vendedorName].ventas.push({
                             cliente: v.cliente || v.nombre_cliente || v.comprador || "CLIENTE SIN NOMBRE",
                             totalOriginal: totalVenta,
@@ -526,7 +654,6 @@
             const egresosFiltrados = egresosData.filter(e => estaEnRango(e.fecha));
             let totalEgresos = egresosFiltrados.reduce((acc, e) => acc + parseNum(e.monto), 0);
 
-            // Actualizar UI General
             document.getElementById('subtotal-ventas').innerText = `$${ingresosTotalesCaja.toLocaleString('en-US', {minimumFractionDigits:2})}`;
             document.getElementById('subtotal-egresos').innerText = `$${totalEgresos.toLocaleString('en-US', {minimumFractionDigits:2})}`;
             
@@ -536,7 +663,7 @@
             document.getElementById('total-credito').innerText = `$${deudaPendienteTotal.toLocaleString('en-US', {minimumFractionDigits:2})}`;
             document.getElementById('total-ventas').innerText = contadorOperaciones;
 
-            // Renderizar la lista del Top 20 de productos / marcas en la pantalla completa
+            // Renderizar la lista del Top 20 de fragancias / variantes exactas
             const listaTopContainer = document.getElementById('lista-top-productos');
             const arrayRanking = Object.keys(rankingProductos).map(prod => ({
                 producto: prod,
@@ -545,17 +672,18 @@
             })).sort((a, b) => b.unidades - a.unidades || b.ingresos - a.ingresos).slice(0, 20);
 
             if (arrayRanking.length === 0) {
-                listaTopContainer.innerHTML = '<p class="text-[9px] text-gray-700 text-center uppercase py-10 italic">No hay registros para calcular el top en este periodo</p>';
+                listaTopContainer.innerHTML = '<p class="text-[9px] text-gray-700 text-center uppercase py-10 italic">No hay registros con fragancias o variantes para calcular el Top 20 en este periodo</p>';
             } else {
                 listaTopContainer.innerHTML = arrayRanking.map((item, index) => {
                     const medalla = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `#${index + 1}`;
+                    const prodEncoded = encodeURIComponent(item.producto);
                     return `
-                    <div class="bg-[#0A0A0A] p-4 rounded-2xl border border-zinc-900 flex justify-between items-center shadow-md">
+                    <div onclick="verDetalleProducto('${prodEncoded}', event)" class="bg-[#0A0A0A] p-4 rounded-2xl border border-zinc-900 hover:border-gold/40 flex justify-between items-center shadow-md cursor-pointer active:scale-95 transition-all">
                         <div class="flex items-center gap-3">
                             <span class="w-7 h-7 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-xs font-black text-gold">${medalla}</span>
                             <div>
                                 <p class="text-xs font-black text-white uppercase tracking-wider">${item.producto}</p>
-                                <p class="text-[8px] text-gray-500 font-bold uppercase mt-0.5">Unidades Vendidas: <span class="text-gold">${item.unidades}</span></p>
+                                <p class="text-[8px] text-gray-500 font-bold uppercase mt-0.5">Unidades Vendidas: <span class="text-gold">${item.unidades}</span> <span class="text-zinc-600 ml-1">(Toca para ver detalle)</span></p>
                             </div>
                         </div>
                         <div class="text-right">
@@ -567,17 +695,16 @@
                 }).join('');
             }
 
-            // Renderizar la lista de deudas en la PANTALLA COMPLETA con su botón de WhatsApp correspondiente e interactividad de expansión
+            // Renderizar lista de deudas de vendedores
             const listaDeudasVendedores = document.getElementById('lista-deudas-vendedores');
             const arrayDeudasVendedores = Object.keys(deudasPorVendedor).map(vendedor => {
-                // Buscamos el número de teléfono del vendedor sincronizado para cargarlo en el botón
                 const matchVendedor = vendedoresData.find(v => v.nombre.toUpperCase() === vendedor.toUpperCase());
                 return {
                     nombre: vendedor,
                     monto: deudasPorVendedor[vendedor].total,
                     ventas: deudasPorVendedor[vendedor].ventas,
                     porcentaje: deudaPendienteTotal > 0 ? (deudasPorVendedor[vendedor].total / deudaPendienteTotal) * 100 : 0,
-                    telefono: matchVendedor ? matchVendedor.telefono : "" // Sincroniza el número de WhatsApp real
+                    telefono: matchVendedor ? matchVendedor.telefono : ""
                 };
             }).sort((a, b) => b.monto - a.monto);
 
@@ -599,7 +726,6 @@
                                     <span class="text-orange-400 font-bold block">$${dv.monto.toLocaleString('en-US', {minimumFractionDigits:2})}</span>
                                     <span class="text-[9px] text-gray-500 font-normal">(${dv.porcentaje.toFixed(1)}%)</span>
                                 </div>
-                                <!-- BOTÓN WHATSAPP DEL VENDEDOR CON REPORTE DETALLADO -->
                                 <button onclick="enviarWhatsAppVendedor('${dv.nombre}', '${dv.telefono}', event)" class="bg-[#25D366] text-black font-black px-3 py-2 rounded-xl flex items-center gap-1 active:scale-90 transition-all text-[8px] tracking-tight">
                                     <i class="fa-brands fa-whatsapp text-xs"></i>
                                     <span>Cobro Detallado</span>
@@ -610,7 +736,6 @@
                             <div style="width: ${dv.porcentaje}%" class="bg-orange-400 h-full rounded-full shadow-[0_0_8px_rgba(251,146,60,0.4)]"></div>
                         </div>
 
-                        <!-- DESGLOSE EXPANDIBLE DE CLIENTES DEUDORES -->
                         <div id="det-vend-${safeVendedorId}" class="hidden pt-4 border-t border-zinc-900 space-y-2" onclick="event.stopPropagation()">
                             <p class="text-[8px] text-gold font-black uppercase tracking-widest mb-1"><i class="fa-solid fa-list mr-1"></i> Cartera de Clientes Deudores</p>
                             ${dv.ventas.map(vt => `
@@ -668,7 +793,25 @@
                 `_Luxury Finanzas System_`
             );
             window.open(`https://wa.me/?text=${mensaje}`);
-        }
+        };
+
+        window.enviarWhatsAppDetallado = () => {
+            const inicio = document.getElementById('fecha-inicio').value || "Histórico";
+            const fin = document.getElementById('fecha-fin').value || "Actual";
+            
+            let texto = `🏆 *REPORTE FINANCIERO DETALLADO | JADDY INC*\n`;
+            texto += `📅 *Periodo:* ${inicio} al ${fin}\n\n`;
+            texto += `💰 *Ingresos (Caja):* ${document.getElementById('subtotal-ventas').innerText}\n`;
+            texto += `💸 *Egresos / Gastos:* ${document.getElementById('subtotal-egresos').innerText}\n`;
+            texto += `💳 *Cuentas por Cobrar:* ${document.getElementById('total-credito').innerText}\n`;
+            texto += `💎 *Utilidad Neta Real:* ${document.getElementById('total-utilidad').innerText}\n`;
+            texto += `📦 *Operaciones Totales:* ${document.getElementById('total-ventas').innerText}\n\n`;
+            
+            texto += `_Luxury Finanzas System - Generado automáticamente_`;
+
+            const mensaje = encodeURIComponent(texto);
+            window.open(`https://wa.me/?text=${mensaje}`);
+        };
 
         document.getElementById('fecha-inicio').addEventListener('change', () => { modoHistorialTotal = false; procesarTodo(); });
         document.getElementById('fecha-fin').addEventListener('change', () => { modoHistorialTotal = false; procesarTodo(); });
