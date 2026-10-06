@@ -783,20 +783,47 @@
             
             const cards = document.querySelectorAll('#lista-top-productos > div');
             if (cards.length === 0 || document.querySelector('#lista-top-productos p')) {
-                alert("No hay fragancias en el top para enviar.");
-                return;
+                // Check if there are actual products instead of just checking the selector
+                const actualCards = Array.from(cards).filter(card => card.querySelector('p.text-xs'));
+                if (actualCards.length === 0) {
+                    // Fallback to alert replacement box or just silent return / gentle message
+                    const containerTop = document.getElementById('lista-top-productos');
+                    if (containerTop) {
+                        containerTop.insertAdjacentHTML('afterbegin', '<div class="bg-red-500/10 border border-red-500/30 text-red-400 text-[9px] p-2 rounded-xl text-center uppercase font-bold mb-3">No hay fragancias en el top para enviar.</div>');
+                        setTimeout(() => { const msg = containerTop.querySelector('.bg-red-500\\/10'); if(msg) msg.remove(); }, 3000);
+                    }
+                    return;
+                }
             }
 
-            cards.forEach((card, idx) => {
-                const nombre = card.querySelector('p.text-xs').innerText;
-                const unidadesTexto = card.querySelector('p.text-\\[8px\\].text-gray-500').innerText;
-                const matchUnidades = unidadesTexto.match(/Unidades Vendidas:\s*(\d+)/i);
-                const unidades = matchUnidades ? matchUnidades[1] : '0';
-                const generado = card.querySelector('.text-right p.text-xs').innerText;
+            const validCards = document.querySelectorAll('#lista-top-productos > div');
+            let countValid = 0;
+            validCards.forEach((card, idx) => {
+                const nombreEl = card.querySelector('p.text-xs');
+                const unidadesEl = card.querySelector('p.text-\\[8px\\].text-gray-500');
+                const generadoEl = card.querySelector('.text-right p.text-xs');
 
-                texto += `🔹 *${idx + 1}. ${nombre}*\n`;
-                texto += `   📦 Vendidas: *${unidades} unids* | Ingresos: ${generado}\n\n`;
+                if (nombreEl && unidadesEl && generadoEl) {
+                    countValid++;
+                    const nombre = nombreEl.innerText;
+                    const unidadesTexto = unidadesEl.innerText;
+                    const matchUnidades = unidadesTexto.match(/Unidades Vendidas:\s*(\d+)/i);
+                    const unidades = matchUnidades ? matchUnidades[1] : '0';
+                    const generado = generadoEl.innerText;
+
+                    texto += `🔹 *${countValid}. ${nombre}*\n`;
+                    texto += `   📦 Vendidas: *${unidades} unids* | Ingresos: ${generado}\n\n`;
+                }
             });
+
+            if (countValid === 0) {
+                const containerTop = document.getElementById('lista-top-productos');
+                if (containerTop) {
+                    containerTop.insertAdjacentHTML('afterbegin', '<div class="bg-red-500/10 border border-red-500/30 text-red-400 text-[9px] p-2 rounded-xl text-center uppercase font-bold mb-3">No hay fragancias en el top para enviar.</div>');
+                    setTimeout(() => { const msg = containerTop.querySelector('.bg-red-500\\/10'); if(msg) msg.remove(); }, 3000);
+                }
+                return;
+            }
 
             texto += `_Luxury Finanzas System - Pedido generado automáticamente_`;
 
