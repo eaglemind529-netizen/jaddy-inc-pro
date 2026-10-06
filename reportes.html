@@ -1,4 +1,4 @@
-
+```html
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -67,9 +67,15 @@
     <div class="p-4">
         <header class="flex justify-between items-center mb-6">
             <button onclick="window.history.back()" class="text-[10px] font-black border border-gold/30 px-4 py-2 rounded-full text-gold uppercase">← Volver</button>
-            <div class="text-right">
-                <p class="text-[8px] text-gray-500 font-black uppercase tracking-widest">Análisis de Rango</p>
-                <p class="text-gold font-black italic text-sm">JADDY INC</p>
+            <div class="flex items-center gap-2">
+                <!-- BOTÓN TOP 20 SOLICITADO -->
+                <button onclick="toggleTopModal(true)" class="bg-gold/10 border border-gold/40 text-gold font-black text-[9px] px-3 py-2 rounded-full uppercase tracking-wider active:scale-95 transition-all flex items-center gap-1">
+                    <i class="fa-solid fa-trophy text-xs"></i> Top
+                </button>
+                <div class="text-right">
+                    <p class="text-[8px] text-gray-500 font-black uppercase tracking-widest">Análisis de Rango</p>
+                    <p class="text-gold font-black italic text-sm">JADDY INC</p>
+                </div>
             </div>
         </header>
 
@@ -153,6 +159,22 @@
         </header>
         <div id="lista-deudas-vendedores" class="flex-1 overflow-y-auto p-5 space-y-3 pb-28">
             <p class="text-[9px] text-gray-700 text-center uppercase py-4 italic">Cargando cuentas...</p>
+        </div>
+    </div>
+
+    <!-- PANTALLA COMPLETA NUEVA: Top 20 Productos / Marcas Más Vendidas -->
+    <div id="top-modal" class="fixed inset-0 z-[101] hidden flex flex-col bg-[#050505]/98 backdrop-blur-md">
+        <header class="p-6 flex justify-between items-center border-b border-zinc-900 bg-black">
+            <div class="flex items-center gap-3">
+                <i class="fas fa-trophy text-gold text-lg"></i>
+                <h2 class="font-black text-white italic text-sm tracking-tight uppercase">Top 20 Productos / Marcas</h2>
+            </div>
+            <button onclick="toggleTopModal(false)" class="w-9 h-9 rounded-full bg-[#111] border border-white/5 flex items-center justify-center text-zinc-400 hover:text-gold active:scale-90 transition-all">
+                <i class="fas fa-times text-xs"></i>
+            </button>
+        </header>
+        <div id="lista-top-productos" class="flex-1 overflow-y-auto p-5 space-y-3 pb-28">
+            <p class="text-[9px] text-gray-700 text-center uppercase py-4 italic">Calculando top de ventas...</p>
         </div>
     </div>
 
@@ -246,13 +268,13 @@
                     { id: "V3", nombre: "JOSÉ RODRÍGUEZ", telefono: "" }
                 ];
 
-                // Cargar datos simulados de volumen real enriquecidos con vendedor para testear el desglose de deudas
+                // Cargar datos simulados enriquecidos con productos/marcas y fechas de vencimiento para testear el reporte de WhatsApp detallado
                 ventasData = [
-                    { id: "V1", total: 1200.00, tipo: "CONTADO", fecha: hoy, abonos: [], vendedor: "MARÍA GONZÁLEZ" },
-                    { id: "V2", total: 500.00, tipo: "CREDITO", fecha: hoy, abonos: [{ monto: 200, fecha: hoy }], vendedor: "MARÍA GONZÁLEZ", cliente: "ALBERTO ROJAS" }, // María tiene $300 pendientes
-                    { id: "V3", total: 350.00, tipo: "CONTADO", fecha: hoy, abonos: [], vendedor: "CARLOS MENDOZA" },
-                    { id: "V4", total: 800.00, tipo: "CREDITO", fecha: hoy, abonos: [], vendedor: "CARLOS MENDOZA", cliente: "RESTAURANTE EL SOL" }, // Carlos tiene $800 pendientes
-                    { id: "V5", total: 400.00, tipo: "CREDITO", fecha: hoy, abonos: [{ monto: 150, fecha: hoy }], vendedor: "JOSÉ RODRÍGUEZ", cliente: "SARA GÓMEZ" } // José tiene $250 pendientes
+                    { id: "V1", total: 1200.00, tipo: "CONTADO", fecha: hoy, abonos: [], vendedor: "MARÍA GONZÁLEZ", producto: "ROLEX SUBMARINER", marca: "ROLEX", cantidad: 2 },
+                    { id: "V2", total: 500.00, tipo: "CREDITO", fecha: "2026-05-01", fecha_vencimiento: "2026-05-15", abonos: [{ monto: 200, fecha: "2026-05-02" }], vendedor: "MARÍA GONZÁLEZ", cliente: "ALBERTO ROJAS", producto: "IPHONE 15 PRO MAX", marca: "APPLE", cantidad: 1 },
+                    { id: "V3", total: 350.00, tipo: "CONTADO", fecha: hoy, abonos: [], vendedor: "CARLOS MENDOZA", producto: "ROLEX SUBMARINER", marca: "ROLEX", cantidad: 1 },
+                    { id: "V4", total: 800.00, tipo: "CREDITO", fecha: "2026-04-10", fecha_vencimiento: "2026-04-20", abonos: [], vendedor: "CARLOS MENDOZA", cliente: "RESTAURANTE EL SOL", producto: "AIRPODS PRO", marca: "APPLE", cantidad: 4 },
+                    { id: "V5", total: 400.00, tipo: "CREDITO", fecha: "2026-05-10", fecha_vencimiento: "2026-05-20", abonos: [{ monto: 150, fecha: "2026-05-11" }], vendedor: "JOSÉ RODRÍGUEZ", cliente: "SARA GÓMEZ", producto: "NIKE AIR FORCE 1", marca: "NIKE", cantidad: 3 }
                 ];
 
                 egresosData = [
@@ -268,6 +290,16 @@
         // CONTROL GLOBAL DE PANTALLA COMPLETA
         window.toggleVendedoresModal = (show) => {
             const modal = document.getElementById('vendedores-modal');
+            if (show) {
+                modal.classList.remove('hidden');
+            } else {
+                modal.classList.add('hidden');
+            }
+        };
+
+        // CONTROL GLOBAL DE PANTALLA COMPLETA TOP 20
+        window.toggleTopModal = (show) => {
+            const modal = document.getElementById('top-modal');
             if (show) {
                 modal.classList.remove('hidden');
             } else {
@@ -324,20 +356,82 @@
             procesarTodo();
         };
 
-        // Función global para enviar mensaje de WhatsApp personalizado al vendedor correspondiente
-        window.enviarWhatsAppVendedor = (nombre, monto, telefono, event) => {
+        // Función global para enviar mensaje de WhatsApp detallado al vendedor con la lista de clientes, montos, fechas y atraso
+        window.enviarWhatsAppVendedor = (nombreVendedor, telefono, event) => {
             if (event) event.stopPropagation();
-            const mensaje = encodeURIComponent(
-                `🏆 *REPORTE DE COBRO | JADDY INC*\n\n` +
-                `👋 Hola *${nombre}*,\n\n` +
-                `💼 Te informamos que cuentas con un saldo pendiente por cobrar en la calle de:\n` +
-                `💰 *💵 $${monto.toLocaleString('en-US', {minimumFractionDigits:2})}*\n\n` +
-                `Por favor, realiza el seguimiento correspondiente para el retorno de caja.\n\n` +
-                `_Luxury Finanzas System_`
-            );
             
-            // Si el vendedor tiene cargado el número, enviamos directo, de lo contrario abrimos selección manual
-            const url = telefono ? `https://wa.me/${telefono}?text=${mensaje}` : `https://wa.me/?text=${mensaje}`;
+            // Reconstruir o buscar las deudas y ventas de este vendedor específico
+            const inicio = document.getElementById('fecha-inicio').value;
+            const fin = document.getElementById('fecha-fin').value;
+            const estaEnRango = (fechaOriginal) => {
+                if (modoHistorialTotal || (!inicio && !fin)) return true;
+                const f = normalizarFecha(fechaOriginal);
+                return f >= inicio && f <= fin;
+            };
+
+            let ventasVendedor = [];
+            let montoTotalDeuda = 0;
+
+            ventasData.forEach(v => {
+                const vendedorName = (v.vendedor || "SIN ASIGNAR").toUpperCase();
+                if (vendedorName === nombreVendedor.toUpperCase()) {
+                    const tipoVenta = (v.tipo || "").toUpperCase();
+                    if (tipoVenta === 'CREDITO') {
+                        let totalAbonadoHistorico = 0;
+                        if (v.abonos && Array.isArray(v.abonos)) {
+                            v.abonos.forEach(ab => { totalAbonadoHistorico += parseNum(ab.monto); });
+                        }
+                        const saldoPendiente = parseNum(v.total || v.precio) - totalAbonadoHistorico;
+                        if (saldoPendiente > 0) {
+                            montoTotalDeuda += saldoPendiente;
+                            const fechaEntrega = normalizarFecha(v.fecha_venta || v.fecha || "N/A");
+                            const fechaVencimiento = normalizarFecha(v.fecha_vencimiento || v.vencimiento || fechaEntrega);
+                            
+                            // Calcular días de atraso respecto a la fecha actual
+                            let diasAtraso = 0;
+                            if (fechaVencimiento && fechaVencimiento !== "N/A") {
+                                const hoyDate = new Date();
+                                const vencDate = new Date(fechaVencimiento + "T00:00:00");
+                                const diffTime = hoyDate - vencDate;
+                                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                                diasAtraso = diffDays > 0 ? diffDays : 0;
+                            }
+
+                            ventasVendedor.push({
+                                cliente: v.cliente || v.nombre_cliente || v.comprador || "CLIENTE SIN NOMBRE",
+                                saldo: saldoPendiente,
+                                fechaEntrega: fechaEntrega,
+                                fechaVencimiento: fechaVencimiento,
+                                atraso: diasAtraso,
+                                producto: v.producto || v.marca || v.articulo || ""
+                            });
+                        }
+                    }
+                }
+            });
+
+            // Construir el texto detallado para WhatsApp
+            let detalleTexto = `🏆 *REPORTE DE COBRO | JADDY INC*\n\n`;
+            detalleTexto += `👋 Hola *${nombreVendedor}*,\n`;
+            detalleTexto += `💼 Detalle de tus cuentas pendientes en la calle:\n\n`;
+            
+            if (ventasVendedor.length === 0) {
+                detalleTexto += `✅ ¡No tienes saldos pendientes asignados actualmente!\n`;
+            } else {
+                ventasVendedor.forEach((item, idx) => {
+                    detalleTexto += `🔹 *${idx + 1}. Cliente:* ${item.cliente}\n`;
+                    if(item.producto) detalleTexto += `   📦 *Art/Prod:* ${item.producto}\n`;
+                    detalleTexto += `   💰 *Debe:* $${item.saldo.toLocaleString('en-US', {minimumFractionDigits:2})}\n`;
+                    detalleTexto += `   📅 *Entrega:* ${item.fechaEntrega}\n`;
+                    detalleTexto += `   ⏰ *Vence:* ${item.fechaVencimiento}\n`;
+                    detalleTexto += `   ⏳ *Atraso:* ${item.atraso} día(s)\n\n`;
+                });
+                detalleTexto += `💰 *SALDO TOTAL A COBRAR:* $${montoTotalDeuda.toLocaleString('en-US', {minimumFractionDigits:2})}\n\n`;
+            }
+            detalleTexto += `_Por favor gestionar el cobro lo antes posible._\n*Luxury Finanzas System*`;
+
+            const mensajeCodificado = encodeURIComponent(detalleTexto);
+            const url = telefono ? `https://wa.me/${telefono}?text=${mensajeCodificado}` : `https://wa.me/?text=${mensajeCodificado}`;
             window.open(url);
         };
 
@@ -357,6 +451,8 @@
             
             // Estructura para agrupar deudas por vendedor (Monto Total + Listado de Ventas)
             const deudasPorVendedor = {};
+            // Estructura para acumular el Top de productos o marcas
+            const rankingProductos = {};
 
             ventasData.forEach(v => {
                 const fechaVentaNorm = normalizarFecha(v.fecha_venta || v.fecha);
@@ -365,8 +461,20 @@
                 const tipoVenta = (v.tipo || "").toUpperCase();
                 const vendedorName = (v.vendedor || "SIN ASIGNAR").toUpperCase();
 
+                // Extracción segura del nombre del producto o marca registrada en la venta
+                const nombreItem = (v.producto || v.marca || v.articulo || v.descripcion_producto || "PRODUCTO GENERAL").toUpperCase();
+                const cantItem = parseNum(v.cantidad || v.cant || 1);
+
                 if (ventaEnRango) {
                     contadorOperaciones++;
+                    
+                    // Acumular métricas para el Top 20
+                    if (!rankingProductos[nombreItem]) {
+                        rankingProductos[nombreItem] = { unidades: 0, ingresos: 0 };
+                    }
+                    rankingProductos[nombreItem].unidades += cantItem;
+                    rankingProductos[nombreItem].unidades = Math.max(rankingProductos[nombreItem].unidades, 1);
+                    rankingProductos[nombreItem].ingresos += totalVenta;
                 }
 
                 // Lógica de Ingresos Reales (Solo lo que entró físicamente)
@@ -428,6 +536,37 @@
             document.getElementById('total-credito').innerText = `$${deudaPendienteTotal.toLocaleString('en-US', {minimumFractionDigits:2})}`;
             document.getElementById('total-ventas').innerText = contadorOperaciones;
 
+            // Renderizar la lista del Top 20 de productos / marcas en la pantalla completa
+            const listaTopContainer = document.getElementById('lista-top-productos');
+            const arrayRanking = Object.keys(rankingProductos).map(prod => ({
+                producto: prod,
+                unidades: rankingProductos[prod].unidades,
+                ingresos: rankingProductos[prod].ingresos
+            })).sort((a, b) => b.unidades - a.unidades || b.ingresos - a.ingresos).slice(0, 20);
+
+            if (arrayRanking.length === 0) {
+                listaTopContainer.innerHTML = '<p class="text-[9px] text-gray-700 text-center uppercase py-10 italic">No hay registros para calcular el top en este periodo</p>';
+            } else {
+                listaTopContainer.innerHTML = arrayRanking.map((item, index) => {
+                    const medalla = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `#${index + 1}`;
+                    return `
+                    <div class="bg-[#0A0A0A] p-4 rounded-2xl border border-zinc-900 flex justify-between items-center shadow-md">
+                        <div class="flex items-center gap-3">
+                            <span class="w-7 h-7 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-xs font-black text-gold">${medalla}</span>
+                            <div>
+                                <p class="text-xs font-black text-white uppercase tracking-wider">${item.producto}</p>
+                                <p class="text-[8px] text-gray-500 font-bold uppercase mt-0.5">Unidades Vendidas: <span class="text-gold">${item.unidades}</span></p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-xs font-black text-green-400 font-mono">$${item.ingresos.toLocaleString('en-US', {minimumFractionDigits:2})}</p>
+                            <p class="text-[7px] text-zinc-500 uppercase tracking-widest">Generado</p>
+                        </div>
+                    </div>
+                    `;
+                }).join('');
+            }
+
             // Renderizar la lista de deudas en la PANTALLA COMPLETA con su botón de WhatsApp correspondiente e interactividad de expansión
             const listaDeudasVendedores = document.getElementById('lista-deudas-vendedores');
             const arrayDeudasVendedores = Object.keys(deudasPorVendedor).map(vendedor => {
@@ -460,10 +599,10 @@
                                     <span class="text-orange-400 font-bold block">$${dv.monto.toLocaleString('en-US', {minimumFractionDigits:2})}</span>
                                     <span class="text-[9px] text-gray-500 font-normal">(${dv.porcentaje.toFixed(1)}%)</span>
                                 </div>
-                                <!-- BOTÓN WHATSAPP DEL VENDEDOR -->
-                                <button onclick="enviarWhatsAppVendedor('${dv.nombre}', ${dv.monto}, '${dv.telefono}', event)" class="bg-[#25D366] text-black font-black px-3 py-2 rounded-xl flex items-center gap-1 active:scale-90 transition-all text-[8px] tracking-tight">
+                                <!-- BOTÓN WHATSAPP DEL VENDEDOR CON REPORTE DETALLADO -->
+                                <button onclick="enviarWhatsAppVendedor('${dv.nombre}', '${dv.telefono}', event)" class="bg-[#25D366] text-black font-black px-3 py-2 rounded-xl flex items-center gap-1 active:scale-90 transition-all text-[8px] tracking-tight">
                                     <i class="fa-brands fa-whatsapp text-xs"></i>
-                                    <span>Cobro</span>
+                                    <span>Cobro Detallado</span>
                                 </button>
                             </div>
                         </div>
@@ -479,7 +618,7 @@
                                     <div class="space-y-1">
                                         <p class="text-[10px] font-black text-zinc-100 uppercase tracking-wide">${vt.cliente}</p>
                                         <div class="flex gap-2 text-[7px] font-bold text-gray-500 uppercase">
-                                            <span>Fecha: ${new Date(vt.fecha).toLocaleDateString()}</span>
+                                            <span>Entrega: ${new Date(vt.fecha).toLocaleDateString()}</span>
                                             <span>•</span>
                                             <span>Original: $${vt.totalOriginal.toFixed(2)}</span>
                                             <span>•</span>
@@ -536,5 +675,4 @@
     </script>
 </body>
 </html>
-
 ```
